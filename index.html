@@ -234,7 +234,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .sidebar.collapsed{width:54px;}
 .sb-top{display:flex;align-items:center;justify-content:space-between;padding:16px 12px 14px;border-bottom:0.5px solid rgba(255,255,255,0.07);min-height:56px;}
 .sb-logo{display:flex;align-items:center;gap:9px;overflow:hidden;white-space:nowrap;min-width:0;}
-.sb-logo-icon{width:28px;height:28px;background:#c8102e;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;flex-shrink:0;letter-spacing:0;}
+.sb-logo-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
 .sb-logo-text{font-size:12px;font-weight:700;color:#fff;letter-spacing:2px;white-space:nowrap;transition:opacity .2s;}
 .sidebar.collapsed .sb-logo-text{opacity:0;pointer-events:none;width:0;overflow:hidden;}
 .sb-toggle{background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);color:#aaa;width:22px;height:22px;border-radius:4px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .22s;line-height:1;}
@@ -296,7 +296,13 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 <nav class="sidebar" id="sidebar">
   <div class="sb-top">
     <div class="sb-logo">
-      <div class="sb-logo-icon">S</div>
+      <div class="sb-logo-icon">
+        <svg viewBox="0 0 28 28" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+          <rect width="28" height="28" rx="6" fill="#1D2847"/>
+          <text x="14" y="12" text-anchor="middle" font-size="6.5" font-weight="700" fill="#D9A89A" font-family="Georgia,'Times New Roman',serif" letter-spacing="1.5">UN</text>
+          <text x="14" y="21.5" text-anchor="middle" font-size="6.5" font-weight="700" fill="#D9A89A" font-family="Georgia,'Times New Roman',serif" letter-spacing="1.5">OVE</text>
+        </svg>
+      </div>
       <span class="sb-logo-text">SEPHORA</span>
     </div>
     <button class="sb-toggle" onclick="toggleSidebar()" title="접기/펼치기">‹</button>
@@ -1112,6 +1118,12 @@ function renderKPI() {
   // SALES: 백만원(M) 단위 표기
   const fmtKRW  = v => '₩' + (Math.abs(v) / 1000000).toFixed(1) + '백만';
   const salesVal = (cur.sales / 1000000).toFixed(1); // 숫자만: 1320.9
+  const comPct  = cur.sales > 0 ? (cur.com / cur.sales * 100).toFixed(1) : '0.0';
+  const bamPct  = cur.sales > 0 ? (cur.bam / cur.sales * 100).toFixed(1) : '0.0';
+  const salesBreakdown = '<div style="font-size:9px;color:#aaa;margin-top:6px;line-height:1.8;display:flex;gap:12px;">'
+    + '<span><span style="color:#888;font-weight:700;">.COM</span> ' + (cur.com/1000000).toFixed(1) + ' <span style="color:#ccc;">(' + comPct + '%)</span></span>'
+    + '<span><span style="color:#888;font-weight:700;">B&M</span> ' + (cur.bam/1000000).toFixed(1) + ' <span style="color:#ccc;">(' + bamPct + '%)</span></span>'
+    + '</div>';
 
   // ROAS: 필터된 날짜 범위의 광고비 합산
   const filteredDates = new Set(data.map(d => d.date));
@@ -1123,9 +1135,13 @@ function renderKPI() {
   const fmtRoas   = v => v === null ? '—' : Math.round(v * 100) + '%';
 
   // 이전 기간 ROAS 계산 (MoM/WoW delta 표시용)
-  const prevAdSpend = prevDates
+  const prevAdSpendActual = prevDates
     ? ADS_RAW.filter(r => prevDates.has(r.date)).reduce((s,r) => s + r.spend, 0)
     : 0;
+  // 이전 기간 광고비 데이터 없으면 현재 기간 일 평균으로 비례 추정
+  const prevAdSpend = (prevAdSpendActual === 0 && prevDates && prevDates.size > 0 && filteredDates.size > 0)
+    ? totalAdSpend / filteredDates.size * prevDates.size
+    : prevAdSpendActual;
   const prevRoasTotal = (prevAdSpend > 0 && prev) ? prev.sales / prevAdSpend : null;
   const prevRoasCom   = (prevAdSpend > 0 && prev) ? prev.com   / prevAdSpend : null;
 
@@ -1134,7 +1150,7 @@ function renderKPI() {
       val: cur.visits.toLocaleString(),
       delta: dHtml(cur.visits, prev?.visits, v => Math.abs(Math.round(v)).toLocaleString()) },
     { key:'sales', label:'TOTAL Sales (₩) - 단위 : 백만 원', bar:'#d97070', wide:true,
-      val: salesVal,
+      val: salesVal + salesBreakdown,
       delta: dHtml(cur.sales, prev?.sales, v => fmtKRW(v)) },
     { key:'cvr', label:'CVR (주문/방문)', bar:'#8878d0', wide:false,
       val: cur.cvr.toFixed(2) + '%',
