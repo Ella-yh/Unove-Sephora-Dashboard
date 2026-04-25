@@ -75,8 +75,8 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .sales-toggle{display:flex;gap:4px;}
 .stgl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
   padding:3px 9px;border:0.5px solid #D8D8DC;background:#fff;color:#777;cursor:pointer;border-radius:3px;transition:all .15s;}
-.stgl:hover{border-color:#d97070;color:#d97070;}
-.stgl.active{background:#d97070;border-color:#d97070;color:#fff;}
+.stgl:hover{border-color:#1D2847;color:#1D2847;}
+.stgl.active{background:#1D2847;border-color:#1D2847;color:#fff;}
 
 /* Event section */
 .ev-sec{padding:0 28px 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -633,11 +633,21 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     </div>
   </div>
 
+  <!-- 기간 단위 -->
+  <div class="filter-block">
+    <div class="filter-lbl">기간 단위</div>
+    <div style="display:flex;gap:4px;">
+      <button class="stgl" data-ads-period="monthly" onclick="setAdsPeriod(this)">월별</button>
+      <button class="stgl active" data-ads-period="weekly" onclick="setAdsPeriod(this)">주간</button>
+      <button class="stgl" data-ads-period="daily" onclick="setAdsPeriod(this)">일별</button>
+    </div>
+  </div>
+
 </div>
 
 <!-- Chart 1: 전체 퍼포먼스 -->
 <div class="chart-sec">
-  <div class="sec-hdr">퍼포먼스 / 세포라 매출 / 세포라 유입 (주간)</div>
+  <div class="sec-hdr" id="adsChart1Hdr">퍼포먼스 / 세포라 매출 / 세포라 유입 (주간)</div>
   <div class="chart-card">
     <div class="leg-row" id="adsChart1Leg" style="flex-wrap:wrap;gap:10px;margin-bottom:10px;"></div>
     <div class="chart-wrap" style="height:300px;"><canvas id="adsChart1"></canvas></div>
@@ -817,6 +827,7 @@ const ADS_RAW = [];
 let selAdsSales  = 'com';    // com | total | bam
 let selAdsMetric = 'spend';  // spend | impressions | clicks
 let selAdsMedia  = new Set(['meta','tiktok','gsa']);
+let selAdsPeriod = 'weekly'; // monthly | weekly | daily
 let adsChart1 = null, adsChart2 = null, adsChart3 = null;
 
 window.setAdsSales = function(btn) {
@@ -2807,6 +2818,29 @@ function parseDate(raw) {
 // ── Rebuild derived data ────────────────────────────────────────────────────
 // ─── PERFORMANCE ADS ─────────────────────────────────────────────────────────
 
+function getMonthKey(dateStr) {
+  return dateStr.slice(0, 7); // YYYY-MM
+}
+function getDayKey(dateStr) {
+  return dateStr.slice(0, 10); // YYYY-MM-DD
+}
+function getPeriodKey(dateStr) {
+  if (selAdsPeriod === 'monthly') return getMonthKey(dateStr);
+  if (selAdsPeriod === 'daily')   return getDayKey(dateStr);
+  return getWeekKey(dateStr);
+}
+function fmtPeriodLabel(key) {
+  if (selAdsPeriod === 'monthly') {
+    const parts = key.split('-');
+    return parts[0].slice(2) + '/' + parts[1]; // YY/MM
+  }
+  if (selAdsPeriod === 'daily') {
+    const d = new Date(key + 'T00:00:00');
+    return (d.getMonth()+1) + '/' + d.getDate();
+  }
+  return fmtWkLabel(key);
+}
+
 function getWeekKey(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
   const dow = d.getDay();
@@ -2839,6 +2873,42 @@ function buildAdsWeekly(mediaFilter) {
     byWeek[wk].byObj[r.objective].clicks      += r.clicks;
   });
   return byWeek;
+}
+
+function buildAdsByPeriod(mediaFilter) {
+  const byP = {};
+  ADS_RAW.forEach(r => {
+    if (mediaFilter && !mediaFilter.has(r.media)) return;
+    const k = getPeriodKey(r.date);
+    if (!byP[k]) byP[k] = { spend:0, impressions:0, clicks:0, byObj:{} };
+    byP[k].spend       += r.spend;
+    byP[k].impressions += r.impressions;
+    byP[k].clicks      += r.clicks;
+    if (!byP[k].byObj[r.objective]) byP[k].byObj[r.objective] = {spend:0,impressions:0,clicks:0};
+    byP[k].byObj[r.objective].spend       += r.spend;
+    byP[k].byObj[r.objective].impressions += r.impressions;
+    byP[k].byObj[r.objective].clicks      += r.clicks;
+  });
+  return byP;
+}
+
+function buildSephoraByPeriod() {
+  const byP = {};
+  Object.entries(SALES_BY_DATE).forEach(([date, s]) => {
+    const k = getPeriodKey(date);
+    if (!byP[k]) byP[k] = {sales_com:0, sales_bam:0, sales_total:0, visits:0};
+    byP[k].sales_com   += s.com   || 0;
+    byP[k].sales_bam   += s.bam   || 0;
+    byP[k].sales_total += s.total || 0;
+  });
+  const visitsByDate = {};
+  RAW_SKU.forEach(r => { visitsByDate[r.date] = (visitsByDate[r.date]||0) + r.visits; });
+  Object.entries(visitsByDate).forEach(([date, v]) => {
+    const k = getPeriodKey(date);
+    if (!byP[k]) byP[k] = {sales_com:0, sales_bam:0, sales_total:0, visits:0};
+    byP[k].visits += v;
+  });
+  return byP;
 }
 
 function buildSephoraWeekly() {
@@ -2883,7 +2953,7 @@ const OBJ_COLORS = {
 };
 
 function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, mediaLabel) {
-  const labels = weeks.map(fmtWkLabel);
+  const labels = weeks.map(fmtPeriodLabel);
   const metricKey = selAdsMetric;
   const salesKey  = getSalesKey();
   const fmtNum = v => selAdsMetric === 'spend'
@@ -2998,10 +3068,10 @@ function renderLegend(containerId, datasets) {
 function refreshAds() {
   if (ADS_RAW.length === 0) return;
 
-  const sepWeekly = buildSephoraWeekly();
+  const sepWeekly = buildSephoraByPeriod();
 
   // Chart 1 — 선택 매체 합산
-  const ads1 = buildAdsWeekly(selAdsMedia);
+  const ads1 = buildAdsByPeriod(selAdsMedia);
   const weeks1 = [...new Set([...Object.keys(ads1), ...Object.keys(sepWeekly)])].sort();
   const cfg1 = makeAdsChartCfg(weeks1, ads1, sepWeekly, false, [], getMetricLabel());
   renderLegend('adsChart1Leg', cfg1.data.datasets);
@@ -3009,7 +3079,7 @@ function refreshAds() {
   if (ctx1) { if (adsChart1) adsChart1.destroy(); adsChart1 = new Chart(ctx1.getContext('2d'), cfg1); }
 
   // Chart 2 — Meta 목표별 누적
-  const ads2 = buildAdsWeekly(new Set(['meta']));
+  const ads2 = buildAdsByPeriod(new Set(['meta']));
   const weeks2 = [...new Set([...Object.keys(ads2), ...Object.keys(sepWeekly)])].sort();
   const metaObjs = ['전환(장바구니)','전환(구매)','트래픽(click)','트래픽(lpv)','조회'];
   const cfg2 = makeAdsChartCfg(weeks2, ads2, sepWeekly, true, metaObjs, '');
@@ -3018,7 +3088,7 @@ function refreshAds() {
   if (ctx2) { if (adsChart2) adsChart2.destroy(); adsChart2 = new Chart(ctx2.getContext('2d'), cfg2); }
 
   // Chart 3 — TikTok 목표별 누적
-  const ads3 = buildAdsWeekly(new Set(['tiktok']));
+  const ads3 = buildAdsByPeriod(new Set(['tiktok']));
   const weeks3 = [...new Set([...Object.keys(ads3), ...Object.keys(sepWeekly)])].sort();
   const ttObjs = ['검색','조회'];
   const cfg3 = makeAdsChartCfg(weeks3, ads3, sepWeekly, true, ttObjs, '');
