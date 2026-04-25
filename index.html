@@ -4,11 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sephora Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1a1a;font-size:13px;}
+body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1a1a;font-size:13px;}
 
 .hdr{background:#000;color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #c8102e;}
 .logo{font-size:20px;font-weight:800;letter-spacing:5px;}
@@ -21,7 +22,7 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1
 .kpi-bar{width:4px;border-radius:2px;align-self:stretch;flex-shrink:0;}
 .kpi-left{flex:1;min-width:0;}
 .kpi-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;margin-bottom:5px;}
-.kpi-value{font-size:22px;font-weight:700;color:#1a1a1a;line-height:1;margin-bottom:4px;}
+.kpi-value{font-size:22px;font-weight:700;color:#ffffff;line-height:1;margin-bottom:4px;}
 .kpi-delta{font-size:10px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
 .up{color:#16a34a;}.dn{color:#c8102e;}.na-c{color:#aaa;}
 .kpi-note{width:110px;font-size:8px;color:#bbb;line-height:1.5;border-left:1px solid #ebebeb;padding-left:10px;align-self:center;flex-shrink:0;}
@@ -49,7 +50,7 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1
 .chart-sec{padding:12px 28px;}
 .sec-hdr{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
 .sec-hdr::after{content:'';flex:1;height:1px;background:#e0e0e0;}
-.chart-card{background:#fff;border:1px solid #e0e0e0;padding:14px 16px 10px;}
+.chart-card{background:#111114;border:0.5px solid rgba(255,255,255,0.07);padding:14px 16px 10px;}
 .leg-row{display:flex;gap:16px;margin-bottom:10px;flex-wrap:wrap;}
 .leg{display:flex;align-items:center;gap:5px;font-size:11px;color:#555;}
 .leg-dot{width:11px;height:11px;border-radius:2px;flex-shrink:0;}
@@ -325,9 +326,9 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1
   <div class="sec-hdr">일자별 Visits · Sales · CVR</div>
   <div class="chart-card">
     <div class="leg-row" style="align-items:center;">
-      <div class="leg"><div class="leg-dot" style="background:rgba(80,80,80,0.35);border:1.5px solid rgba(80,80,80,0.6);"></div>Visits</div>
-      <div class="leg"><div class="leg-dot" style="background:#c8102e;"></div><span id="salesLegLabel">Sales (.COM)</span></div>
-      <div class="leg"><div class="leg-dot" style="background:#1e6fbf;border-radius:50%;"></div>CVR (%)</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(106,173,213,0.3);border:1.5px solid #6aadd5;"></div>Visits</div>
+      <div class="leg"><div class="leg-dot" style="background:#d97070;"></div><span id="salesLegLabel">Sales (.COM)</span></div>
+      <div class="leg"><div class="leg-dot" style="background:#8878d0;border-radius:50%;"></div>CVR (%)</div>
       <div class="sales-toggle">
         <button class="stgl active" data-type="com" onclick="setSalesType(this)">COM</button>
         <button class="stgl" data-type="total" onclick="setSalesType(this)">TTL</button>
@@ -988,12 +989,14 @@ function renderKPI() {
   }
 
 
-  // SALES: KRW 형식 + .COM/B&M 비율
-  const fmtKRW = v => '₩' + Math.round(Math.abs(v)).toLocaleString('ko-KR');
-  const comPct = cur.sales > 0 ? (cur.com / cur.sales * 100).toFixed(1) : '0.0';
-  const bamPct = cur.sales > 0 ? (cur.bam / cur.sales * 100).toFixed(1) : '0.0';
+  // SALES: 백만원(M) 단위 표기 — 1,000,000원 = 1.0백만
+  // KPI 카드 기준: ₩4.8백만 형식 / .COM·B&M 소계도 동일 단위 적용
+  const fmtKRW  = v => '₩' + (Math.abs(v) / 1000000).toFixed(1) + '백만';
+  const comPct  = cur.sales > 0 ? (cur.com / cur.sales * 100).toFixed(1) : '0.0';
+  const bamPct  = cur.sales > 0 ? (cur.bam / cur.sales * 100).toFixed(1) : '0.0';
+  const fmtSubM = v => '₩' + (Math.abs(v) / 1000000).toFixed(1) + '백만';
   const salesBreakdown = '<div style="font-size:9px;color:#999;margin-top:4px;line-height:1.6;">'
-    + '.COM \u20a9' + Math.round(cur.com).toLocaleString('ko-KR') + ' (' + comPct + '%)&nbsp;&nbsp;/&nbsp;&nbsp;B&M \u20a9' + Math.round(cur.bam).toLocaleString('ko-KR') + ' (' + bamPct + '%)'
+    + '.COM ' + fmtSubM(cur.com) + ' (' + comPct + '%)&nbsp;&nbsp;/&nbsp;&nbsp;B&M ' + fmtSubM(cur.bam) + ' (' + bamPct + '%)'
     + '</div>';
 
 
@@ -1002,10 +1005,10 @@ function renderKPI() {
     { key:'visits', label:'TOTAL VISITS', bar:'#555555',
       val: cur.visits.toLocaleString(),
       delta: dHtml(cur.visits, prev?.visits, v => Math.abs(Math.round(v)).toLocaleString()) },
-    { key:'sales', label:'TOTAL SALES', bar:'#c8102e',
+    { key:'sales', label:'TOTAL SALES', bar:'#d97070',
       val: fmtKRW(cur.sales) + salesBreakdown,
       delta: dHtml(cur.sales, prev?.sales, v => fmtKRW(v)) },
-    { key:'cvr', label:'CVR (주문/방문)', bar:'#1e6fbf',
+    { key:'cvr', label:'CVR (주문/방문)', bar:'#8878d0',
       val: cur.cvr.toFixed(2) + '%',
       delta: dHtml(cur.cvr, prev?.cvr, v => Math.abs(v).toFixed(2) + '%') },
   ];
@@ -1095,12 +1098,12 @@ function renderChart() {
           data: data.map(d => d.visits),
           type: 'line',
           fill: true,
-          backgroundColor: 'rgba(80,80,80,0.13)',
-          borderColor: 'rgba(80,80,80,0.45)',
-          borderWidth: 1,
+          backgroundColor: 'rgba(106,173,213,0.1)',
+          borderColor: '#6aadd5',
+          borderWidth: 1.5,
           pointRadius: 0,
           pointHoverRadius: 4,
-          pointHoverBackgroundColor: 'rgba(80,80,80,0.7)',
+          pointHoverBackgroundColor: '#6aadd5',
           yAxisID: 'yV', order: 3,
           tension: 0.25,
         },
@@ -1109,8 +1112,8 @@ function renderChart() {
           label: selSalesType === 'com' ? 'Sales (.COM)' : selSalesType === 'bam' ? 'Sales (B&M)' : 'Sales (TTL)',
           data: data.map(d => { const sb = SALES_BY_DATE[d.date] || {}; return selSalesType === 'com' ? (sb.com||0) : selSalesType === 'bam' ? (sb.bam||0) : (sb.total||0); }),
           type: 'bar',
-          backgroundColor: 'rgba(200,16,46,0.8)',
-          hoverBackgroundColor: 'rgba(200,16,46,1)',
+          backgroundColor: 'rgba(217,112,112,0.82)',
+          hoverBackgroundColor: '#d97070',
           yAxisID: 'yS', order: 2,
           barPercentage: 0.5,
           categoryPercentage: 0.85,
@@ -1120,12 +1123,12 @@ function renderChart() {
           label: 'CVR',
           data: data.map(d => d.cvr),
           type: 'line',
-          borderColor: '#1e6fbf',
+          borderColor: '#8878d0',
           backgroundColor: 'transparent',
           borderWidth: 2,
           pointRadius: n > 50 ? 0 : n > 25 ? 2 : 3,
           pointHoverRadius: 5,
-          pointBackgroundColor: '#1e6fbf',
+          pointBackgroundColor: '#8878d0',
           fill: false,
           yAxisID: 'yC', order: 1,
           tension: 0.3,
@@ -1161,7 +1164,7 @@ function renderChart() {
       },
       scales: {
         x: {
-          grid: { color: 'rgba(0,0,0,0.04)' },
+          grid: { color: 'rgba(255,255,255,0.05)' },
           ticks: {
             font: { size: 9 }, color: '#999', maxRotation: 45,
             callback(val, idx) {
@@ -1173,15 +1176,15 @@ function renderChart() {
         },
         yV: {
           type: 'linear', position: 'left',
-          grid: { color: 'rgba(0,0,0,0.05)' },
-          ticks: { font:{size:9}, color:'#888', callback: v => v>=1000?(v/1000).toFixed(0)+'K':v },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { font:{size:9}, color:'#ffffff', callback: v => v>=1000?(v/1000).toFixed(0)+'K':v },
           title: { display:true, text:'Visits', font:{size:9}, color:'#888' }
         },
         yS: {
           type: 'linear', position: 'right',
           grid: { drawOnChartArea: false },
-          ticks: { font:{size:9}, color:'#c8102e', callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v },
-          title: { display:true, text:'Sales (₩)', font:{size:9}, color:'#c8102e' }
+          ticks: { font:{size:9}, color:'#ffffff', callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v },
+          title: { display:true, text:'Sales (₩)', font:{size:9}, color:'#d97070' }
         },
         yC: {
           type: 'linear', position: 'right', display: false,
@@ -1668,7 +1671,7 @@ function renderLagEffect() {
   if (lagChartInst) lagChartInst.destroy();
 
   if (!datasets.length) {
-    ctx.font = '11px Helvetica Neue'; ctx.fillStyle = '#ccc';
+    ctx.font = "11px 'Pretendard','Helvetica Neue'"; ctx.fillStyle = '#ccc';
     ctx.fillText('데이터 부족 (이벤트 유형별 2건 이상 필요)', 20, 100);
     return;
   }
@@ -1685,9 +1688,9 @@ function renderLagEffect() {
         }
       },
       scales: {
-        x: { ticks: { font:{size:9}, color:'#999' }, grid: { color:'rgba(0,0,0,0.04)' } },
+        x: { ticks: { font:{size:9}, color:'#ffffff' }, grid: { color:'rgba(0,0,0,0.04)' } },
         y: {
-          ticks: { font:{size:9}, color:'#888', callback: v => (v>=0?'+':'')+v.toFixed(0)+'%' },
+          ticks: { font:{size:9}, color:'#ffffff', callback: v => (v>=0?'+':'')+v.toFixed(0)+'%' },
           grid: { color:'rgba(0,0,0,0.05)' },
           title: { display:true, text:'Visits Lift (%)', font:{size:8}, color:'#aaa' }
         }
@@ -2058,7 +2061,7 @@ function renderChLineChart(canvasId, weeks, channels, pivot, key, _unused, idx) 
             },
             font: { size: 10 }
           },
-          grid: { color: 'rgba(0,0,0,0.06)' }
+          grid: { color: 'rgba(255,255,255,0.05)' }
         },
         x: { ticks: { font: { size: 9 } }, grid: { display: false } }
       }
@@ -2150,7 +2153,7 @@ function renderComboChart(weeks, channels, pivot) {
           beginAtZero: true,
           title: { display: true, text: 'Visits', color: '#2F5496', font: { size: 11, weight: 'bold' } },
           ticks: { callback: v => v >= 1000 ? (v/1000)+'K' : v, color: '#2F5496', font: { size: 10 } },
-          grid: { color: 'rgba(0,0,0,0.06)' },
+          grid: { color: 'rgba(255,255,255,0.05)' },
         },
         ySales: {
           type: 'linear',
@@ -2503,9 +2506,9 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
   datasets.push({
     label: getSalesLabel(),
     data: weeks.map(wk => (sepWeekly[wk]?.[salesKey] || 0)),
-    type: 'line', borderColor: '#c8102e', backgroundColor: 'transparent',
+    type: 'line', borderColor: '#d97070', backgroundColor: 'transparent',
     borderWidth: 2, pointRadius: 3, pointHoverRadius: 5,
-    pointBackgroundColor: '#c8102e', fill: false,
+    pointBackgroundColor: '#d97070', fill: false,
     yAxisID: 'yS', order: 1, tension: 0.3,
   });
 
@@ -2513,9 +2516,9 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
   datasets.push({
     label: '세포라 유입',
     data: weeks.map(wk => (sepWeekly[wk]?.visits || 0)),
-    type: 'line', borderColor: '#27ae60', backgroundColor: 'transparent',
+    type: 'line', borderColor: '#5dcaa5', backgroundColor: 'transparent',
     borderWidth: 2, pointRadius: 3, pointHoverRadius: 5,
-    pointBackgroundColor: '#27ae60', fill: false,
+    pointBackgroundColor: '#5dcaa5', fill: false,
     yAxisID: 'yV', order: 2, tension: 0.3,
   });
 
@@ -2542,21 +2545,21 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
         }
       },
       scales: {
-        x: { stacked: stacked, grid:{color:'rgba(0,0,0,0.04)'}, ticks:{font:{size:9},color:'#999',maxRotation:45} },
+        x: { stacked: stacked, grid:{color:'rgba(0,0,0,0.04)'}, ticks:{font:{size:9},color:'#ffffff',maxRotation:45} },
         yA: {
           type:'linear', position:'left', stacked: stacked,
           grid:{color:'rgba(0,0,0,0.05)'},
-          ticks:{ font:{size:9}, color:'#4682c8',
+          ticks:{ font:{size:9}, color:'#ffffff',
             callback: v => selAdsMetric==='spend' ? (v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v) : (v>=1000?(v/1000).toFixed(0)+'K':v)
           },
           title:{ display:true, text:getMetricLabel(), font:{size:9}, color:'#4682c8' }
         },
         yS: {
           type:'linear', position:'right', grid:{drawOnChartArea:false},
-          ticks:{ font:{size:9}, color:'#c8102e',
+          ticks:{ font:{size:9}, color:'#ffffff',
             callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v
           },
-          title:{ display:true, text:'매출(₩)', font:{size:9}, color:'#c8102e' }
+          title:{ display:true, text:'매출(₩)', font:{size:9}, color:'#d97070' }
         },
         yV: {
           type:'linear', position:'right', display:false, grid:{drawOnChartArea:false},
