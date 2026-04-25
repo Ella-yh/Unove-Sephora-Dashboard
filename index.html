@@ -844,6 +844,12 @@ window.toggleAdsMedia = function(btn) {
   } else { selAdsMedia.add(m); btn.classList.add('active'); }
   refreshAds();
 };
+window.setChartPeriod = function(chartNum, btn, period) {
+  document.querySelectorAll('[data-chart="' + chartNum + '"]').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  adsChartPeriod[chartNum] = period;
+  refreshAdsChart(chartNum);
+};
 let selSalesType = 'com'; // 'com' | 'total' | 'bam'
 let showMarkers = false;
 let showVisits   = false;
@@ -3033,14 +3039,14 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
           ticks:{ font:{size:9}, color:'#ffffff',
             callback: v => selAdsMetric==='spend' ? (v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v) : (v>=1000?(v/1000).toFixed(0)+'K':v)
           },
-          title:{ display:true, text:getMetricLabel(), font:{size:9}, color:'#4682c8' }
+          title:{ display:false }
         },
         yS: {
           type:'linear', position:'right', grid:{drawOnChartArea:false},
           ticks:{ font:{size:9}, color:'#ffffff',
             callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v
           },
-          title:{ display:true, text:'매출(₩)', font:{size:9}, color:'#d97070' }
+          title:{ display:false }
         },
         yV: {
           type:'linear', position:'right', display:false, grid:{drawOnChartArea:false},
