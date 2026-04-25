@@ -56,6 +56,14 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1
 .chart-wrap{position:relative;height:320px;}
 .chart-note{font-size:9px;color:#ccc;text-align:right;margin-top:5px;}
 
+/* Marker toggle button */
+.marker-toggle{margin-left:8px;}
+.mkr-btn{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  padding:3px 9px;border:1px solid #ddd;background:#fff;color:#aaa;cursor:pointer;border-radius:2px;transition:all .15s;}
+.mkr-btn:hover{border-color:#555;color:#555;}
+.mkr-btn.active{background:#1a1a1a;border-color:#1a1a1a;color:#fff;}
+.marker-zone.hidden{height:0!important;min-height:0!important;margin:0!important;overflow:hidden;}
+
 /* Sales type toggle */
 .sales-toggle{display:flex;gap:4px;margin-left:auto;}
 .stgl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
@@ -323,6 +331,9 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1
         <button class="stgl active" data-type="com" onclick="setSalesType(this)">COM</button>
         <button class="stgl" data-type="total" onclick="setSalesType(this)">TTL</button>
         <button class="stgl" data-type="bam" onclick="setSalesType(this)">B&M</button>
+      </div>
+      <div class="marker-toggle">
+        <button class="mkr-btn active" id="btnMarkerToggle" onclick="toggleMarkers(this)">이벤트 마커 표시</button>
       </div>
     </div>
     <div id="markerZone" class="marker-zone"></div>
@@ -602,6 +613,16 @@ const USD_TO_KRW = 1500; // 환율 기준: 1 USD = 1,500 KRW (수동 업데이�
 
 let selMonths = new Set(), selWeeks = new Set(), selCats = new Set(), selSkus = new Set(), selEvType = new Set();
 let selSalesType = 'com'; // 'com' | 'total' | 'bam'
+let showMarkers = true;
+
+window.toggleMarkers = function(btn) {
+  showMarkers = !showMarkers;
+  btn.classList.toggle('active', showMarkers);
+  btn.textContent = showMarkers ? '이벤트 마커 표시' : '이벤트 마커 숨김';
+  const zone = document.getElementById('markerZone');
+  if (zone) zone.classList.toggle('hidden', !showMarkers);
+  if (showMarkers) positionMarkers();
+};
 
 window.setSalesType = function(btn) {
   selSalesType = btn.dataset.type;
@@ -1096,6 +1117,12 @@ const _ro = new ResizeObserver(() => {
 // ─── MARKER ZONE ──────────────────────────────────────────────────────────────
 function positionMarkers() {
   const zone = document.getElementById('markerZone');
+  if (!showMarkers) {
+    zone.innerHTML = '';
+    zone.classList.add('hidden');
+    return;
+  }
+  zone.classList.remove('hidden');
   zone.innerHTML = '';
   if (!chart) return;
 
