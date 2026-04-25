@@ -17,7 +17,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#0909
 .hdr-r{font-size:10px;color:#555;}
 
 /* KPI */
-.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 28px 0;}
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:14px 28px 0;}
 .kpi{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);padding:14px 16px 14px 18px;display:flex;align-items:stretch;gap:12px;border-radius:3px;}
 .kpi-bar{width:4px;border-radius:2px;align-self:stretch;flex-shrink:0;}
 .kpi-left{flex:1;min-width:0;}
@@ -329,6 +329,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#0909
       <div class="leg"><div class="leg-dot" style="background:rgba(106,173,213,0.3);border:1.5px solid #6aadd5;"></div>Visits</div>
       <div class="leg"><div class="leg-dot" style="background:#d97070;"></div><span id="salesLegLabel">Sales (.COM)</span></div>
       <div class="leg"><div class="leg-dot" style="background:#8878d0;border-radius:50%;"></div>CVR (%)</div>
+      <div class="leg"><div class="leg-dot" style="background:#e8c84a;border-radius:50%;"></div>광고비(net)</div>
       <div class="sales-toggle">
         <button class="stgl active" data-type="com" onclick="setSalesType(this)">COM</button>
         <button class="stgl" data-type="total" onclick="setSalesType(this)">TTL</button>
@@ -943,9 +944,11 @@ function sumData(arr) {
 
 // ─── KPI ──────────────────────────────────────────────────────────────────────
 const KPI_NOTES = {
-  visits: '세포라 웹사이트/앱에서 특정 제품(SKU)과 상호작용한 세션. (제품 페이지 또는 퀵룩 보기, 장바구니에 담기, 상품이 포함된 장바구니 보기, 주문 확인, 좋아하는 목록 보기)',
-  sales:  'Sephora 실매출 기준 (환율 1,500원)',
-  cvr:    '주문 수량 / Visits TY × 100'
+  visits:     '세포라 웹사이트/앱에서 특정 제품(SKU)과 상호작용한 세션. (제품 페이지 또는 퀵룩 보기, 장바구니에 담기, 상품이 포함된 장바구니 보기, 주문 확인, 좋아하는 목록 보기)',
+  sales:      'Sephora 실매출 기준 (환율 1,500원)',
+  cvr:        '주문 수량 / Visits TY × 100',
+  roas_total: '전체 매출 / 전체 광고비(net)',
+  roas_com:   '닷컴 매출 / 전체 광고비(net)'
 };
 
 function renderKPI() {
@@ -1001,6 +1004,15 @@ function renderKPI() {
 
 
 
+  // ROAS: 필터된 날짜 범위의 광고비 합산
+  const filteredDates = new Set(data.map(d => d.date));
+  const totalAdSpend = ADS_RAW
+    .filter(r => filteredDates.has(r.date))
+    .reduce((sum, r) => sum + r.spend, 0);
+  const roasTotal = totalAdSpend > 0 ? cur.sales / totalAdSpend : null;
+  const roasCom   = totalAdSpend > 0 ? cur.com   / totalAdSpend : null;
+  const fmtRoas   = v => v === null ? '—' : v.toFixed(2) + 'x';
+
   const items = [
     { key:'visits', label:'TOTAL VISITS', bar:'#555555',
       val: cur.visits.toLocaleString(),
@@ -1011,6 +1023,12 @@ function renderKPI() {
     { key:'cvr', label:'CVR (주문/방문)', bar:'#8878d0',
       val: cur.cvr.toFixed(2) + '%',
       delta: dHtml(cur.cvr, prev?.cvr, v => Math.abs(v).toFixed(2) + '%') },
+    { key:'roas_total', label:'전체 ROAS', bar:'#6aadd5',
+      val: fmtRoas(roasTotal),
+      delta: null },
+    { key:'roas_com', label:'닷컴 ROAS', bar:'#6aadd5',
+      val: fmtRoas(roasCom),
+      delta: null },
   ];
 
   document.getElementById('kpiRow').innerHTML = items.map(k => `
@@ -1132,6 +1150,26 @@ function renderChart() {
           fill: false,
           yAxisID: 'yC', order: 1,
           tension: 0.3,
+        },
+        // 광고비(net) → line (yellow)
+        {
+          label: '광고비(net)',
+          data: data.map(d => {
+            const dateSpend = ADS_RAW.filter(r => r.date === d.date).reduce((s,r) => s + r.spend, 0);
+            return dateSpend > 0 ? dateSpend : null;
+          }),
+          type: 'line',
+          borderColor: '#e8c84a',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [4, 3],
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: '#e8c84a',
+          spanGaps: false,
+          fill: false,
+          yAxisID: 'yA', order: 0,
+          tension: 0.25,
         }
       ]
     },
@@ -1156,6 +1194,7 @@ function renderChart() {
               if (ctx.dataset.label === 'Visits') return `  Visits: ${v.toLocaleString()}`;
               if (ctx.dataset.label.startsWith('Sales')) return '  ' + ctx.dataset.label + ': ₩' + Math.round(Math.abs(v)).toLocaleString('ko-KR');
               if (ctx.dataset.label === 'CVR') return `  CVR: ${v.toFixed(2)}%`;
+              if (ctx.dataset.label === '광고비(net)') return v != null ? `  광고비: ₩${Math.round(v).toLocaleString('ko-KR')}` : null;
               return ctx.dataset.label + ': ' + v;
             }
           }
@@ -1189,6 +1228,12 @@ function renderChart() {
         yC: {
           type: 'linear', position: 'right', display: false,
           grid: { drawOnChartArea: false }
+        },
+        yA: {
+          type: 'linear', position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: { font:{size:9}, color:'#e8c84a', callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v },
+          title: { display:true, text:'광고비(₩)', font:{size:9}, color:'#e8c84a' }
         }
       }
     }
@@ -2091,8 +2136,8 @@ function renderComboChart(weeks, channels, pivot) {
           type: 'bar',
           label: 'Sales ($)',
           data: totSales,
-          backgroundColor: 'rgba(200,16,46,0.75)',
-          borderColor: '#c8102e',
+          backgroundColor: 'rgba(217,112,112,0.8)',
+          borderColor: '#d97070',
           borderWidth: 1,
           yAxisID: 'ySales',
           order: 2,
@@ -2159,8 +2204,8 @@ function renderComboChart(weeks, channels, pivot) {
           type: 'linear',
           position: 'right',
           beginAtZero: true,
-          title: { display: true, text: 'Sales ($)', color: '#c8102e', font: { size: 11, weight: 'bold' } },
-          ticks: { callback: v => '$'+(v>=1000?(v/1000)+'K':v), color: '#c8102e', font: { size: 10 } },
+          title: { display: true, text: 'Sales ($)', color: '#d97070', font: { size: 11, weight: 'bold' } },
+          ticks: { callback: v => '$'+(v>=1000?(v/1000)+'K':v), color: '#d97070', font: { size: 10 } },
           grid: { drawOnChartArea: false },
         },
         yCvr: {
