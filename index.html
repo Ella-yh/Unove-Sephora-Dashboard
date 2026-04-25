@@ -2544,15 +2544,6 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     if (Array.isArray(data.ads)) data.ads.forEach(r => ADS_RAW.push(r));
 
     // ââ ëë²ê·¸: ì¤ë§¤ì¶ ì»¬ë¼/ê° íì¸ (ì½ììì _DEBUG_SALES íì¸ í ì ê±°) ââ
-    if (data._debug_sales) {
-      console.group('%c[SALES DEBUG] Raw_ì¤ë§¤ì¶ ìí¸ ë¶ì', 'color:#c8102e;font-weight:bold');
-      console.log('ì´ ë°ì´í° íì:', data._debug_sales.total_rows);
-      console.log('í¤ë ìë³¸:', data._debug_sales.headers);
-      console.log('ê°ì§ë ì»¬ë¼ ì¸ë±ì¤:', data._debug_sales.detected_cols);
-      console.log('ì²« 3í ìí (ë ì§/B&M/COM/ì ì²´ ìë³¸âë³í):', data._debug_sales.samples);
-      console.log('ì ì²´ SALES_BY_DATE ì²«5ê°:', Object.entries(SALES_BY_DATE).slice(0,5));
-      console.groupEnd();
-    }
 
     rebuildDerivedData();
     const ts = data.updatedAt ? new Date(data.updatedAt).toLocaleString('ko-KR') : 'â';
