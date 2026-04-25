@@ -17,15 +17,18 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .hdr-r{font-size:10px;color:#555;}
 
 /* KPI */
-.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:14px 28px 0;}
-.kpi{background:#ffffff;border:0.5px solid #E8E8EC;padding:14px 16px 14px 18px;display:flex;align-items:stretch;gap:12px;border-radius:3px;}
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:14px 28px 0;}
+.kpi{background:#ffffff;border:0.5px solid #E8E8EC;padding:14px 16px 14px 18px;display:flex;align-items:stretch;gap:12px;border-radius:3px;position:relative;}
 .kpi-bar{width:4px;border-radius:2px;align-self:stretch;flex-shrink:0;}
 .kpi-left{flex:1;min-width:0;}
-.kpi-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:5px;}
+.kpi-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:5px;padding-right:20px;}
 .kpi-value{font-size:22px;font-weight:700;color:#1a1a1a;line-height:1;margin-bottom:4px;}
 .kpi-delta{font-size:10px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
 .up{color:#16a34a;}.dn{color:#c8102e;}.na-c{color:#aaa;}
-.kpi-note{width:110px;font-size:8px;color:#bbb;line-height:1.5;border-left:0.5px solid #E8E8EC;padding-left:10px;align-self:center;flex-shrink:0;}
+.kpi-info-btn{position:absolute;top:10px;right:10px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,0.07);border:none;cursor:pointer;font-size:9px;font-weight:700;color:#aaa;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;transition:background .15s,color .15s;}
+.kpi-info-btn:hover{background:#e8e8ec;color:#555;}
+.kpi-tooltip{display:none;position:absolute;top:28px;right:0;z-index:500;background:#fff;border:0.5px solid #D8D8DC;border-radius:4px;padding:9px 12px;font-size:9px;color:#666;line-height:1.7;width:220px;box-shadow:0 4px 16px rgba(0,0,0,.12);white-space:normal;pointer-events:none;}
+.kpi-info-btn:hover + .kpi-tooltip,.kpi-info-btn:focus + .kpi-tooltip{display:block;}
 .kpi-krw{font-size:12px;font-weight:400;color:#bbb;margin-left:6px;letter-spacing:0;}
 
 /* Filters */
@@ -393,13 +396,13 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     <div class="leg-row" style="align-items:center;flex-wrap:wrap;gap:6px;">
       <div class="leg"><div class="leg-dot" style="background:#d97070;"></div><span id="salesLegLabel">Sales (.COM)</span></div>
       <div class="leg"><div class="leg-dot" style="background:#8878d0;border-radius:50%;"></div>CVR (%)</div>
+      <button class="mkr-btn" id="btnVisitsToggle" onclick="toggleVisits(this)" style="display:flex;align-items:center;gap:4px;">
+        <span style="font-size:12px;font-weight:700;line-height:1;color:#6aadd5;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#6aadd5;"></span>Visits
+      </button>
+      <button class="mkr-btn" id="btnAdSpendToggle" onclick="toggleAdSpend(this)" style="display:flex;align-items:center;gap:4px;">
+        <span style="font-size:12px;font-weight:700;line-height:1;color:#e8c84a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e8c84a;"></span>광고비
+      </button>
       <div style="display:flex;gap:4px;align-items:center;margin-left:auto;">
-        <button class="mkr-btn" id="btnVisitsToggle" onclick="toggleVisits(this)" style="display:flex;align-items:center;gap:4px;">
-          <span style="font-size:12px;font-weight:700;line-height:1;color:#6aadd5;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#6aadd5;"></span>Visits
-        </button>
-        <button class="mkr-btn" id="btnAdSpendToggle" onclick="toggleAdSpend(this)" style="display:flex;align-items:center;gap:4px;">
-          <span style="font-size:12px;font-weight:700;line-height:1;color:#e8c84a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e8c84a;"></span>광고비
-        </button>
         <div class="sales-toggle" style="margin-left:0;">
           <button class="stgl active" data-type="com" onclick="setSalesType(this)">COM</button>
           <button class="stgl" data-type="total" onclick="setSalesType(this)">TTL</button>
@@ -415,7 +418,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 </div>
 
 <div style="padding:0 28px 20px;">
-  <div class="ev-card" style="max-width:600px;">
+  <div class="ev-card">
     <div class="ev-list-hdr">
       <div class="ttl">이벤트 마커 <span style="font-weight:400;color:#bbb;" id="evCount"></span></div>
       <div class="dd-wrap ev-filter-dd" id="ddWrap-evtype">
@@ -809,6 +812,7 @@ window.toggleMarkers = function(btn) {
   const zone = document.getElementById('markerZone');
   if (zone) zone.classList.toggle('hidden', !showMarkers);
   if (showMarkers) positionMarkers();
+  renderChart(); // 점선(annotation) 동기화
 }
 function toggleVisits(btn) {
   showVisits = !showVisits;
@@ -1067,14 +1071,14 @@ const KPI_NOTES = {
 function renderKPI() {
   const data = getFiltered();
   const cur  = sumData(data);
-  let prev = null, cmpLbl = '';
+  let prev = null, cmpLbl = '', prevDates = null;
 
   // WOW: 주 1개 선택 시
   if (selWeeks.size === 1 && selMonths.size === 0) {
     const w = [...selWeeks][0];
     if (w > 1) {
       const pd = getFilteredForPeriod(new Set(), new Set([w-1]));
-      if (pd.length) { prev = sumData(pd); cmpLbl = 'WOW vs W' + (w-1); }
+      if (pd.length) { prev = sumData(pd); prevDates = new Set(pd.map(d => d.date)); cmpLbl = 'WOW vs W' + (w-1); }
     }
   }
   // MOM: 월 1개 선택 시
@@ -1087,7 +1091,7 @@ function renderKPI() {
       if (pd.length) {
         const MN = {'01':'JAN','02':'FEB','03':'MAR','04':'APR','05':'MAY',
                     '06':'JUN','07':'JUL','08':'AUG','09':'SEP','10':'OCT','11':'NOV','12':'DEC'};
-        prev = sumData(pd); cmpLbl = 'MOM vs ' + (MN[pm] || pm);
+        prev = sumData(pd); prevDates = new Set(pd.map(d => d.date)); cmpLbl = 'MOM vs ' + (MN[pm] || pm);
       }
     }
   }
@@ -1105,17 +1109,9 @@ function renderKPI() {
   }
 
 
-  // SALES: 백만원(M) 단위 표기 — 1,000,000원 = 1.0백만
-  // KPI 카드 기준: ₩4.8백만 형식 / .COM·B&M 소계도 동일 단위 적용
+  // SALES: 백만원(M) 단위 표기
   const fmtKRW  = v => '₩' + (Math.abs(v) / 1000000).toFixed(1) + '백만';
-  const comPct  = cur.sales > 0 ? (cur.com / cur.sales * 100).toFixed(1) : '0.0';
-  const bamPct  = cur.sales > 0 ? (cur.bam / cur.sales * 100).toFixed(1) : '0.0';
-  const fmtSubM = v => '₩' + (Math.abs(v) / 1000000).toFixed(1) + '백만';
-  const salesBreakdown = '<div style="font-size:9px;color:#999;margin-top:4px;line-height:1.6;">'
-    + '.COM ' + fmtSubM(cur.com) + ' (' + comPct + '%)&nbsp;&nbsp;/&nbsp;&nbsp;B&M ' + fmtSubM(cur.bam) + ' (' + bamPct + '%)'
-    + '</div>';
-
-
+  const salesVal = (cur.sales / 1000000).toFixed(1); // 숫자만: 1320.9
 
   // ROAS: 필터된 날짜 범위의 광고비 합산
   const filteredDates = new Set(data.map(d => d.date));
@@ -1126,38 +1122,50 @@ function renderKPI() {
   const roasCom   = totalAdSpend > 0 ? cur.com   / totalAdSpend : null;
   const fmtRoas   = v => v === null ? '—' : Math.round(v * 100) + '%';
 
+  // 이전 기간 ROAS 계산 (MoM/WoW delta 표시용)
+  const prevAdSpend = prevDates
+    ? ADS_RAW.filter(r => prevDates.has(r.date)).reduce((s,r) => s + r.spend, 0)
+    : 0;
+  const prevRoasTotal = (prevAdSpend > 0 && prev) ? prev.sales / prevAdSpend : null;
+  const prevRoasCom   = (prevAdSpend > 0 && prev) ? prev.com   / prevAdSpend : null;
+
   const items = [
-    { key:'visits', label:'TOTAL VISITS', bar:'#555555',
+    { key:'visits', label:'TOTAL VISITS', bar:'#555555', wide:false,
       val: cur.visits.toLocaleString(),
       delta: dHtml(cur.visits, prev?.visits, v => Math.abs(Math.round(v)).toLocaleString()) },
-    { key:'sales', label:'TOTAL SALES', bar:'#d97070',
-      val: fmtKRW(cur.sales) + salesBreakdown,
+    { key:'sales', label:'TOTAL Sales (₩) - 단위 : 백만 원', bar:'#d97070', wide:true,
+      val: salesVal,
       delta: dHtml(cur.sales, prev?.sales, v => fmtKRW(v)) },
-    { key:'cvr', label:'CVR (주문/방문)', bar:'#8878d0',
+    { key:'cvr', label:'CVR (주문/방문)', bar:'#8878d0', wide:false,
       val: cur.cvr.toFixed(2) + '%',
       delta: dHtml(cur.cvr, prev?.cvr, v => Math.abs(v).toFixed(2) + '%') },
-    { key:'roas_total', label:'전체 ROAS', bar:'#e8c84a',
+    { key:'roas_total', label:'전체 ROAS', bar:'#e8c84a', wide:false,
       val: fmtRoas(roasTotal),
-      delta: null },
-    { key:'roas_com', label:'닷컴 ROAS', bar:'#e8c84a',
+      delta: (roasTotal !== null && prevRoasTotal !== null)
+        ? dHtml(roasTotal * 100, prevRoasTotal * 100, v => Math.abs(v).toFixed(1) + '%')
+        : null },
+    { key:'roas_com', label:'닷컴 ROAS', bar:'#e8c84a', wide:false,
       val: fmtRoas(roasCom),
-      delta: null },
+      delta: (roasCom !== null && prevRoasCom !== null)
+        ? dHtml(roasCom * 100, prevRoasCom * 100, v => Math.abs(v).toFixed(1) + '%')
+        : null },
   ];
 
   document.getElementById('kpiRow').innerHTML = items.map(k => `
-    <div class="kpi">
+    <div class="kpi"${k.wide ? ' style="grid-column:span 2;"' : ''}>
       <div class="kpi-bar" style="background:${k.bar};"></div>
       <div class="kpi-left">
         <div class="kpi-label">${k.label}</div>
         <div class="kpi-value">${k.val}</div>
         ${k.delta ? `<div class="kpi-delta">${k.delta}</div>` : ''}
       </div>
-      <div class="kpi-note">${KPI_NOTES[k.key]}</div>
+      ${KPI_NOTES[k.key] ? `<button class="kpi-info-btn" tabindex="-1">i</button><div class="kpi-tooltip">${KPI_NOTES[k.key]}</div>` : ''}
     </div>`).join('');
 }
 
 // ─── ANNOTATION: deduplicate + stagger ────────────────────────────────────────
 function buildAnnotations(labels) {
+  if (!showMarkers) return {}; // 마커 숨김 시 점선 전부 제거
   const annotations = {};
 
   // Deduplicate: one entry per (type, start)
@@ -2846,30 +2854,4 @@ function showStgStatus(msg, type) {
 // ── window 전역 등록 (onclick 참조용) ────────────────────────────────────────
 // eval 대신 직접 참조로 등록 (strict mode 호환)
 setTimeout(function() {
-  var fns = ['addEvent','clearChFilter','clearFilter','editEvent','removeEvent',
-             'renderEventList','saveEvent','switchTab','toggleChDD','toggleDD'];
-  fns.forEach(function(fn) {
-    try {
-      if (typeof window[fn] === 'undefined') {
-        // 현재 스코프에서 함수 탐색
-        var found = (fn === 'addEvent') ? addEvent :
-                    (fn === 'clearChFilter') ? clearChFilter :
-                    (fn === 'clearFilter') ? clearFilter :
-                    (fn === 'editEvent') ? editEvent :
-                    (fn === 'removeEvent') ? removeEvent :
-                    (fn === 'renderEventList') ? renderEventList :
-                    (fn === 'saveEvent') ? saveEvent :
-                    (fn === 'switchTab') ? switchTab :
-                    (fn === 'toggleChDD') ? toggleChDD :
-                    (fn === 'toggleDD') ? toggleDD : null;
-        if (found) window[fn] = found;
-      }
-    } catch(e) { console.warn('window reg failed:', fn, e); }
-  });
-  console.log('[Dashboard] window registrations complete');
-}, 0);
-
-</script>
-<div id="mTooltip"></div>
-</body>
-</html>
+  var f
