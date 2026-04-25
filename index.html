@@ -4,62 +4,77 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sephora Dashboard</title>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1a1a;font-size:13px;}
+body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#09090e;color:#cccccc;font-size:13px;}
 
 .hdr{background:#000;color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #c8102e;}
 .logo{font-size:20px;font-weight:800;letter-spacing:5px;}
-.hdr-sub{font-size:9px;color:#888;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
-.hdr-r{font-size:10px;color:#777;}
+.hdr-sub{font-size:9px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+.hdr-r{font-size:10px;color:#555;}
 
 /* KPI */
 .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 28px 0;}
-.kpi{background:#fff;border:1px solid #e0e0e0;padding:14px 16px 14px 18px;display:flex;align-items:stretch;gap:12px;}
+.kpi{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);padding:14px 16px 14px 18px;display:flex;align-items:stretch;gap:12px;border-radius:3px;}
 .kpi-bar{width:4px;border-radius:2px;align-self:stretch;flex-shrink:0;}
 .kpi-left{flex:1;min-width:0;}
-.kpi-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;margin-bottom:5px;}
-.kpi-value{font-size:22px;font-weight:700;color:#1a1a1a;line-height:1;margin-bottom:4px;}
+.kpi-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:5px;}
+.kpi-value{font-size:22px;font-weight:700;color:#ffffff;line-height:1;margin-bottom:4px;}
 .kpi-delta{font-size:10px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
 .up{color:#16a34a;}.dn{color:#c8102e;}.na-c{color:#aaa;}
-.kpi-note{width:110px;font-size:8px;color:#bbb;line-height:1.5;border-left:1px solid #ebebeb;padding-left:10px;align-self:center;flex-shrink:0;}
-.kpi-krw{font-size:12px;font-weight:400;color:#bbb;margin-left:6px;letter-spacing:0;}
+.kpi-note{width:110px;font-size:8px;color:#444;line-height:1.5;border-left:0.5px solid rgba(255,255,255,0.08);padding-left:10px;align-self:center;flex-shrink:0;}
+.kpi-krw{font-size:12px;font-weight:400;color:#555;margin-left:6px;letter-spacing:0;}
 
 /* Filters */
 .filter-row{padding:12px 28px 0;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;}
 .filter-block{display:flex;flex-direction:column;gap:4px;}
 .filter-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#aaa;}
 .dd-wrap{position:relative;user-select:none;}
-.dd-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 12px;background:#fff;border:1px solid #ddd;cursor:pointer;font-size:11px;font-weight:600;min-width:150px;white-space:nowrap;}
-.dd-btn:hover{border-color:#999;}
-.dd-btn .arr{font-size:9px;color:#aaa;transition:transform .15s;}
+.dd-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 12px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);cursor:pointer;font-size:11px;font-weight:600;min-width:150px;white-space:nowrap;color:#888;border-radius:3px;}
+.dd-btn:hover{border-color:rgba(255,255,255,0.25);color:#ccc;}
+.dd-btn .arr{font-size:9px;color:#555;transition:transform .15s;}
 .dd-btn.open .arr{transform:rotate(180deg);}
-.dd-panel{display:none;position:absolute;top:calc(100% + 2px);left:0;background:#fff;border:1px solid #ddd;z-index:300;min-width:100%;box-shadow:0 4px 14px rgba(0,0,0,.12);max-height:260px;overflow-y:auto;}
+.dd-panel{display:none;position:absolute;top:calc(100% + 2px);left:0;background:#14141e;border:0.5px solid rgba(255,255,255,0.12);z-index:300;min-width:100%;box-shadow:0 4px 20px rgba(0,0,0,.6);max-height:260px;overflow-y:auto;}
 .dd-panel.show{display:block;}
 .dd-all{padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;color:#555;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:8px;}
-.dd-all:hover{background:#f8f8f8;}
-.dd-opt{padding:6px 12px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:8px;color:#444;white-space:nowrap;}
+.dd-all:hover{background:rgba(255,255,255,0.06);}
+.dd-opt{padding:6px 12px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:8px;color:#888;white-space:nowrap;}
 #ddPanel-week .dd-opt{font-size:9.5px;padding:5px 10px;}
-.dd-opt:hover{background:#f8f8f8;}
-.dd-opt input[type=checkbox]{accent-color:#1a1a1a;width:12px;height:12px;cursor:pointer;flex-shrink:0;}
+.dd-opt:hover{background:rgba(255,255,255,0.06);}
+.dd-opt input[type=checkbox]{accent-color:#6aadd5;width:12px;height:12px;cursor:pointer;flex-shrink:0;}
 
 /* Chart */
 .chart-sec{padding:12px 28px;}
 .sec-hdr{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
-.sec-hdr::after{content:'';flex:1;height:1px;background:#e0e0e0;}
-.chart-card{background:#fff;border:1px solid #e0e0e0;padding:14px 16px 10px;}
+.sec-hdr::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.07);}
+.chart-card{background:#111114;border:0.5px solid rgba(255,255,255,0.07);padding:14px 16px 10px;}
 .leg-row{display:flex;gap:16px;margin-bottom:10px;flex-wrap:wrap;}
 .leg{display:flex;align-items:center;gap:5px;font-size:11px;color:#555;}
 .leg-dot{width:11px;height:11px;border-radius:2px;flex-shrink:0;}
 .chart-wrap{position:relative;height:320px;}
 .chart-note{font-size:9px;color:#ccc;text-align:right;margin-top:5px;}
 
+/* Marker toggle button */
+.marker-toggle{margin-left:8px;}
+.mkr-btn{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  padding:3px 9px;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#555;cursor:pointer;border-radius:3px;transition:all .15s;}
+.mkr-btn:hover{border-color:#555;color:#555;}
+.mkr-btn.active{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.2);color:#fff;}
+.marker-zone.hidden{height:0!important;min-height:0!important;margin:0!important;overflow:hidden;}
+
+/* Sales type toggle */
+.sales-toggle{display:flex;gap:4px;margin-left:auto;}
+.stgl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  padding:3px 9px;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#555;cursor:pointer;border-radius:3px;transition:all .15s;}
+.stgl:hover{border-color:#c8102e;color:#c8102e;}
+.stgl.active{background:#c8102e;border-color:#c8102e;color:#fff;}
+
 /* Event section */
 .ev-sec{padding:0 28px 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.ev-card{background:#fff;border:1px solid #e0e0e0;padding:16px 18px;}
+.ev-card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);padding:16px 18px;border-radius:3px;}
 .ev-card-ttl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:12px;}
 .type-leg{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
 .tleg{display:flex;align-items:center;gap:3px;font-size:9px;color:#555;}
@@ -69,8 +84,8 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1
 .fel{display:flex;flex-direction:column;gap:3px;}
 .fel label{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#aaa;}
 .req{color:#c8102e;}
-.fel input,.fel select{padding:7px 10px;border:1px solid #ddd;font-size:12px;font-family:inherit;outline:none;border-radius:2px;width:100%;transition:border-color .15s;}
-.fel input:focus,.fel select:focus{border-color:#1a1a1a;}
+.fel input,.fel select{padding:7px 10px;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#ccc;font-size:12px;font-family:inherit;outline:none;border-radius:2px;width:100%;transition:border-color .15s;}
+.fel input:focus,.fel select:focus{border-color:rgba(255,255,255,0.3);}
 .fel input.err,.fel select.err{border-color:#c8102e;}
 .btn-add{width:100%;padding:9px;background:#1a1a1a;color:#fff;border:none;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:2px;}
 .btn-add:hover{background:#333;}
@@ -93,26 +108,26 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1
 .ev-item:last-child{border-bottom:none;}
 .ev-tag{font-size:9px;font-weight:700;padding:2px 6px;border-radius:2px;flex-shrink:0;white-space:nowrap;color:#fff;}
 .ev-info{flex:1;min-width:0;}
-.ev-date{font-size:9px;color:#999;}
-.ev-place{font-size:11px;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.ev-prod{font-size:10px;color:#aaa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ev-date{font-size:9px;color:#555;}
+.ev-place{font-size:11px;color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ev-prod{font-size:10px;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .btn-rm{background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 3px;line-height:1;flex-shrink:0;}
 .btn-rm:hover{color:#c8102e;}
 .empty-msg{font-size:11px;color:#ccc;text-align:center;padding:16px 0;}
 
-.footer{background:#000;color:#444;text-align:center;padding:9px;font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-top:6px;}
+.footer{background:#05050a;color:#333;text-align:center;padding:9px;font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-top:6px;}
 
 /* Tab Navigation */
-.tab-nav{display:flex;gap:0;padding:0 28px;background:#111;border-bottom:1px solid #333;}
-.tab-btn{padding:11px 28px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#666;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
-.tab-btn:hover{color:#aaa;}
+.tab-nav{display:flex;gap:0;padding:0 28px;background:#07070c;border-bottom:0.5px solid rgba(255,255,255,0.08);}
+.tab-btn{padding:11px 28px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.tab-btn:hover{color:#888;}
 .tab-btn.active{color:#fff;border-bottom-color:#c8102e;}
 
 /* Channel KPI */
 .ch-kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 28px 0;}
-.ch-kpi{background:#fff;border:1px solid #e0e0e0;padding:16px 20px;}
-.ch-kpi-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;margin-bottom:6px;}
-.ch-kpi-val{font-size:24px;font-weight:700;color:#1a1a1a;line-height:1;margin-bottom:5px;}
+.ch-kpi{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);padding:16px 20px;border-radius:3px;}
+.ch-kpi-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:6px;}
+.ch-kpi-val{font-size:24px;font-weight:700;color:#ffffff;line-height:1;margin-bottom:5px;}
 .ch-kpi-wow{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;}
 .ch-kpi-sub{font-size:9px;color:#bbb;margin-top:4px;}
 
@@ -120,9 +135,9 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1
 .ch-tbl{width:100%;border-collapse:collapse;font-size:10px;}
 .ch-tbl th{font-size:8px;font-weight:700;letter-spacing:1px;color:#fff;text-transform:uppercase;padding:6px 8px;text-align:right;white-space:nowrap;}
 .ch-tbl th:first-child{text-align:left;min-width:140px;}
-.ch-tbl td{padding:5px 8px;border-bottom:1px solid #f4f4f4;text-align:right;color:#555;font-variant-numeric:tabular-nums;}
-.ch-tbl td:first-child{text-align:left;font-weight:600;color:#333;}
-.ch-tbl tr:last-child td{font-weight:700;background:#f8f9fc;border-top:2px solid #ddd;}
+.ch-tbl td{padding:5px 8px;border-bottom:0.5px solid rgba(255,255,255,0.05);text-align:right;color:#888;font-variant-numeric:tabular-nums;}
+.ch-tbl td:first-child{text-align:left;font-weight:600;color:#ccc;}
+.ch-tbl tr:last-child td{font-weight:700;background:rgba(255,255,255,0.05);border-top:1px solid rgba(255,255,255,0.12);}
 .ch-tbl .wow-up{color:#16a34a;font-weight:700;}
 .ch-tbl .wow-dn{color:#c8102e;font-weight:700;}
 
@@ -130,16 +145,16 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1
 .marker-zone{position:relative;width:100%;overflow:visible;min-height:24px;margin-bottom:4px;}
 .m-lbl{position:absolute;transform:translateX(-50%);font-size:7px;font-weight:700;color:#fff;padding:1px 4px;border-radius:2px;white-space:nowrap;line-height:1.4;cursor:default;z-index:10;pointer-events:auto;}
 .m-lbl-range{position:absolute;font-size:7px;font-weight:700;color:#fff;padding:1px 4px;border-radius:2px;white-space:nowrap;line-height:1.4;cursor:default;z-index:10;text-align:center;overflow:hidden;text-overflow:ellipsis;pointer-events:auto;}
-.m-tick{position:absolute;width:1px;background:rgba(0,0,0,0.15);top:0;bottom:0;}
+.m-tick{position:absolute;width:1px;background:rgba(255,255,255,0.06);top:0;bottom:0;}
 /* Hover tooltip */
-#mTooltip{display:none;position:fixed;background:#111;color:#e8e8e8;padding:7px 10px;border-radius:3px;font-size:9px;line-height:1.7;z-index:9999;pointer-events:none;max-width:240px;box-shadow:0 3px 12px rgba(0,0,0,0.35);white-space:pre-wrap;border-left:3px solid #888;}
+#mTooltip{display:none;position:fixed;background:#111;color:#e8e8e8;padding:7px 10px;border-radius:3px;font-size:9px;line-height:1.7;z-index:9999;pointer-events:none;max-width:240px;box-shadow:0 3px 12px rgba(0,0,0,0.35);white-space:pre-wrap;border-left:3px solid rgba(255,255,255,0.2);}
 
 /* Analysis section */
 .analysis-sec{padding:0 28px 20px;}
 .analysis-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.analysis-card{background:#fff;border:1px solid #e0e0e0;padding:16px 18px;}
+.analysis-card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);padding:16px 18px;border-radius:3px;}
 .analysis-ttl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-.analysis-ttl::after{content:'';flex:1;height:1px;background:#f0f0f0;}
+.analysis-ttl::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.06);}
 .analysis-sub{font-size:8px;color:#ccc;margin-bottom:10px;}
 /* Type summary table */
 .sum-tbl{width:100%;border-collapse:collapse;font-size:10px;}
@@ -157,58 +172,58 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1
 
 /* Insight text */
 .insight-box{margin-top:10px;border-top:1px solid #f0f0f0;padding-top:10px;}
-.insight-item{font-size:9px;color:#666;line-height:1.7;padding:2px 0 2px 10px;border-left:3px solid #eee;margin-bottom:4px;}
+.insight-item{font-size:9px;color:#666;line-height:1.7;padding:2px 0 2px 10px;border-left:2px solid rgba(255,255,255,0.08);margin-bottom:4px;}
 .insight-item.good{border-left-color:#16a34a;}
 .insight-item.warn{border-left-color:#c8102e;}
-.insight-item.info{border-left-color:#1e6fbf;}
+.insight-item.info{border-left-color:#4a90c8;}
 /* Event edit form */
-.btn-edit{background:none;border:1px solid #ddd;color:#888;cursor:pointer;font-size:10px;padding:1px 6px;border-radius:2px;flex-shrink:0;line-height:1.5;}
-.btn-edit:hover{border-color:#555;color:#333;}
+.btn-edit{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.08);color:#666;cursor:pointer;font-size:10px;padding:1px 6px;border-radius:2px;flex-shrink:0;line-height:1.5;}
+.btn-edit:hover{border-color:rgba(255,255,255,0.2);color:#ccc;}
 .ev-edit-form{flex:1;padding:4px 0;}
 .ev-edit-row{display:flex;gap:5px;margin-bottom:5px;align-items:center;}
-.ev-edit-field{padding:4px 7px;border:1px solid #ddd;font-size:11px;font-family:inherit;outline:none;border-radius:2px;flex:1;}
-.ev-edit-field:focus{border-color:#1a1a1a;}
+.ev-edit-field{padding:4px 7px;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#ccc;font-size:11px;font-family:inherit;outline:none;border-radius:2px;flex:1;}
+.ev-edit-field:focus{border-color:rgba(255,255,255,0.3);}
 .ev-edit-field.short{flex:0 0 auto;width:130px;}
 .ev-edit-btns{display:flex;gap:5px;margin-top:4px;}
 .btn-save{padding:5px 14px;background:#1a1a1a;color:#fff;border:none;font-size:10px;font-weight:700;cursor:pointer;border-radius:2px;}
 .btn-save:hover{background:#333;}
-.btn-cancel{padding:5px 10px;background:#f5f5f5;color:#666;border:1px solid #ddd;font-size:10px;cursor:pointer;border-radius:2px;}
-.btn-cancel:hover{background:#eee;}
+.btn-cancel{padding:5px 10px;background:rgba(255,255,255,0.05);color:#888;border:0.5px solid rgba(255,255,255,0.1);font-size:10px;cursor:pointer;border-radius:2px;}
+.btn-cancel:hover{background:rgba(255,255,255,0.08);}
 
-/* ═══ LOGIN OVERLAY ═══ */
-#loginOverlay{position:fixed;inset:0;background:#000;z-index:10000;display:flex;align-items:center;justify-content:center;}
-.login-box{background:#111;border:1px solid #222;padding:52px 48px;text-align:center;width:380px;}
-.login-logo-l{font-size:26px;font-weight:800;letter-spacing:6px;color:#fff;margin-bottom:4px;}
-.login-sub-l{font-size:9px;color:#555;letter-spacing:3px;text-transform:uppercase;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid #1e1e1e;}
-.login-desc-l{font-size:11px;color:#777;margin-bottom:24px;line-height:1.8;}
-.login-domain{font-size:9px;color:#444;margin-top:14px;}
-.login-err{font-size:11px;color:#c8102e;margin-top:12px;min-height:16px;}
-#g_id_signin{display:flex;justify-content:center;}
+/* ── LOGIN OVERLAY ── */
+#loginOverlay{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;z-index:9999;}
+.login-box{text-align:center;padding:48px 40px;max-width:360px;width:100%;}
+.login-logo-l{font-size:28px;font-weight:900;letter-spacing:6px;color:#fff;margin-bottom:6px;}
+.login-sub-l{font-size:10px;color:#777;letter-spacing:3px;text-transform:uppercase;margin-bottom:28px;}
+.login-desc-l{font-size:12px;color:#aaa;margin-bottom:32px;line-height:1.7;}
+.login-err{font-size:11px;color:#ef4444;margin-top:12px;min-height:18px;}
+.login-domain{font-size:10px;color:#555;margin-top:20px;letter-spacing:1px;}
 
-/* ═══ SETTINGS TAB ═══ */
-.stg-sec{padding:24px 28px;max-width:720px;}
-.stg-card{background:#fff;border:1px solid #e0e0e0;padding:24px 28px;margin-bottom:16px;}
-.stg-ttl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:16px;}
-.stg-row{margin-bottom:18px;}
-.stg-lbl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:6px;display:block;}
-.stg-hint{font-size:9px;color:#bbb;margin-bottom:7px;line-height:1.6;}
-.stg-inp{width:100%;padding:8px 12px;border:1px solid #ddd;font-size:12px;font-family:inherit;outline:none;border-radius:2px;transition:border-color .15s;}
-.stg-inp:focus{border-color:#1a1a1a;}
-.col-guide{background:#f8f8f8;border:1px solid #eee;padding:8px 12px;font-size:9px;color:#aaa;font-family:monospace;line-height:1.9;border-radius:2px;margin-top:6px;}
+
+/* ── SETTINGS TAB ── */
+.tab-content{max-width:760px;margin:0 auto;padding:32px 24px;}
+.stg-card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:4px;padding:28px 32px;margin-bottom:24px;}
+.stg-ttl{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:20px;padding-bottom:12px;border-bottom:0.5px solid rgba(255,255,255,0.07);}
+.stg-row{margin-bottom:20px;}
+.stg-lbl{font-size:11px;font-weight:700;color:#aaa;display:block;margin-bottom:6px;}
+.stg-hint{font-size:10px;color:#aaa;margin-bottom:6px;}
+.stg-inp{width:100%;padding:8px 12px;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#ccc;font-size:12px;font-family:inherit;outline:none;border-radius:2px;box-sizing:border-box;}
+.stg-inp:focus{border-color:rgba(255,255,255,0.3);}
 .btn-stg{padding:9px 24px;background:#1a1a1a;color:#fff;border:none;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:2px;}
 .btn-stg:hover{background:#333;}
-.stg-status{font-size:10px;margin-top:12px;padding:8px 12px;border-radius:2px;display:none;line-height:1.6;}
-.stg-status.ok{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;}
-.stg-status.err{background:#fef2f2;color:#c8102e;border:1px solid #fecaca;}
-.stg-status.loading{background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;}
+.stg-status{font-size:10px;margin-top:12px;padding:8px 12px;border-radius:2px;display:none;line-height:1.6;white-space:pre-line;}
+.stg-status.ok{background:rgba(22,163,74,0.12);color:#4ade80;border:0.5px solid rgba(74,222,128,0.2);}
+.stg-status.err{background:rgba(200,16,46,0.12);color:#f87171;border:0.5px solid rgba(248,113,113,0.2);}
+.stg-status.loading{background:rgba(3,105,161,0.12);color:#38bdf8;border:0.5px solid rgba(56,189,248,0.2);}
+.stg-note{font-size:10px;color:#666;background:rgba(255,255,255,0.02);border:0.5px solid rgba(255,255,255,0.07);padding:12px 16px;border-radius:2px;line-height:1.8;}
+.stg-note strong{color:#aaa;}
 .user-row{display:flex;align-items:center;gap:12px;}
-.user-av{width:32px;height:32px;border-radius:50%;border:1px solid #333;display:none;}
-.user-nm{font-size:12px;color:#555;font-weight:600;}
-.user-em{font-size:10px;color:#bbb;}
+.user-av{width:32px;height:32px;border-radius:50%;border:0.5px solid rgba(255,255,255,0.1);display:none;}
+.user-nm{font-size:13px;font-weight:600;color:#ccc;}
+.user-em{font-size:10px;color:#aaa;}
 .btn-signout{margin-left:auto;padding:5px 14px;background:transparent;color:#666;border:1px solid #ddd;font-size:10px;cursor:pointer;border-radius:2px;}
 .btn-signout:hover{border-color:#999;color:#333;}
-.stg-note{font-size:10px;color:#bbb;background:#fafafa;border:1px solid #eee;padding:12px 16px;border-radius:2px;line-height:1.8;}
-.stg-note strong{color:#888;}
+
 </style>
 </head>
 <body>
@@ -219,21 +234,43 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1
     <div class="login-logo-l">SEPHORA</div>
     <div class="login-sub-l">Commerce Dashboard · Internal</div>
     <div class="login-desc-l">와이어트 Google 계정으로 로그인하세요.<br><strong style="color:#999;">@wyattcorp.com</strong> 계정만 접근 가능합니다.</div>
-    <div id="g_id_signin"></div>
+    <button id="btnGoogleLogin" onclick="startGoogleLogin()" style="
+      display:flex;align-items:center;gap:12px;padding:11px 24px;width:280px;
+      background:#fff;color:#1f1f1f;border:1px solid #dadce0;border-radius:4px;
+      font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;
+      justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.12);
+      transition:box-shadow .2s;margin:0 auto;" 
+      onmouseover="this.style.boxShadow='0 2px 6px rgba(0,0,0,.2)'"
+      onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.12)'">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.34-8.16 2.34-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Google 계정으로 로그인
+    </button>
     <div class="login-err" id="loginErr"></div>
     <div class="login-domain">🔒 @wyattcorp.com 계정 전용</div>
   </div>
 </div>
 
+
 <div class="hdr">
   <div><div class="logo">SEPHORA</div><div class="hdr-sub">Sales & Traffic Dashboard · [UN_US]</div></div>
-  <div class="hdr-r">DATA: JAN 20 – APR 18, 2026<br>관리자 : 데이터마케팅팀 이윤희</div>
+  <div class="hdr-r" style="display:flex;align-items:center;gap:16px;">
+    <div style="text-align:right;">
+      <div id="lastUpdatedLabel" style="font-size:9px;color:#888;">—</div>
+      <div style="font-size:10px;color:#777;">관리자 : 데이터마케팅팀 이윤희</div>
+    </div>
+    <button id="btnRefresh" onclick="manualRefresh()" style="
+      padding:7px 16px;background:#1a1a1a;color:#fff;border:none;
+      font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+      cursor:pointer;border-radius:2px;white-space:nowrap;display:none;
+    ">↻ RAW 업데이트</button>
+  </div>
 </div>
 
 <!-- TAB NAV -->
 <div class="tab-nav">
   <div class="tab-btn active" data-tab="main" onclick="switchTab('main')">Commerce Overview</div>
   <div class="tab-btn" data-tab="channel" onclick="switchTab('channel')">Channel Analysis</div>
+  <div class="tab-btn" data-tab="ads" onclick="switchTab('ads')">Performance Ads</div>
   <div class="tab-btn" data-tab="settings" onclick="switchTab('settings')">⚙ Settings</div>
 </div>
 
@@ -288,10 +325,18 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1
 <div class="chart-sec">
   <div class="sec-hdr">일자별 Visits · Sales · CVR</div>
   <div class="chart-card">
-    <div class="leg-row">
-      <div class="leg"><div class="leg-dot" style="background:rgba(80,80,80,0.35);border:1.5px solid rgba(80,80,80,0.6);"></div>Visits</div>
-      <div class="leg"><div class="leg-dot" style="background:#c8102e;"></div>Sales ($)</div>
-      <div class="leg"><div class="leg-dot" style="background:#1e6fbf;border-radius:50%;"></div>CVR (%)</div>
+    <div class="leg-row" style="align-items:center;">
+      <div class="leg"><div class="leg-dot" style="background:rgba(106,173,213,0.3);border:1.5px solid #6aadd5;"></div>Visits</div>
+      <div class="leg"><div class="leg-dot" style="background:#d97070;"></div><span id="salesLegLabel">Sales (.COM)</span></div>
+      <div class="leg"><div class="leg-dot" style="background:#8878d0;border-radius:50%;"></div>CVR (%)</div>
+      <div class="sales-toggle">
+        <button class="stgl active" data-type="com" onclick="setSalesType(this)">COM</button>
+        <button class="stgl" data-type="total" onclick="setSalesType(this)">TTL</button>
+        <button class="stgl" data-type="bam" onclick="setSalesType(this)">B&M</button>
+      </div>
+      <div class="marker-toggle">
+        <button class="mkr-btn active" id="btnMarkerToggle" onclick="toggleMarkers(this)">이벤트 마커 표시</button>
+      </div>
     </div>
     <div id="markerZone" class="marker-zone"></div>
     <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
@@ -426,10 +471,81 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1
 
 </div><!-- /tabChannel -->
 
+
+
+<!-- ═══════════ PERFORMANCE ADS TAB ═══════════ -->
+<div id="tabAds" style="display:none;">
+
+<!-- 필터 바 -->
+<div class="filter-row" style="padding:14px 28px 0;gap:16px;flex-wrap:wrap;align-items:center;">
+
+  <!-- 매출 타입 -->
+  <div class="filter-block">
+    <div class="filter-lbl">매출 타입</div>
+    <div style="display:flex;gap:4px;">
+      <button class="stgl active" data-ads-sales="com"   onclick="setAdsSales(this)">.COM</button>
+      <button class="stgl"        data-ads-sales="total" onclick="setAdsSales(this)">TTL</button>
+      <button class="stgl"        data-ads-sales="bam"   onclick="setAdsSales(this)">B&M</button>
+    </div>
+  </div>
+
+  <!-- 퍼포먼스 지표 -->
+  <div class="filter-block">
+    <div class="filter-lbl">퍼포먼스 지표</div>
+    <div style="display:flex;gap:4px;">
+      <button class="stgl active" data-ads-metric="spend"       onclick="setAdsMetric(this)">광고비(net)</button>
+      <button class="stgl"        data-ads-metric="impressions" onclick="setAdsMetric(this)">노출수</button>
+      <button class="stgl"        data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭수</button>
+    </div>
+  </div>
+
+  <!-- 광고 매체 -->
+  <div class="filter-block">
+    <div class="filter-lbl">광고 매체</div>
+    <div style="display:flex;gap:4px;" id="adsMediaBtns">
+      <button class="stgl active" data-ads-media="meta"   onclick="toggleAdsMedia(this)">Meta</button>
+      <button class="stgl active" data-ads-media="tiktok" onclick="toggleAdsMedia(this)">TikTok</button>
+      <button class="stgl active" data-ads-media="gsa"    onclick="toggleAdsMedia(this)">GSA</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Chart 1: 전체 퍼포먼스 -->
+<div class="chart-sec">
+  <div class="sec-hdr">퍼포먼스 / 세포라 매출 / 세포라 유입 (주간)</div>
+  <div class="chart-card">
+    <div class="leg-row" id="adsChart1Leg" style="flex-wrap:wrap;gap:10px;margin-bottom:10px;"></div>
+    <div class="chart-wrap" style="height:300px;"><canvas id="adsChart1"></canvas></div>
+    <div class="chart-note">* 좌축: 퍼포먼스 지표, 우축(빨강): 세포라 매출(₩), 우축(파랑): 세포라 유입</div>
+  </div>
+</div>
+
+<!-- Chart 2: Meta 캠페인 목표별 -->
+<div class="chart-sec">
+  <div class="sec-hdr">Meta — 캠페인 목표별 퍼포먼스 / 세포라 매출 / 세포라 유입</div>
+  <div class="chart-card">
+    <div class="leg-row" id="adsChart2Leg" style="flex-wrap:wrap;gap:10px;margin-bottom:10px;"></div>
+    <div class="chart-wrap" style="height:300px;"><canvas id="adsChart2"></canvas></div>
+  </div>
+</div>
+
+<!-- Chart 3: TikTok 캠페인 목표별 -->
+<div class="chart-sec" style="padding-bottom:28px;">
+  <div class="sec-hdr">TikTok — 캠페인 목표별 퍼포먼스 / 세포라 매출 / 세포라 유입</div>
+  <div class="chart-card">
+    <div class="leg-row" id="adsChart3Leg" style="flex-wrap:wrap;gap:10px;margin-bottom:10px;"></div>
+    <div class="chart-wrap" style="height:300px;"><canvas id="adsChart3"></canvas></div>
+  </div>
+</div>
+
+</div><!-- /tabAds -->
+
 <!-- ═══════════ SETTINGS TAB ═══════════ -->
 <div id="tabSettings" style="display:none;">
-<div class="stg-sec">
+<div class="tab-content">
 
+  <!-- 계정 카드 -->
   <div class="stg-card">
     <div class="stg-ttl">Account</div>
     <div class="user-row">
@@ -442,29 +558,20 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1
     </div>
   </div>
 
+  <!-- Data Source 카드 -->
   <div class="stg-card">
-    <div class="stg-ttl">Data Source — Google Sheets</div>
+    <div class="stg-ttl">Data Source — Google Apps Script</div>
     <div class="stg-note" style="margin-bottom:20px;">
-      <strong>구글 스프레드시트 연결 방법</strong><br>
-      시트에서 <strong>파일 → 공유 → 웹에 게시</strong> →<br>
-      게시할 시트 선택 → <strong>쉼표로 구분된 값(.csv)</strong> → 게시 → URL 복사
+      <strong>연결 구조</strong><br>
+      Google Sheets → Apps Script Web App → 이 대시보드<br>
+      <span style="color:#16a34a;font-size:10px;">✅ CSV URL 브라우저 미노출 · @wyattcorp.com 서버 검증 · 30분 자동 갱신</span>
     </div>
-
     <div class="stg-row">
-      <label class="stg-lbl">📊 SKU Daily Data URL <span style="color:#c8102e;">*</span></label>
-      <div class="stg-hint">일자별 SKU 방문수/매출/주문 데이터 → Commerce Overview 탭</div>
-      <input type="text" class="stg-inp" id="skuUrl" placeholder="https://docs.google.com/spreadsheets/d/…/pub?output=csv&gid=…">
-      <div class="col-guide">필수 컬럼 순서: date, sku, visits, sales, orders, month, week<br>예) 2026-01-20 | 2965499 | 250 | 0.0 | 0.0 | 01 | 1</div>
+      <label class="stg-lbl">🔗 Apps Script Web App URL <span style="color:#c8102e;">*</span></label>
+      <div class="stg-hint">Google Apps Script 배포 후 발급되는 웹 앱 URL을 입력하세요.</div>
+      <input type="text" class="stg-inp" id="appsScriptUrl" placeholder="https://script.google.com/macros/s/…/exec">
     </div>
-
-    <div class="stg-row">
-      <label class="stg-lbl">📡 Channel Weekly Data URL <span style="color:#c8102e;">*</span></label>
-      <div class="stg-hint">채널별 주간 방문수/매출/CVR 데이터 → Channel Analysis 탭</div>
-      <input type="text" class="stg-inp" id="chUrl" placeholder="https://docs.google.com/spreadsheets/d/…/pub?output=csv&gid=…">
-      <div class="col-guide">필수 컬럼 순서: week, range, channel, visits, sales, cvr<br>예) W1 | 2/1~2/7 | Organic Social | 3082 | 53.0 | 0.0003</div>
-    </div>
-
-    <button class="btn-stg" onclick="saveAndLoad()">💾 저장 및 데이터 로드</button>
+    <button class="btn-stg" onclick="saveAndLoad()">💾 저장 및 연결</button>
     <div id="stgStatus" class="stg-status"></div>
   </div>
 
@@ -474,6 +581,7 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1
 <div class="footer">SEPHORA · [UN_US] COMMERCE DASHBOARD · 2026</div>
 
 <script>
+
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 const SKU_META = {
   2965499:{name:'Damage Repair & Shine Leave in Conditioner',desc:'Damage LIC 150ml',cat:'LIC',catDetail:'Damage'},
@@ -497,7 +605,11 @@ const SKU_META = {
 };
 
 let RAW_SKU = [];
-let DAYS = [];
+let RAW_SALES = [];
+let SALES_BY_DATE = {};
+
+
+
 // ─── EVENT TYPES ──────────────────────────────────────────────────────────────
 const TYPES = {
   'Email':              '#e88080',   // lighter red
@@ -571,6 +683,52 @@ let EVENTS = [
 const USD_TO_KRW = 1500; // 환율 기준: 1 USD = 1,500 KRW (수동 업데이트)
 
 let selMonths = new Set(), selWeeks = new Set(), selCats = new Set(), selSkus = new Set(), selEvType = new Set();
+
+// ─── ADS STATE ────────────────────────────────────────────────────────────────
+const ADS_RAW = [];
+let selAdsSales  = 'com';    // com | total | bam
+let selAdsMetric = 'spend';  // spend | impressions | clicks
+let selAdsMedia  = new Set(['meta','tiktok','gsa']);
+let adsChart1 = null, adsChart2 = null, adsChart3 = null;
+
+window.setAdsSales = function(btn) {
+  selAdsSales = btn.dataset.adsSales;
+  document.querySelectorAll('[data-ads-sales]').forEach(b => b.classList.toggle('active', b===btn));
+  refreshAds();
+};
+window.setAdsMetric = function(btn) {
+  selAdsMetric = btn.dataset.adsMetric;
+  document.querySelectorAll('[data-ads-metric]').forEach(b => b.classList.toggle('active', b===btn));
+  refreshAds();
+};
+window.toggleAdsMedia = function(btn) {
+  const m = btn.dataset.adsMedia;
+  if (selAdsMedia.has(m)) {
+    if (selAdsMedia.size > 1) { selAdsMedia.delete(m); btn.classList.remove('active'); }
+  } else { selAdsMedia.add(m); btn.classList.add('active'); }
+  refreshAds();
+};
+let selSalesType = 'com'; // 'com' | 'total' | 'bam'
+let showMarkers = true;
+
+window.toggleMarkers = function(btn) {
+  showMarkers = !showMarkers;
+  btn.classList.toggle('active', showMarkers);
+  btn.textContent = showMarkers ? '이벤트 마커 표시' : '이벤트 마커 숨김';
+  const zone = document.getElementById('markerZone');
+  if (zone) zone.classList.toggle('hidden', !showMarkers);
+  if (showMarkers) positionMarkers();
+};
+
+window.setSalesType = function(btn) {
+  selSalesType = btn.dataset.type;
+  document.querySelectorAll('.stgl').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const labels = {com:'Sales (.COM)', total:'Sales (TTL)', bam:'Sales (B&M)'};
+  const el = document.getElementById('salesLegLabel');
+  if (el) el.textContent = labels[selSalesType] || 'Sales';
+  renderChart();
+};
 let chart = null;
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
@@ -689,23 +847,23 @@ function rebuildSkuOptions() {
 }
 
 function buildWeekOptions() {
-  const weeks = [...new Set(DAYS.map(d => d.week))].sort((a,b) => a-b);
+  const weeks = [...new Set(RAW_SKU.map(d => d.week))].sort((a,b) => a-b);
   const wInfo = {};
   // Calculate theoretical Sun-Sat range for each week (regardless of data availability)
-  DAYS.forEach(d => {
+  RAW_SKU.forEach(d => {
     if (wInfo[d.week]) return; // only need first occurrence per week
     const dt  = new Date(d.date);
     const dow = dt.getDay(); // 0=Sun, 1=Mon, ...
     const sun = new Date(dt); sun.setDate(dt.getDate() - dow);       // this week's Sunday
     const sat = new Date(sun); sat.setDate(sun.getDate() + 6);        // this week's Saturday
-    const fmt = x => `${String(x.getMonth()+1).padStart(2,'0')}/${String(x.getDate()).padStart(2,'0')}`;
+    const fmt = x => `${x.getMonth()+1}/${x.getDate()}`; // M/D 형식 (0 없음)
     wInfo[d.week] = {ws: fmt(sun), we: fmt(sat)};
   });
   const panel = document.getElementById('ddPanel-week');
   weeks.forEach(w => {
     const lbl = document.createElement('label');
     lbl.className = 'dd-opt';
-    lbl.innerHTML = `<input type="checkbox" data-group="week" value="${w}"> W${w} (${wInfo[w].ws}~${wInfo[w].we})`;
+    lbl.innerHTML = `<input type="checkbox" data-group="week" value="${w}"> ${wInfo[w].ws}-${wInfo[w].we}`;
     panel.appendChild(lbl);
     lbl.querySelector('input').addEventListener('change', function() {
       const v = parseInt(this.value);
@@ -745,18 +903,17 @@ function getFiltered() {
     const wOk = selWeeks.size === 0  || selWeeks.has(d.week);
     return mOk && wOk && skuPassesCatSku(d.sku);
   });
-  // 2. Aggregate by date
+  // 2. Aggregate by date (sales from SALES_BY_DATE lookup)
   const byDate = {};
   skuFiltered.forEach(d => {
-    if (!byDate[d.date]) byDate[d.date] = {date:d.date, month:d.month, week:d.week, visits:0, sales:0, orders:0};
+    if (!byDate[d.date]) byDate[d.date] = {date:d.date, month:d.month, week:d.week, visits:0, orders:0};
     byDate[d.date].visits += d.visits;
-    byDate[d.date].sales  += d.sales;
     byDate[d.date].orders += d.orders;
   });
-  // 3. Compute CVR, sort by date
+  // 3. Inject sales from SALES_BY_DATE, compute CVR, sort by date
   return Object.values(byDate)
     .sort((a,b) => a.date.localeCompare(b.date))
-    .map(d => ({...d, cvr: d.visits > 0 ? d.orders/d.visits*100 : 0}));
+    .map(d => ({...d, sales: (SALES_BY_DATE[d.date] || {}).total || 0, cvr: d.visits > 0 ? d.orders/d.visits*100 : 0}));
 }
 
 // Get aggregated data for a specific time slice (for MOM/WOW prev period)
@@ -770,60 +927,90 @@ function getFilteredForPeriod(monthSet, weekSet) {
   skuFiltered.forEach(d => {
     if (!byDate[d.date]) byDate[d.date] = {visits:0, sales:0, orders:0};
     byDate[d.date].visits += d.visits;
-    byDate[d.date].sales  += d.sales;
     byDate[d.date].orders += d.orders;
   });
-  return Object.values(byDate).map(d => ({...d, cvr: d.visits > 0 ? d.orders/d.visits*100 : 0}));
+  return Object.values(byDate).map(d => ({...d, sales: (SALES_BY_DATE[d.date] || {}).total || 0, cvr: d.visits > 0 ? d.orders/d.visits*100 : 0}));
 }
 
 function sumData(arr) {
   const v = arr.reduce((a,b) => a+b.visits, 0);
   const s = arr.reduce((a,b) => a+b.sales, 0);
   const o = arr.reduce((a,b) => a+b.orders, 0);
-  return { visits:v, sales:s, orders:o, cvr: v > 0 ? o/v*100 : 0 };
+  const com = arr.reduce((a,b) => a + ((SALES_BY_DATE[b.date]||{}).com||0), 0);
+  const bam = arr.reduce((a,b) => a + ((SALES_BY_DATE[b.date]||{}).bam||0), 0);
+  return { visits:v, sales:s, orders:o, com, bam, cvr: v > 0 ? o/v*100 : 0 };
 }
 
 // ─── KPI ──────────────────────────────────────────────────────────────────────
 const KPI_NOTES = {
   visits: '세포라 웹사이트/앱에서 특정 제품(SKU)과 상호작용한 세션. (제품 페이지 또는 퀵룩 보기, 장바구니에 담기, 상품이 포함된 장바구니 보기, 주문 확인, 좋아하는 목록 보기)',
-  sales:  '전자상거래, 매장 픽업(BOPIS), 당일 배송을 포함하여 주문 처리가 완료되었거나 배송 준비가 완료된 매출. 환율 1 USD = 1,500 KRW 기준',
+  sales:  'Sephora 실매출 기준 (환율 1,500원)',
   cvr:    '주문 수량 / Visits TY × 100'
 };
 
 function renderKPI() {
   const data = getFiltered();
-  const cur = sumData(data);
+  const cur  = sumData(data);
   let prev = null, cmpLbl = '';
+
+  // WOW: 주 1개 선택 시
   if (selWeeks.size === 1 && selMonths.size === 0) {
     const w = [...selWeeks][0];
     if (w > 1) {
       const pd = getFilteredForPeriod(new Set(), new Set([w-1]));
-      if (pd.length) { prev = sumData(pd); cmpLbl = `WOW vs W${w-1}`; }
+      if (pd.length) { prev = sumData(pd); cmpLbl = 'WOW vs W' + (w-1); }
     }
-  } else if (selMonths.size === 1 && selWeeks.size === 0) {
-    const m = [...selMonths][0], pm = String(parseInt(m)-1).padStart(2,'0');
-    const pd = getFilteredForPeriod(new Set([pm]), new Set());
-    if (pd.length) { const mn={'01':'JAN','02':'FEB','03':'MAR','04':'APR'}; prev = sumData(pd); cmpLbl = `MOM vs ${mn[pm]||pm}`; }
+  }
+  // MOM: 월 1개 선택 시
+  else if (selMonths.size === 1 && selWeeks.size === 0) {
+    const m = [...selMonths][0];
+    const prevM = parseInt(m) - 1;
+    if (prevM > 0) {
+      const pm = String(prevM).padStart(2, '0');
+      const pd = getFilteredForPeriod(new Set([pm]), new Set());
+      if (pd.length) {
+        const MN = {'01':'JAN','02':'FEB','03':'MAR','04':'APR','05':'MAY',
+                    '06':'JUN','07':'JUL','08':'AUG','09':'SEP','10':'OCT','11':'NOV','12':'DEC'};
+        prev = sumData(pd); cmpLbl = 'MOM vs ' + (MN[pm] || pm);
+      }
+    }
   }
 
-  function dHtml(cur, prev, fmt) {
-    if (!prev) return '';
-    const d = cur - prev, pct = prev !== 0 ? (d/prev*100).toFixed(1) : null;
+  function dHtml(curVal, prevVal, fmt) {
+    if (prevVal == null || prevVal === undefined) return '';
+    const d   = curVal - prevVal;
+    const pct = prevVal !== 0 ? (d / prevVal * 100).toFixed(1) : null;
     const cls = d >= 0 ? 'up' : 'dn', arr = d >= 0 ? '▲' : '▼';
-    return `<span class="${cls}">${arr} ${d>=0?'+':''}${fmt(d)}</span><span style="color:#ddd;margin:0 3px;">|</span><span class="${cls}">${d>=0?'+':''}${pct}%</span><span class="na-c" style="margin-left:4px;">${cmpLbl}</span>`;
+    const pctPart = pct ? '<span class="' + cls + '">' + (d>=0?'+':'') + pct + '%</span>' : '';
+    return '<span class="' + cls + '">' + arr + ' ' + (d>=0?'+':'') + fmt(d) + '</span>'
+         + '<span style="color:#ddd;margin:0 3px;">|</span>'
+         + pctPart
+         + '<span class="na-c" style="margin-left:4px;">' + cmpLbl + '</span>';
   }
+
+
+  // SALES: 백만원(M) 단위 표기 — 1,000,000원 = 1.0백만
+  // KPI 카드 기준: ₩4.8백만 형식 / .COM·B&M 소계도 동일 단위 적용
+  const fmtKRW  = v => '₩' + (Math.abs(v) / 1000000).toFixed(1) + '백만';
+  const comPct  = cur.sales > 0 ? (cur.com / cur.sales * 100).toFixed(1) : '0.0';
+  const bamPct  = cur.sales > 0 ? (cur.bam / cur.sales * 100).toFixed(1) : '0.0';
+  const fmtSubM = v => '₩' + (Math.abs(v) / 1000000).toFixed(1) + '백만';
+  const salesBreakdown = '<div style="font-size:9px;color:#999;margin-top:4px;line-height:1.6;">'
+    + '.COM ' + fmtSubM(cur.com) + ' (' + comPct + '%)&nbsp;&nbsp;/&nbsp;&nbsp;B&M ' + fmtSubM(cur.bam) + ' (' + bamPct + '%)'
+    + '</div>';
+
+
 
   const items = [
     { key:'visits', label:'TOTAL VISITS', bar:'#555555',
       val: cur.visits.toLocaleString(),
-      delta: dHtml(cur.visits, prev?.visits, v => Math.abs(v).toLocaleString()) },
-    { key:'sales', label:'TOTAL SALES ($)', bar:'#c8102e',
-      val: '$' + cur.sales.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})
-            + `<span class="kpi-krw"> ≈ ₩${Math.round(cur.sales * USD_TO_KRW).toLocaleString()}</span>`,
-      delta: dHtml(cur.sales, prev?.sales, v => '$'+Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})) },
-    { key:'cvr', label:'CVR (주문/방문)', bar:'#1e6fbf',
-      val: cur.cvr.toFixed(2) + '%',  // ← 소수점 2자리
-      delta: dHtml(cur.cvr, prev?.cvr, v => Math.abs(v).toFixed(2)+'%') },
+      delta: dHtml(cur.visits, prev?.visits, v => Math.abs(Math.round(v)).toLocaleString()) },
+    { key:'sales', label:'TOTAL SALES', bar:'#d97070',
+      val: fmtKRW(cur.sales) + salesBreakdown,
+      delta: dHtml(cur.sales, prev?.sales, v => fmtKRW(v)) },
+    { key:'cvr', label:'CVR (주문/방문)', bar:'#8878d0',
+      val: cur.cvr.toFixed(2) + '%',
+      delta: dHtml(cur.cvr, prev?.cvr, v => Math.abs(v).toFixed(2) + '%') },
   ];
 
   document.getElementById('kpiRow').innerHTML = items.map(k => `
@@ -911,22 +1098,22 @@ function renderChart() {
           data: data.map(d => d.visits),
           type: 'line',
           fill: true,
-          backgroundColor: 'rgba(80,80,80,0.13)',
-          borderColor: 'rgba(80,80,80,0.45)',
-          borderWidth: 1,
+          backgroundColor: 'rgba(106,173,213,0.1)',
+          borderColor: '#6aadd5',
+          borderWidth: 1.5,
           pointRadius: 0,
           pointHoverRadius: 4,
-          pointHoverBackgroundColor: 'rgba(80,80,80,0.7)',
+          pointHoverBackgroundColor: '#6aadd5',
           yAxisID: 'yV', order: 3,
           tension: 0.25,
         },
-        // Sales → bar (prominent)
+        // Sales → bar (prominent, KRW)
         {
-          label: 'Sales ($)',
-          data: data.map(d => d.sales),
+          label: selSalesType === 'com' ? 'Sales (.COM)' : selSalesType === 'bam' ? 'Sales (B&M)' : 'Sales (TTL)',
+          data: data.map(d => { const sb = SALES_BY_DATE[d.date] || {}; return selSalesType === 'com' ? (sb.com||0) : selSalesType === 'bam' ? (sb.bam||0) : (sb.total||0); }),
           type: 'bar',
-          backgroundColor: 'rgba(200,16,46,0.8)',
-          hoverBackgroundColor: 'rgba(200,16,46,1)',
+          backgroundColor: 'rgba(217,112,112,0.82)',
+          hoverBackgroundColor: '#d97070',
           yAxisID: 'yS', order: 2,
           barPercentage: 0.5,
           categoryPercentage: 0.85,
@@ -936,12 +1123,12 @@ function renderChart() {
           label: 'CVR',
           data: data.map(d => d.cvr),
           type: 'line',
-          borderColor: '#1e6fbf',
+          borderColor: '#8878d0',
           backgroundColor: 'transparent',
           borderWidth: 2,
           pointRadius: n > 50 ? 0 : n > 25 ? 2 : 3,
           pointHoverRadius: 5,
-          pointBackgroundColor: '#1e6fbf',
+          pointBackgroundColor: '#8878d0',
           fill: false,
           yAxisID: 'yC', order: 1,
           tension: 0.3,
@@ -967,7 +1154,7 @@ function renderChart() {
             label: ctx => {
               const v = ctx.raw;
               if (ctx.dataset.label === 'Visits') return `  Visits: ${v.toLocaleString()}`;
-              if (ctx.dataset.label === 'Sales ($)') return `  Sales: $${v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+              if (ctx.dataset.label.startsWith('Sales')) return '  ' + ctx.dataset.label + ': ₩' + Math.round(Math.abs(v)).toLocaleString('ko-KR');
               if (ctx.dataset.label === 'CVR') return `  CVR: ${v.toFixed(2)}%`;
               return ctx.dataset.label + ': ' + v;
             }
@@ -977,9 +1164,9 @@ function renderChart() {
       },
       scales: {
         x: {
-          grid: { color: 'rgba(0,0,0,0.04)' },
+          grid: { color: 'rgba(255,255,255,0.05)' },
           ticks: {
-            font: { size: 9 }, color: '#999', maxRotation: 45,
+            font: { size: 9 }, color: '#ffffff', maxRotation: 45,
             callback(val, idx) {
               if (n > 50 && idx % 7 !== 0) return '';
               if (n > 25 && idx % 2 !== 0) return '';
@@ -989,15 +1176,15 @@ function renderChart() {
         },
         yV: {
           type: 'linear', position: 'left',
-          grid: { color: 'rgba(0,0,0,0.05)' },
-          ticks: { font:{size:9}, color:'#888', callback: v => v>=1000?(v/1000).toFixed(0)+'K':v },
-          title: { display:true, text:'Visits', font:{size:9}, color:'#888' }
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { font:{size:9}, color:'#ffffff', callback: v => v>=1000?(v/1000).toFixed(0)+'K':v },
+          title: { display:true, text:'Visits', font:{size:9}, color:'#6aadd5' }
         },
         yS: {
           type: 'linear', position: 'right',
           grid: { drawOnChartArea: false },
-          ticks: { font:{size:9}, color:'#c8102e', callback: v => '$'+(v>=1000?(v/1000).toFixed(0)+'K':v) },
-          title: { display:true, text:'Sales ($)', font:{size:9}, color:'#c8102e' }
+          ticks: { font:{size:9}, color:'#ffffff', callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v },
+          title: { display:true, text:'Sales (₩)', font:{size:9}, color:'#d97070' }
         },
         yC: {
           type: 'linear', position: 'right', display: false,
@@ -1028,6 +1215,12 @@ const _ro = new ResizeObserver(() => {
 // ─── MARKER ZONE ──────────────────────────────────────────────────────────────
 function positionMarkers() {
   const zone = document.getElementById('markerZone');
+  if (!showMarkers) {
+    zone.innerHTML = '';
+    zone.classList.add('hidden');
+    return;
+  }
+  zone.classList.remove('hidden');
   zone.innerHTML = '';
   if (!chart) return;
 
@@ -1478,7 +1671,7 @@ function renderLagEffect() {
   if (lagChartInst) lagChartInst.destroy();
 
   if (!datasets.length) {
-    ctx.font = '11px Helvetica Neue'; ctx.fillStyle = '#ccc';
+    ctx.font = "11px 'Pretendard','Helvetica Neue'"; ctx.fillStyle = '#ccc';
     ctx.fillText('데이터 부족 (이벤트 유형별 2건 이상 필요)', 20, 100);
     return;
   }
@@ -1495,9 +1688,9 @@ function renderLagEffect() {
         }
       },
       scales: {
-        x: { ticks: { font:{size:9}, color:'#999' }, grid: { color:'rgba(0,0,0,0.04)' } },
+        x: { ticks: { font:{size:9}, color:'#ffffff' }, grid: { color:'rgba(255,255,255,0.05)' } },
         y: {
-          ticks: { font:{size:9}, color:'#888', callback: v => (v>=0?'+':'')+v.toFixed(0)+'%' },
+          ticks: { font:{size:9}, color:'#ffffff', callback: v => (v>=0?'+':'')+v.toFixed(0)+'%' },
           grid: { color:'rgba(0,0,0,0.05)' },
           title: { display:true, text:'Visits Lift (%)', font:{size:8}, color:'#aaa' }
         }
@@ -1590,10 +1783,16 @@ let chVisitsChart, chSalesChart, chCvrChart;
 
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  document.getElementById('tabMain').style.display = tab === 'main' ? '' : 'none';
-  document.getElementById('tabChannel').style.display = tab === 'channel' ? '' : 'none';
-  document.getElementById('tabSettings').style.display = tab === 'settings' ? '' : 'none';
-  if (tab === 'channel') refreshChannel();
+  const tabMain     = document.getElementById('tabMain');
+  const tabChannel  = document.getElementById('tabChannel');
+  const tabAds      = document.getElementById('tabAds');
+  const tabSettings = document.getElementById('tabSettings');
+  if (tabMain)     tabMain.style.display     = tab === 'main'     ? '' : 'none';
+  if (tabChannel)  tabChannel.style.display  = tab === 'channel'  ? '' : 'none';
+  if (tabAds)      tabAds.style.display      = tab === 'ads'      ? '' : 'none';
+  if (tabSettings) tabSettings.style.display = tab === 'settings' ? '' : 'none';
+  if (tab === 'channel') { try { refreshChannel(); } catch(e){} }
+  if (tab === 'ads')     { try { refreshAds();     } catch(e){} }
 }
 
 function buildChWeekOptions() {
@@ -1862,7 +2061,7 @@ function renderChLineChart(canvasId, weeks, channels, pivot, key, _unused, idx) 
             },
             font: { size: 10 }
           },
-          grid: { color: 'rgba(0,0,0,0.06)' }
+          grid: { color: 'rgba(255,255,255,0.05)' }
         },
         x: { ticks: { font: { size: 9 } }, grid: { display: false } }
       }
@@ -1954,7 +2153,7 @@ function renderComboChart(weeks, channels, pivot) {
           beginAtZero: true,
           title: { display: true, text: 'Visits', color: '#2F5496', font: { size: 11, weight: 'bold' } },
           ticks: { callback: v => v >= 1000 ? (v/1000)+'K' : v, color: '#2F5496', font: { size: 10 } },
-          grid: { color: 'rgba(0,0,0,0.06)' },
+          grid: { color: 'rgba(255,255,255,0.05)' },
         },
         ySales: {
           type: 'linear',
@@ -1982,54 +2181,83 @@ function renderComboChart(weeks, channels, pivot) {
   });
 }
 
+buildChWeekOptions();
+buildChChanOptions();
 
-// ═══════════════════════════════════════════════════════════════════
-//  GOOGLE OAUTH + SHEETS DATA LOADER
-// ═══════════════════════════════════════════════════════════════════
-const GOOGLE_CLIENT_ID = '209428467221-2e8e38d23fo4uaorjo5l5s3epkjbla3u.apps.googleusercontent.com';  // ← Google Cloud Console에서 발급한 Client ID로 교체
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+buildWeekOptions();
+buildCatOptions();
+rebuildSkuOptions();
+buildEvTypeOptions();
+renderTypeLegend();
+renderEventList();
+refresh();
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  GOOGLE OAUTH REDIRECT + APPS SCRIPT DATA LOADER
+// ═══════════════════════════════════════════════════════════════════════════════
+const GOOGLE_CLIENT_ID = '209428467221-2e8e38d23fo4uaorjo5l5s3epkjbla3u.apps.googleusercontent.com';
 const ALLOWED_DOMAIN   = 'wyattcorp.com';
+const REDIRECT_URI     = 'https://ella-yh.github.io/Unove-Sephora-Dashboard/';
 
 let currentUser = null;
+let autoRefreshTimer = null;
+const AUTO_REFRESH_MS = 30 * 60 * 1000; // 30분
 
+// ── 페이지 로드: hash 토큰 확인 → 캐시 확인 → 로그인 화면
 window.addEventListener('load', function() {
+  const hash = window.location.hash;
+  if (hash && hash.includes('access_token=')) {
+    const params = new URLSearchParams(hash.substring(1));
+    const token  = params.get('access_token');
+    history.replaceState(null, '', window.location.pathname);
+    if (token) { verifyGoogleToken(token); return; }
+  }
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('error')) {
+    document.getElementById('loginErr').textContent = '로그인이 취소되었습니다.';
+    history.replaceState(null, '', window.location.pathname);
+    return;
+  }
   const cached = sessionStorage.getItem('sephora_auth');
   if (cached) {
     try {
       currentUser = JSON.parse(cached);
-      onAuthSuccess(currentUser);
-      return;
-    } catch(e) { sessionStorage.removeItem('sephora_auth'); }
+      const token = sessionStorage.getItem('sephora_token');
+      if (token) { onAuthSuccess(currentUser); return; }
+    } catch(e) {}
+    sessionStorage.removeItem('sephora_auth');
+    sessionStorage.removeItem('sephora_token');
   }
-  initGoogleAuth();
 });
 
-function initGoogleAuth() {
-  if (typeof google === 'undefined') {
-    setTimeout(initGoogleAuth, 200);
-    return;
-  }
-  google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    callback: handleCredentialResponse,
-    hd: ALLOWED_DOMAIN,
-    auto_select: false,
-    cancel_on_tap_outside: false,
+window.startGoogleLogin = function() {
+  const btn = document.getElementById('btnGoogleLogin');
+  if (btn) { btn.disabled = true; btn.textContent = '이동 중...'; }
+  const params = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID, redirect_uri: REDIRECT_URI,
+    response_type: 'token', scope: 'email profile',
+    hd: ALLOWED_DOMAIN, prompt: 'select_account'
   });
-  google.accounts.id.renderButton(
-    document.getElementById('g_id_signin'),
-    { theme:'filled_black', size:'large', text:'signin_with', shape:'rectangular', width:280 }
-  );
-}
+  window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
+};
 
-function handleCredentialResponse(resp) {
+async function verifyGoogleToken(token) {
+  document.getElementById('loginErr').textContent = '인증 확인 중...';
   try {
-    const payload = parseJwt(resp.credential);
-    const email = payload.email || '';
-    if (!email.endsWith('@' + ALLOWED_DOMAIN)) {
-      document.getElementById('loginErr').textContent = ALLOWED_DOMAIN + ' 계정만 접근 가능합니다.';
+    const res  = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('userinfo 조회 실패 (HTTP ' + res.status + ')');
+    const info = await res.json();
+    if (!info.email || !info.email.endsWith('@' + ALLOWED_DOMAIN)) {
+      document.getElementById('loginErr').textContent =
+        (info.email || '알 수 없는 계정') + ' — @' + ALLOWED_DOMAIN + ' 계정만 접근 가능합니다.';
       return;
     }
-    currentUser = { name: payload.name, email: payload.email, picture: payload.picture || '' };
+    sessionStorage.setItem('sephora_token', token);
+    currentUser = { name: info.name || info.email, email: info.email, picture: info.picture || '' };
     sessionStorage.setItem('sephora_auth', JSON.stringify(currentUser));
     onAuthSuccess(currentUser);
   } catch(e) {
@@ -2037,180 +2265,425 @@ function handleCredentialResponse(resp) {
   }
 }
 
-function parseJwt(token) {
-  const b64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
-  return JSON.parse(atob(b64));
-}
-
 function onAuthSuccess(user) {
   document.getElementById('loginOverlay').style.display = 'none';
-  // 유저 정보 표시
   document.getElementById('userNm').textContent = user.name;
   document.getElementById('userEm').textContent = user.email;
   if (user.picture) {
     const av = document.getElementById('userAv');
-    av.src = user.picture;
-    av.style.display = '';
+    if (av) { av.src = user.picture; av.style.display = ''; }
   }
-  // 저장된 URL 복원
-  const skuUrl = localStorage.getItem('sephora_sku_url') || '';
-  const chUrl  = localStorage.getItem('sephora_ch_url')  || '';
-  document.getElementById('skuUrl').value = skuUrl;
-  document.getElementById('chUrl').value  = chUrl;
-  // 데이터 로드 시도
-  if (skuUrl && chUrl) {
-    loadDataAndInit(skuUrl, chUrl);
+  const btnRef = document.getElementById('btnRefresh');
+  if (btnRef) btnRef.style.display = '';
+  const appsScriptUrl = localStorage.getItem('sephora_apps_script_url') || '';
+  const urlInput = document.getElementById('appsScriptUrl');
+  if (urlInput) urlInput.value = appsScriptUrl;
+  if (appsScriptUrl) {
+    loadFromAppsScript(appsScriptUrl);
   } else {
-    showStgStatus('⚠ Settings 탭에서 Google Sheets URL을 설정해주세요.', 'err');
+    showStgStatus('⚠ Settings 탭에서 Apps Script URL을 설정해주세요.', 'err');
     switchTab('settings');
   }
 }
 
-function signOut() {
+window.signOut = function() {
   sessionStorage.removeItem('sephora_auth');
-  if (typeof google !== 'undefined') {
-    try { google.accounts.id.disableAutoSelect(); } catch(e) {}
-  }
+  sessionStorage.removeItem('sephora_token');
+  if (autoRefreshTimer) clearInterval(autoRefreshTimer);
   location.reload();
-}
+};
 
-function saveAndLoad() {
-  const skuUrl = document.getElementById('skuUrl').value.trim();
-  const chUrl  = document.getElementById('chUrl').value.trim();
-  if (!skuUrl || !chUrl) { showStgStatus('두 URL 모두 입력해주세요.', 'err'); return; }
-  localStorage.setItem('sephora_sku_url', skuUrl);
-  localStorage.setItem('sephora_ch_url',  chUrl);
-  loadDataAndInit(skuUrl, chUrl);
-}
+window.saveAndLoad = function() {
+  const url = (document.getElementById('appsScriptUrl') || {}).value || '';
+  const trimmed = url.trim();
+  if (!trimmed) { showStgStatus('Apps Script URL을 입력해주세요.', 'err'); return; }
+  if (!trimmed.includes('script.google.com')) {
+    showStgStatus('⚠ 올바른 Apps Script URL 형식이 아닙니다.', 'err'); return;
+  }
+  localStorage.setItem('sephora_apps_script_url', trimmed);
+  loadFromAppsScript(trimmed);
+};
 
-async function loadDataAndInit(skuUrl, chUrl) {
-  showStgStatus('📡 데이터 불러오는 중...', 'loading');
+window.manualRefresh = function() {
+  const url = localStorage.getItem('sephora_apps_script_url') || '';
+  if (!url) { switchTab('settings'); return; }
+  const btn = document.getElementById('btnRefresh');
+  if (btn) { btn.disabled = true; btn.textContent = '↻ 업데이트 중...'; }
+  loadFromAppsScript(url, true).finally(() => {
+    if (btn) { btn.disabled = false; btn.textContent = '↻ RAW 업데이트'; }
+  });
+};
+
+async function loadFromAppsScript(appsScriptUrl, isSilent) {
+  const token = sessionStorage.getItem('sephora_token');
+  if (!token) {
+    showStgStatus('❌ 로그인이 필요합니다. 새로고침 후 다시 로그인해주세요.', 'err');
+    return;
+  }
+  if (!isSilent) showStgStatus('📡 Apps Script에서 데이터 불러오는 중...', 'loading');
   try {
-    const [skuText, chText] = await Promise.all([fetchCsv(skuUrl), fetchCsv(chUrl)]);
-    const newSku = parseSkuCsv(skuText);
-    const newCh  = parseChCsv(chText);
-    if (!newSku.length) throw new Error('SKU 데이터가 비어 있습니다. 컬럼 헤더를 확인하세요.');
-    if (!newCh.length)  throw new Error('Channel 데이터가 비어 있습니다. 컬럼 헤더를 확인하세요.');
+    const res  = await fetch(appsScriptUrl + '?token=' + encodeURIComponent(token), { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.error) {
+      if (data.error === 'INVALID_TOKEN' || data.error === 'NO_TOKEN') {
+        throw new Error('토큰 만료 — 로그아웃 후 다시 로그인해주세요.');
+      }
+      throw new Error(data.error + (data.detail ? ': ' + data.detail : ''));
+    }
+    // Apps Script가 서버에서 파싱 완료 → 직접 사용
+    const newSku   = Array.isArray(data.commerce) ? data.commerce : [];
+    const newSales = Array.isArray(data.sales)    ? data.sales    : [];
+    const newCh    = Array.isArray(data.channel)  ? data.channel  : [];
+    if (!newSku.length)   throw new Error('RAW_commerce 데이터가 비어 있습니다.');
+    if (!newSales.length) throw new Error('Raw_실매출 데이터가 비어 있습니다.');
+    if (!newCh.length)    throw new Error('Raw_유입 데이터가 비어 있습니다.');
+    RAW_SKU.length = 0;   newSku.forEach(r   => RAW_SKU.push(r));
+    RAW_SALES.length = 0; newSales.forEach(r => RAW_SALES.push(r));
+    CH_RAW.length = 0;    newCh.forEach(r    => CH_RAW.push(r));
+    Object.keys(SALES_BY_DATE).forEach(k => delete SALES_BY_DATE[k]);
+    RAW_SALES.forEach(r => { SALES_BY_DATE[r.date] = { total: r.total || 0, com: r.com || 0, bam: r.bam || 0 }; });
+    ADS_RAW.length = 0;
+    if (Array.isArray(data.ads)) data.ads.forEach(r => ADS_RAW.push(r));
 
-    // Replace global data
-    RAW_SKU.length = 0; newSku.forEach(r => RAW_SKU.push(r));
-    CH_RAW.length  = 0; newCh.forEach(r  => CH_RAW.push(r));
+    // ── 디버그: 실매출 컬럼/값 확인 (콘솔에서 _DEBUG_SALES 확인 후 제거) ──
+    if (data._debug_sales) {
+      console.group('%c[SALES DEBUG] Raw_실매출 시트 분석', 'color:#c8102e;font-weight:bold');
+      console.log('총 데이터 행수:', data._debug_sales.total_rows);
+      console.log('헤더 원본:', data._debug_sales.headers);
+      console.log('감지된 컬럼 인덱스:', data._debug_sales.detected_cols);
+      console.log('첫 3행 샘플 (날짜/B&M/COM/전체 원본→변환):', data._debug_sales.samples);
+      console.log('전체 SALES_BY_DATE 첫5개:', Object.entries(SALES_BY_DATE).slice(0,5));
+      console.groupEnd();
+    }
 
     rebuildDerivedData();
-    showStgStatus('✅ 로드 완료 — SKU ' + RAW_SKU.length + '행 / Channel ' + CH_RAW.length + '행', 'ok');
-
-    // 대시보드 초기화
+    const ts = data.updatedAt ? new Date(data.updatedAt).toLocaleString('ko-KR') : '—';
+    const label = document.getElementById('lastUpdatedLabel');
+    if (label) label.textContent = '업데이트: ' + ts;
+    showStgStatus('✅ 로드 완료 — SKU ' + RAW_SKU.length + '행 / 매출 ' + RAW_SALES.length + '행 / Channel ' + CH_RAW.length + '행 / Ads ' + ADS_RAW.length + '행', 'ok');
     initDashboard();
-
-    // Settings에 있으면 main으로 이동
-    if (document.getElementById('tabSettings').style.display !== 'none') switchTab('main');
-
+    if (!isSilent && document.getElementById('tabSettings') &&
+        document.getElementById('tabSettings').style.display !== 'none') switchTab('main');
+    if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+    autoRefreshTimer = setInterval(() => loadFromAppsScript(appsScriptUrl, true), AUTO_REFRESH_MS);
   } catch(e) {
-    showStgStatus('❌ 로드 실패: ' + e.message + '\n\n시트가 "웹에 게시 (CSV)"로 퍼블리시되었는지 확인하세요.', 'err');
+    showStgStatus('❌ 로드 실패: ' + e.message, 'err');
     console.error(e);
   }
 }
 
-async function fetchCsv(url) {
-  const res = await fetch(url, { cache: 'no-store' });
-  if (!res.ok) throw new Error('HTTP ' + res.status + ' (' + url.substring(0,60) + '...)');
-  return res.text();
+// ── 배열 파서 (Apps Script 반환 2D array) ────────────────────────────────────
+function parseNum(val) {
+  if (val === null || val === undefined || val === '') return 0;
+  if (typeof val === 'number') return val;
+  return parseFloat(String(val).replace(/[,$%]/g,'')) || 0;
 }
 
-function parseCsvLine(line) {
-  const out = []; let cur = '', inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '"') { inQ = !inQ; }
-    else if (c === ',' && !inQ) { out.push(cur.trim()); cur = ''; }
-    else { cur += c; }
+function parseDate(raw) {
+  // Apps Script에서 이미 "YYYY-MM-DD" 문자열로 반환됨
+  if (!raw) return null;
+  const s = String(raw).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  if (s.length > 10 && s[10] === 'T') return s.slice(0,10); // ISO datetime fallback
+  return null;
+}
+
+
+// ── Rebuild derived data ────────────────────────────────────────────────────
+// ─── PERFORMANCE ADS ─────────────────────────────────────────────────────────
+
+function getWeekKey(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const dow = d.getDay();
+  const sun = new Date(d);
+  sun.setDate(d.getDate() - dow);
+  const mm = String(sun.getMonth()+1).padStart(2,'0');
+  const dd = String(sun.getDate()).padStart(2,'0');
+  return sun.getFullYear() + '-' + mm + '-' + dd;
+}
+function fmtWkLabel(wkKey) {
+  const d = new Date(wkKey + 'T00:00:00');
+  const sat = new Date(d); sat.setDate(d.getDate() + 6);
+  const fmt = x => (x.getMonth()+1) + '/' + x.getDate();
+  return fmt(d) + '-' + fmt(sat);
+}
+
+function buildAdsWeekly(mediaFilter) {
+  // Returns { weekKey: { spend, impressions, clicks, byObj: { objName: {spend,impressions,clicks} } } }
+  const byWeek = {};
+  ADS_RAW.forEach(r => {
+    if (mediaFilter && !mediaFilter.has(r.media)) return;
+    const wk = getWeekKey(r.date);
+    if (!byWeek[wk]) byWeek[wk] = { spend:0, impressions:0, clicks:0, byObj:{} };
+    byWeek[wk].spend       += r.spend;
+    byWeek[wk].impressions += r.impressions;
+    byWeek[wk].clicks      += r.clicks;
+    if (!byWeek[wk].byObj[r.objective]) byWeek[wk].byObj[r.objective] = {spend:0,impressions:0,clicks:0};
+    byWeek[wk].byObj[r.objective].spend       += r.spend;
+    byWeek[wk].byObj[r.objective].impressions += r.impressions;
+    byWeek[wk].byObj[r.objective].clicks      += r.clicks;
+  });
+  return byWeek;
+}
+
+function buildSephoraWeekly() {
+  // Returns { weekKey: { sales_com, sales_bam, sales_total, visits } }
+  const byWeek = {};
+  Object.entries(SALES_BY_DATE).forEach(([date, s]) => {
+    const wk = getWeekKey(date);
+    if (!byWeek[wk]) byWeek[wk] = {sales_com:0, sales_bam:0, sales_total:0, visits:0};
+    byWeek[wk].sales_com   += s.com   || 0;
+    byWeek[wk].sales_bam   += s.bam   || 0;
+    byWeek[wk].sales_total += s.total || 0;
+  });
+  // visits from RAW_SKU (aggregate by date→week)
+  const visitsByDate = {};
+  RAW_SKU.forEach(r => { visitsByDate[r.date] = (visitsByDate[r.date]||0) + r.visits; });
+  Object.entries(visitsByDate).forEach(([date, v]) => {
+    const wk = getWeekKey(date);
+    if (!byWeek[wk]) byWeek[wk] = {sales_com:0, sales_bam:0, sales_total:0, visits:0};
+    byWeek[wk].visits += v;
+  });
+  return byWeek;
+}
+
+function getSalesKey() {
+  return selAdsSales === 'com' ? 'sales_com' : selAdsSales === 'bam' ? 'sales_bam' : 'sales_total';
+}
+function getMetricLabel() {
+  return selAdsMetric === 'spend' ? '광고비(₩)' : selAdsMetric === 'impressions' ? '노출수' : '클릭수';
+}
+function getSalesLabel() {
+  return selAdsSales === 'com' ? '매출(.COM,₩)' : selAdsSales === 'bam' ? '매출(B&M,₩)' : '매출(TTL,₩)';
+}
+
+const OBJ_COLORS = {
+  '조회':         '#9b59b6',
+  '트래픽(lpv)':  '#3498db',
+  '트래픽(click)':'#2ecc71',
+  '전환(구매)':   '#e74c3c',
+  '전환(장바구니)':'#f39c12',
+  '검색':         '#1abc9c',
+  '검색광고':     '#34495e',
+};
+
+function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, mediaLabel) {
+  const labels = weeks.map(fmtWkLabel);
+  const metricKey = selAdsMetric;
+  const salesKey  = getSalesKey();
+  const fmtNum = v => selAdsMetric === 'spend'
+    ? '₩' + Math.round(v).toLocaleString('ko-KR')
+    : Math.round(v).toLocaleString();
+
+  const datasets = [];
+
+  if (stacked && objectives.length > 0) {
+    objectives.forEach(obj => {
+      datasets.push({
+        label: obj,
+        data: weeks.map(wk => (adsWeekly[wk]?.byObj?.[obj]?.[metricKey] || 0)),
+        type: 'bar',
+        backgroundColor: OBJ_COLORS[obj] || '#999',
+        stack: 'ads',
+        yAxisID: 'yA', order: 3,
+        barPercentage: 0.6, categoryPercentage: 0.8,
+      });
+    });
+  } else {
+    datasets.push({
+      label: mediaLabel || getMetricLabel(),
+      data: weeks.map(wk => (adsWeekly[wk]?.[metricKey] || 0)),
+      type: 'bar',
+      backgroundColor: 'rgba(70,130,200,0.75)',
+      hoverBackgroundColor: 'rgba(70,130,200,1)',
+      yAxisID: 'yA', order: 3,
+      barPercentage: 0.5, categoryPercentage: 0.8,
+    });
   }
-  out.push(cur.trim());
-  return out;
+
+  // Sephora 매출 라인
+  datasets.push({
+    label: getSalesLabel(),
+    data: weeks.map(wk => (sepWeekly[wk]?.[salesKey] || 0)),
+    type: 'line', borderColor: '#d97070', backgroundColor: 'transparent',
+    borderWidth: 2, pointRadius: 3, pointHoverRadius: 5,
+    pointBackgroundColor: '#d97070', fill: false,
+    yAxisID: 'yS', order: 1, tension: 0.3,
+  });
+
+  // Sephora 유입 라인
+  datasets.push({
+    label: '세포라 유입',
+    data: weeks.map(wk => (sepWeekly[wk]?.visits || 0)),
+    type: 'line', borderColor: '#5dcaa5', backgroundColor: 'transparent',
+    borderWidth: 2, pointRadius: 3, pointHoverRadius: 5,
+    pointBackgroundColor: '#5dcaa5', fill: false,
+    yAxisID: 'yV', order: 2, tension: 0.3,
+  });
+
+  return {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#111', titleColor: '#fff', bodyColor: '#ccc',
+          borderColor: '#333', borderWidth: 1, padding: 10,
+          callbacks: {
+            title: ctx => '📅 ' + labels[ctx[0].dataIndex],
+            label: ctx => {
+              const v = ctx.raw || 0;
+              if (ctx.dataset.yAxisID === 'yS') return '  ' + ctx.dataset.label + ': ₩' + Math.round(v).toLocaleString('ko-KR');
+              if (ctx.dataset.yAxisID === 'yV') return '  세포라 유입: ' + Math.round(v).toLocaleString();
+              return '  ' + ctx.dataset.label + ': ' + fmtNum(v);
+            }
+          }
+        }
+      },
+      scales: {
+        x: { stacked: stacked, grid:{color:'rgba(255,255,255,0.05)'}, ticks:{font:{size:9},color:'#ffffff',maxRotation:45} },
+        yA: {
+          type:'linear', position:'left', stacked: stacked,
+          grid:{color:'rgba(0,0,0,0.05)'},
+          ticks:{ font:{size:9}, color:'#ffffff',
+            callback: v => selAdsMetric==='spend' ? (v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v) : (v>=1000?(v/1000).toFixed(0)+'K':v)
+          },
+          title:{ display:true, text:getMetricLabel(), font:{size:9}, color:'#4682c8' }
+        },
+        yS: {
+          type:'linear', position:'right', grid:{drawOnChartArea:false},
+          ticks:{ font:{size:9}, color:'#ffffff',
+            callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v
+          },
+          title:{ display:true, text:'매출(₩)', font:{size:9}, color:'#d97070' }
+        },
+        yV: {
+          type:'linear', position:'right', display:false, grid:{drawOnChartArea:false},
+        }
+      }
+    }
+  };
 }
 
-function parseSkuCsv(csv) {
-  const rows = csv.trim().split('\n');
-  const hdrs = rows[0].split(',').map(h => h.trim().replace(/"/g,'').toLowerCase());
-  return rows.slice(1).map(row => {
-    const v = parseCsvLine(row);
-    const o = {};
-    hdrs.forEach((h, i) => o[h] = (v[i] || '').replace(/"/g,'').trim());
-    return {
-      date:   o.date,
-      sku:    parseInt(o.sku),
-      visits: parseFloat(o.visits)  || 0,
-      sales:  parseFloat(o.sales)   || 0,
-      orders: parseFloat(o.orders)  || 0,
-      month:  o.month,
-      week:   parseInt(o.week)
-    };
-  }).filter(r => r.date && !isNaN(r.sku));
+function renderLegend(containerId, datasets) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  c.innerHTML = datasets.map(ds => {
+    const col = ds.type === 'line' ? ds.borderColor : (Array.isArray(ds.backgroundColor) ? ds.backgroundColor[0] : ds.backgroundColor);
+    const dotStyle = ds.type === 'line'
+      ? 'border-radius:50%;border:2px solid ' + col + ';background:transparent;'
+      : 'background:' + col + ';border-radius:2px;';
+    return '<div class="leg"><div class="leg-dot" style="' + dotStyle + '"></div>' + ds.label + '</div>';
+  }).join('');
 }
 
-function parseChCsv(csv) {
-  const rows = csv.trim().split('\n');
-  const hdrs = rows[0].split(',').map(h => h.trim().replace(/"/g,'').toLowerCase());
-  return rows.slice(1).map(row => {
-    const v = parseCsvLine(row);
-    const o = {};
-    hdrs.forEach((h, i) => o[h] = (v[i] || '').replace(/"/g,'').trim());
-    return {
-      week:    o.week,
-      range:   o.range,
-      channel: o.channel,
-      visits:  parseFloat(o.visits) || 0,
-      sales:   parseFloat(o.sales)  || 0,
-      cvr:     parseFloat(o.cvr)    || 0
-    };
-  }).filter(r => r.week && r.channel);
+function refreshAds() {
+  if (ADS_RAW.length === 0) return;
+
+  const sepWeekly = buildSephoraWeekly();
+
+  // Chart 1 — 선택 매체 합산
+  const ads1 = buildAdsWeekly(selAdsMedia);
+  const weeks1 = [...new Set([...Object.keys(ads1), ...Object.keys(sepWeekly)])].sort();
+  const cfg1 = makeAdsChartCfg(weeks1, ads1, sepWeekly, false, [], getMetricLabel());
+  renderLegend('adsChart1Leg', cfg1.data.datasets);
+  const ctx1 = document.getElementById('adsChart1');
+  if (ctx1) { if (adsChart1) adsChart1.destroy(); adsChart1 = new Chart(ctx1.getContext('2d'), cfg1); }
+
+  // Chart 2 — Meta 목표별 누적
+  const ads2 = buildAdsWeekly(new Set(['meta']));
+  const weeks2 = [...new Set([...Object.keys(ads2), ...Object.keys(sepWeekly)])].sort();
+  const metaObjs = ['전환(장바구니)','전환(구매)','트래픽(click)','트래픽(lpv)','조회'];
+  const cfg2 = makeAdsChartCfg(weeks2, ads2, sepWeekly, true, metaObjs, '');
+  renderLegend('adsChart2Leg', cfg2.data.datasets);
+  const ctx2 = document.getElementById('adsChart2');
+  if (ctx2) { if (adsChart2) adsChart2.destroy(); adsChart2 = new Chart(ctx2.getContext('2d'), cfg2); }
+
+  // Chart 3 — TikTok 목표별 누적
+  const ads3 = buildAdsWeekly(new Set(['tiktok']));
+  const weeks3 = [...new Set([...Object.keys(ads3), ...Object.keys(sepWeekly)])].sort();
+  const ttObjs = ['검색','조회'];
+  const cfg3 = makeAdsChartCfg(weeks3, ads3, sepWeekly, true, ttObjs, '');
+  renderLegend('adsChart3Leg', cfg3.data.datasets);
+  const ctx3 = document.getElementById('adsChart3');
+  if (ctx3) { if (adsChart3) adsChart3.destroy(); adsChart3 = new Chart(ctx3.getContext('2d'), cfg3); }
 }
 
 function rebuildDerivedData() {
-  // DAYS 재빌드
-  const dayMap = {};
-  RAW_SKU.forEach(r => { if (!dayMap[r.date]) dayMap[r.date] = {date:r.date, month:r.month, week:r.week}; });
-  DAYS.length = 0;
-  Object.values(dayMap).sort((a,b) => a.date.localeCompare(b.date)).forEach(d => DAYS.push(d));
-
-  // CH_WEEKS / CH_CHANNELS / CH_WEEK_RANGES 재빌드
-  const wSet = new Set(), cSet = new Set();
-  CH_RAW.forEach(r => { wSet.add(r.week); cSet.add(r.channel); });
+  if (RAW_SKU.length > 0) {
+    const allDates = [...new Set(RAW_SKU.map(r => r.date))].sort();
+    const minD   = new Date(allDates[0] + 'T00:00:00');
+    const refSun = new Date(minD);
+    refSun.setDate(minD.getDate() - minD.getDay());
+    const refTime = refSun.getTime();
+    RAW_SKU.forEach(r => {
+      r.week = Math.floor((new Date(r.date+'T00:00:00').getTime() - refTime) / (7*86400000)) + 1;
+    });
+  }
   CH_WEEKS.length = 0;
-  [...wSet].sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1))).forEach(w => CH_WEEKS.push(w));
+  [...new Set(CH_RAW.map(r => r.week))]
+    .sort((a,b) => parseInt(String(a).replace(/\D/g,'')) - parseInt(String(b).replace(/\D/g,'')))
+    .forEach(w => CH_WEEKS.push(w));
   CH_CHANNELS.length = 0;
-  [...cSet].forEach(c => CH_CHANNELS.push(c));
+  [...new Set(CH_RAW.map(r => r.channel))].forEach(c => CH_CHANNELS.push(c));
   Object.keys(CH_WEEK_RANGES).forEach(k => delete CH_WEEK_RANGES[k]);
-  CH_RAW.forEach(r => { if (!CH_WEEK_RANGES[r.week]) CH_WEEK_RANGES[r.week] = r.range; });
-
-  // 드롭다운 재빌드
-  ;['ddPanel-week','ddPanel-chWeek','ddPanel-chChan','ddPanel-cat','ddPanel-sku'].forEach(id => {
-    const p = document.getElementById(id);
-    if (p) while (p.children.length > 1) p.removeChild(p.lastChild);
-  });
-  selMonths.clear(); selWeeks.clear(); selCats.clear(); selSkus.clear();
-  selChWeeks.clear(); selChChans.clear();
+  CH_RAW.forEach(r => { CH_WEEK_RANGES[r.week] = r.range; });
 }
 
+// ── Dashboard init ───────────────────────────────────────────────────────────
+function initDashboard() {
+  try { selChWeeks.clear(); selChChans.clear(); } catch(e) {}
+  try { buildChWeekOptions(); buildChChanOptions(); } catch(e) {}
+  // Week 옵션 재빌드 (데이터 로드 후 week 번호가 확정되므로)
+  try {
+    const wp = document.getElementById('ddPanel-week');
+    if (wp) wp.querySelectorAll('.dd-opt').forEach(el => el.remove());
+    selWeeks.clear(); updateLabel('week');
+    buildWeekOptions();
+  } catch(e) {}
+  try { renderKPI(); renderChart(); renderEventList(); } catch(e) { console.warn('render error', e); }
+  try { refreshChannel(); } catch(e) {}
+}
+
+// ── Status helper ────────────────────────────────────────────────────────────
 function showStgStatus(msg, type) {
   const el = document.getElementById('stgStatus');
   if (!el) return;
   el.textContent = msg;
-  el.className = 'stg-status ' + type;
-  el.style.display = 'block';
+  el.className = 'stg-status ' + (type || '');
+  el.style.display = msg ? '' : 'none';
 }
 
-function initDashboard() {
-  buildWeekOptions();
-  buildCatOptions();
-  rebuildSkuOptions();
-  buildEvTypeOptions();
-  renderTypeLegend();
-  renderEventList();
-  buildChWeekOptions();
-  buildChChanOptions();
-  refresh();
-}
+// ── window 전역 등록 (onclick 참조용) ────────────────────────────────────────
+// eval 대신 직접 참조로 등록 (strict mode 호환)
+setTimeout(function() {
+  var fns = ['addEvent','clearChFilter','clearFilter','editEvent','removeEvent',
+             'renderEventList','saveEvent','switchTab','toggleChDD','toggleDD'];
+  fns.forEach(function(fn) {
+    try {
+      if (typeof window[fn] === 'undefined') {
+        // 현재 스코프에서 함수 탐색
+        var found = (fn === 'addEvent') ? addEvent :
+                    (fn === 'clearChFilter') ? clearChFilter :
+                    (fn === 'clearFilter') ? clearFilter :
+                    (fn === 'editEvent') ? editEvent :
+                    (fn === 'removeEvent') ? removeEvent :
+                    (fn === 'renderEventList') ? renderEventList :
+                    (fn === 'saveEvent') ? saveEvent :
+                    (fn === 'switchTab') ? switchTab :
+                    (fn === 'toggleChDD') ? toggleChDD :
+                    (fn === 'toggleDD') ? toggleDD : null;
+        if (found) window[fn] = found;
+      }
+    } catch(e) { console.warn('window reg failed:', fn, e); }
+  });
+  console.log('[Dashboard] window registrations complete');
+}, 0);
+
 </script>
 <div id="mTooltip"></div>
 </body>
