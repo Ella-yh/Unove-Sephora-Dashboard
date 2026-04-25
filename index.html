@@ -56,6 +56,13 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1
 .chart-wrap{position:relative;height:320px;}
 .chart-note{font-size:9px;color:#ccc;text-align:right;margin-top:5px;}
 
+/* Sales type toggle */
+.sales-toggle{display:flex;gap:4px;margin-left:auto;}
+.stgl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  padding:3px 9px;border:1px solid #ddd;background:#fff;color:#aaa;cursor:pointer;border-radius:2px;transition:all .15s;}
+.stgl:hover{border-color:#c8102e;color:#c8102e;}
+.stgl.active{background:#c8102e;border-color:#c8102e;color:#fff;}
+
 /* Event section */
 .ev-sec{padding:0 28px 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .ev-card{background:#fff;border:1px solid #e0e0e0;padding:16px 18px;}
@@ -308,10 +315,15 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f0;color:#1a1
 <div class="chart-sec">
   <div class="sec-hdr">일자별 Visits · Sales · CVR</div>
   <div class="chart-card">
-    <div class="leg-row">
+    <div class="leg-row" style="align-items:center;">
       <div class="leg"><div class="leg-dot" style="background:rgba(80,80,80,0.35);border:1.5px solid rgba(80,80,80,0.6);"></div>Visits</div>
-      <div class="leg"><div class="leg-dot" style="background:#c8102e;"></div>Sales ($)</div>
+      <div class="leg"><div class="leg-dot" style="background:#c8102e;"></div><span id="salesLegLabel">Sales (.COM)</span></div>
       <div class="leg"><div class="leg-dot" style="background:#1e6fbf;border-radius:50%;"></div>CVR (%)</div>
+      <div class="sales-toggle">
+        <button class="stgl active" data-type="com" onclick="setSalesType(this)">COM</button>
+        <button class="stgl" data-type="total" onclick="setSalesType(this)">TTL</button>
+        <button class="stgl" data-type="bam" onclick="setSalesType(this)">B&M</button>
+      </div>
     </div>
     <div id="markerZone" class="marker-zone"></div>
     <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
@@ -589,6 +601,17 @@ let EVENTS = [
 const USD_TO_KRW = 1500; // 환율 기준: 1 USD = 1,500 KRW (수동 업데이트)
 
 let selMonths = new Set(), selWeeks = new Set(), selCats = new Set(), selSkus = new Set(), selEvType = new Set();
+let selSalesType = 'com'; // 'com' | 'total' | 'bam'
+
+window.setSalesType = function(btn) {
+  selSalesType = btn.dataset.type;
+  document.querySelectorAll('.stgl').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const labels = {com:'Sales (.COM)', total:'Sales (TTL)', bam:'Sales (B&M)'};
+  const el = document.getElementById('salesLegLabel');
+  if (el) el.textContent = labels[selSalesType] || 'Sales';
+  renderChart();
+};
 let chart = null;
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
@@ -965,10 +988,10 @@ function renderChart() {
           yAxisID: 'yV', order: 3,
           tension: 0.25,
         },
-        // Sales → bar (prominent)
+        // Sales → bar (prominent, KRW)
         {
-          label: 'Sales ($)',
-          data: data.map(d => d.sales),
+          label: selSalesType === 'com' ? 'Sales (.COM)' : selSalesType === 'bam' ? 'Sales (B&M)' : 'Sales (TTL)',
+          data: data.map(d => { const sb = SALES_BY_DATE[d.date] || {}; return selSalesType === 'com' ? (sb.com||0) : selSalesType === 'bam' ? (sb.bam||0) : (sb.total||0); }),
           type: 'bar',
           backgroundColor: 'rgba(200,16,46,0.8)',
           hoverBackgroundColor: 'rgba(200,16,46,1)',
@@ -1012,7 +1035,7 @@ function renderChart() {
             label: ctx => {
               const v = ctx.raw;
               if (ctx.dataset.label === 'Visits') return `  Visits: ${v.toLocaleString()}`;
-              if (ctx.dataset.label === 'Sales ($)') return `  Sales: $${v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+              if (ctx.dataset.label.startsWith('Sales')) return '  ' + ctx.dataset.label + ': ₩' + Math.round(Math.abs(v)).toLocaleString('ko-KR');
               if (ctx.dataset.label === 'CVR') return `  CVR: ${v.toFixed(2)}%`;
               return ctx.dataset.label + ': ' + v;
             }
@@ -1041,8 +1064,8 @@ function renderChart() {
         yS: {
           type: 'linear', position: 'right',
           grid: { drawOnChartArea: false },
-          ticks: { font:{size:9}, color:'#c8102e', callback: v => '$'+(v>=1000?(v/1000).toFixed(0)+'K':v) },
-          title: { display:true, text:'Sales ($)', font:{size:9}, color:'#c8102e' }
+          ticks: { font:{size:9}, color:'#c8102e', callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v },
+          title: { display:true, text:'Sales (₩)', font:{size:9}, color:'#c8102e' }
         },
         yC: {
           type: 'linear', position: 'right', display: false,
@@ -2263,6 +2286,13 @@ function rebuildDerivedData() {
 function initDashboard() {
   try { selChWeeks.clear(); selChChans.clear(); } catch(e) {}
   try { buildChWeekOptions(); buildChChanOptions(); } catch(e) {}
+  // Week 옵션 재빌드 (데이터 로드 후 week 번호가 확정되므로)
+  try {
+    const wp = document.getElementById('ddPanel-week');
+    if (wp) wp.querySelectorAll('.dd-opt').forEach(el => el.remove());
+    selWeeks.clear(); updateLabel('week');
+    buildWeekOptions();
+  } catch(e) {}
   try { renderKPI(); renderChart(); renderEventList(); } catch(e) { console.warn('render error', e); }
   try { refreshChannel(); } catch(e) {}
 }
