@@ -195,6 +195,11 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 
 /* ── LOGIN OVERLAY ── */
 #loginOverlay{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;z-index:9999;}
+#loadingOverlay{display:none;position:fixed;inset:0;background:rgba(10,12,20,0.88);flex-direction:column;align-items:center;justify-content:center;z-index:9998;backdrop-filter:blur(3px);}
+.ld-spinner{width:36px;height:36px;border:3px solid rgba(217,168,154,0.2);border-top-color:#D9A89A;border-radius:50%;animation:ldSpin .75s linear infinite;margin:0 auto 16px;}
+@keyframes ldSpin{to{transform:rotate(360deg)}}
+.ld-txt{font-size:12px;font-weight:700;color:#D9A89A;letter-spacing:2px;text-transform:uppercase;}
+.ld-sub{font-size:10px;color:#666;margin-top:6px;letter-spacing:1px;}
 .login-box{text-align:center;padding:48px 40px;max-width:360px;width:100%;}
 .login-logo-l{font-size:28px;font-weight:900;letter-spacing:6px;color:#fff;margin-bottom:6px;}
 .login-sub-l{font-size:10px;color:#777;letter-spacing:3px;text-transform:uppercase;margin-bottom:28px;}
@@ -244,8 +249,8 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .sidebar.collapsed .sb-section-lbl{opacity:0;}
 .sb-item{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:6px;color:#888;cursor:pointer;transition:all .13s;white-space:nowrap;overflow:hidden;}
 .sb-item:hover{background:rgba(255,255,255,0.07);color:#ccc;}
-.sb-item.active{background:#1E1E20;color:#fff;}
-.sb-item.active .sb-icon{color:#d97070;}
+.sb-item.active{background:#1D2847;color:#D9A89A;}
+.sb-item.active .sb-icon{color:#D9A89A;}
 .sb-icon{flex-shrink:0;width:18px;display:flex;align-items:center;justify-content:center;}
 .sb-text{font-size:11px;font-weight:500;transition:opacity .2s;white-space:nowrap;}
 .sidebar.collapsed .sb-text{opacity:0;pointer-events:none;width:0;overflow:hidden;}
@@ -291,6 +296,12 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   </div>
 </div>
 
+<div id="loadingOverlay">
+  <div class="ld-spinner"></div>
+  <div class="ld-txt">데이터 로딩 중입니다</div>
+  <div class="ld-sub">잠시만 기다려 주세요...</div>
+</div>
+
 <div class="app-layout">
 <!-- ── SIDEBAR ── -->
 <nav class="sidebar" id="sidebar">
@@ -330,7 +341,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     </div>
     <div class="sb-refresh">
       <div class="sb-upd" id="lastUpdatedLabel">—</div>
-      <button id="btnRefresh" onclick="manualRefresh()" style="padding:4px 10px;background:#c8102e;color:#fff;border:none;font-size:9px;font-weight:700;letter-spacing:.5px;cursor:pointer;border-radius:3px;white-space:nowrap;display:none;">↻ RAW</button>
+      <button id="btnRefresh" onclick="manualRefresh()" style="padding:4px 10px;background:#1D2847;color:#D9A89A;border:none;font-size:9px;font-weight:700;letter-spacing:.5px;cursor:pointer;border-radius:3px;white-space:nowrap;display:none;">↻ RAW</button>
     </div>
   </div>
 </nav>
@@ -2531,7 +2542,10 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     showStgStatus('❌ 로그인이 필요합니다. 새로고침 후 다시 로그인해주세요.', 'err');
     return;
   }
-  if (!isSilent) showStgStatus('📡 Apps Script에서 데이터 불러오는 중...', 'loading');
+  if (!isSilent) {
+    const lo = document.getElementById('loadingOverlay');
+    if (lo) lo.style.display = 'flex';
+  }
   try {
     const res  = await fetch(appsScriptUrl + '?token=' + encodeURIComponent(token), { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -2562,12 +2576,16 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     const label = document.getElementById('lastUpdatedLabel');
     if (label) label.textContent = '업데이트: ' + ts;
     showStgStatus('✅ 로드 완료 — SKU ' + RAW_SKU.length + '행 / 매출 ' + RAW_SALES.length + '행 / Channel ' + CH_RAW.length + '행 / Ads ' + ADS_RAW.length + '행', 'ok');
+    const _lo = document.getElementById('loadingOverlay');
+    if (_lo) _lo.style.display = 'none';
     initDashboard();
     if (!isSilent && document.getElementById('tabSettings') &&
         document.getElementById('tabSettings').style.display !== 'none') switchTab('main');
     if (autoRefreshTimer) clearInterval(autoRefreshTimer);
     autoRefreshTimer = setInterval(() => loadFromAppsScript(appsScriptUrl, true), AUTO_REFRESH_MS);
   } catch(e) {
+    const _lo2 = document.getElementById('loadingOverlay');
+    if (_lo2) _lo2.style.display = 'none';
     showStgStatus('❌ 로드 실패: ' + e.message, 'err');
     console.error(e);
   }
