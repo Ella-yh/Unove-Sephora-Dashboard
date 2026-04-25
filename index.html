@@ -2151,18 +2151,10 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
       }
       throw new Error(data.error + (data.detail ? ': ' + data.detail : ''));
     }
-    // 디버그: 첫 2행 구조 확인
-    console.log('[commerce] header:', data.commerce && data.commerce[0]);
-    console.log('[commerce] row1:',   data.commerce && data.commerce[1]);
-    console.log('[sales] header:',    data.sales    && data.sales[0]);
-    console.log('[sales] row1:',      data.sales    && data.sales[1]);
-    const newSku   = parseSheetRows(data.commerce, parseCommerceRow);
-    const newSales = parseSheetRows(data.sales,    parseSalesRow);
-    const newCh    = parseSheetRows(data.channel,  parseChannelRow);
-    console.log('[parsed] sku:', newSku.length, 'sales:', newSales.length, 'ch:', newCh.length);
-    if (newSku.length === 0 && data.commerce && data.commerce.length > 1) {
-      console.log('[debug] parseCommerceRow sample:', parseCommerceRow(data.commerce[1], data.commerce[0].map(h => String(h).trim().toLowerCase())));
-    }
+    // Apps Script가 서버에서 파싱 완료 → 직접 사용
+    const newSku   = Array.isArray(data.commerce) ? data.commerce : [];
+    const newSales = Array.isArray(data.sales)    ? data.sales    : [];
+    const newCh    = Array.isArray(data.channel)  ? data.channel  : [];
     if (!newSku.length)   throw new Error('RAW_commerce 데이터가 비어 있습니다.');
     if (!newSales.length) throw new Error('Raw_실매출 데이터가 비어 있습니다.');
     if (!newCh.length)    throw new Error('Raw_유입 데이터가 비어 있습니다.');
@@ -2188,59 +2180,6 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
 }
 
 // ── 배열 파서 (Apps Script 반환 2D array) ────────────────────────────────────
-function parseSheetRows(rows, rowParser) {
-  if (!rows || rows.length < 2) return [];
-  const hdrs = rows[0].map(h => String(h).trim().toLowerCase());
-  return rows.slice(1).map(r => rowParser(r, hdrs)).filter(Boolean);
-}
-
-function parseCommerceRow(v, hdrs) {
-  const fi = (terms) => { for (const t of terms) { const i = hdrs.findIndex(h => h.includes(t)); if (i>=0) return i; } return -1; };
-  const iDate = fi(['날짜','date']); const iSku = fi(['sku number','sku']);
-  const iVis  = fi(['visits ty','visits']); const iOrd = fi(['주문','order']);
-  const iCat  = fi(['상품 구분_상세','catdetail']); // catDetail first
-  const iCatP = hdrs.findIndex(h => h.includes('상품 구분') && !h.includes('상세'));
-  const iMon  = fi(['월','month']);
-  const dateStr = parseDate(v[iDate < 0 ? 0 : iDate]);
-  if (!dateStr) return null;
-  const sku = parseInt(v[iSku < 0 ? 3 : iSku]);
-  if (isNaN(sku)) return null;
-  const mon = v[iMon < 0 ? 20 : iMon];
-  return {
-    date: dateStr, sku,
-    visits:    parseNum(v[iVis  < 0 ? 5  : iVis]),
-    orders:    parseNum(v[iOrd  < 0 ? 16 : iOrd]),
-    cat:       String(v[iCatP < 0 ? 17 : iCatP] || '').trim(),
-    catDetail: String(v[iCat  < 0 ? 18 : iCat]  || '').trim(),
-    month:     String(parseInt(mon) || 1).padStart(2,'0'),
-    week:      0
-  };
-}
-
-function parseSalesRow(v, hdrs) {
-  const iDate = hdrs.findIndex(h => h.includes('날짜') || h.includes('date'));
-  const iSal  = hdrs.findIndex(h => h.includes('.com 매출') && h.includes('$'));
-  const dateStr = parseDate(v[iDate < 0 ? 0 : iDate]);
-  if (!dateStr) return null;
-  return { date: dateStr, sales: parseNum(v[iSal < 0 ? 6 : iSal]) };
-}
-
-function parseChannelRow(v, hdrs) {
-  const iWeek = hdrs.findIndex(h => h === 'week');
-  const iRng  = hdrs.findIndex(h => h.includes('date range') || h.includes('range'));
-  const iCh   = hdrs.findIndex(h => h.includes('channel') || h.includes('last touch'));
-  const iVis  = hdrs.findIndex(h => h.includes('visits'));
-  const iSal  = hdrs.findIndex(h => h.includes('sales'));
-  const iCvr  = hdrs.findIndex(h => h.includes('conversion') || h.includes('cvr'));
-  const week = String(v[iWeek < 0 ? 0 : iWeek] || '').trim();
-  const ch   = String(v[iCh   < 0 ? 2 : iCh]   || '').trim();
-  if (!week || !ch) return null;
-  return { week, range: String(v[iRng < 0 ? 1 : iRng] || '').trim(), channel: ch,
-    visits: parseNum(v[iVis < 0 ? 3 : iVis]),
-    sales:  parseNum(v[iSal < 0 ? 4 : iSal]),
-    cvr:    parseNum(v[iCvr < 0 ? 5 : iCvr]) };
-}
-
 function parseNum(val) {
   if (val === null || val === undefined || val === '') return 0;
   if (typeof val === 'number') return val;
@@ -2248,27 +2187,14 @@ function parseNum(val) {
 }
 
 function parseDate(raw) {
-  if (raw === null || raw === undefined || raw === '') return null;
-  // Apps Script JSON: Date 객체 → ISO string "2024-01-15T00:00:00.000Z"
-  if (typeof raw === 'string' && raw.includes('T')) return raw.slice(0,10);
-  if (raw instanceof Date) return raw.toISOString().slice(0,10);
+  // Apps Script에서 이미 "YYYY-MM-DD" 문자열로 반환됨
+  if (!raw) return null;
   const s = String(raw).trim();
-  if (!s || s === '날짜' || s === 'date') return null;
-  // YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  // M/D/YYYY or MM/DD/YYYY
-  const mdy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (mdy) return mdy[3]+'-'+mdy[1].padStart(2,'0')+'-'+mdy[2].padStart(2,'0');
-  // YYYY/MM/DD
-  const ymd = s.match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
-  if (ymd) return ymd[1]+'-'+ymd[2]+'-'+ymd[3];
-  // Excel serial
-  const serial = parseFloat(s);
-  if (!isNaN(serial) && serial > 40000 && serial < 60000) {
-    return new Date(Math.round((serial - 25569) * 86400000)).toISOString().slice(0,10);
-  }
+  if (s.length > 10 && s[10] === 'T') return s.slice(0,10); // ISO datetime fallback
   return null;
 }
+
 
 // ── Rebuild derived data ────────────────────────────────────────────────────
 function rebuildDerivedData() {
