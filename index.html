@@ -297,9 +297,18 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 </div>
 
 <div id="loadingOverlay">
-  <div class="ld-spinner"></div>
-  <div class="ld-txt">데이터 로딩 중입니다</div>
-  <div class="ld-sub">잠시만 기다려 주세요...</div>
+  <div id="ldStateLoading">
+    <div class="ld-spinner"></div>
+    <div class="ld-txt">데이터 로딩 중입니다</div>
+    <div class="ld-sub">잠시만 기다려 주세요...</div>
+  </div>
+  <div id="ldStateError" style="display:none;text-align:center;">
+    <div style="font-size:36px;margin-bottom:12px;">⚠️</div>
+    <div class="ld-txt" style="color:#f87171;">데이터 로드 실패</div>
+    <div id="ldErrorMsg" class="ld-sub" style="color:#fca5a5;margin-bottom:20px;"></div>
+    <button onclick="ldRetry()" style="padding:10px 28px;background:#1D2847;color:#D9A89A;border:none;border-radius:6px;font-size:14px;cursor:pointer;font-weight:600;">↻ 다시 시도</button>
+    <div style="margin-top:12px;"><button onclick="document.getElementById('loadingOverlay').style.display='none'; switchTab('settings')" style="padding:6px 16px;background:transparent;color:#aaa;border:1px solid #444;border-radius:6px;font-size:12px;cursor:pointer;">Settings에서 URL 확인</button></div>
+  </div>
 </div>
 
 <div class="app-layout">
@@ -1965,6 +1974,7 @@ function renderLagEffect() {
 // ─── TOOLTIP MOUSE FOLLOW ────────────────────────────────────────────────────
 document.addEventListener('mousemove', function(e) {
   const tip = document.getElementById('mTooltip');
+  if (!tip) return;
   if (tip.style.display === 'block') {
     const x = e.clientX + 14, y = e.clientY - 8;
     const tipW = tip.offsetWidth, tipH = tip.offsetHeight;
@@ -2536,6 +2546,15 @@ window.manualRefresh = function() {
   });
 };
 
+function ldRetry() {
+  const ldLoading = document.getElementById('ldStateLoading');
+  const ldError   = document.getElementById('ldStateError');
+  if (ldLoading) ldLoading.style.display = '';
+  if (ldError)   ldError.style.display = 'none';
+  const url = localStorage.getItem('sephora_apps_script_url') || '';
+  if (url) loadFromAppsScript(url);
+}
+
 async function loadFromAppsScript(appsScriptUrl, isSilent) {
   const token = sessionStorage.getItem('sephora_token');
   if (!token) {
@@ -2544,6 +2563,10 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
   }
   if (!isSilent) {
     const lo = document.getElementById('loadingOverlay');
+    const ldL = document.getElementById('ldStateLoading');
+    const ldE = document.getElementById('ldStateError');
+    if (ldL) ldL.style.display = '';
+    if (ldE) ldE.style.display = 'none';
     if (lo) lo.style.display = 'flex';
   }
   try {
@@ -2552,7 +2575,17 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     const data = await res.json();
     if (data.error) {
       if (data.error === 'INVALID_TOKEN' || data.error === 'NO_TOKEN') {
-        throw new Error('토큰 만료 — 로그아웃 후 다시 로그인해주세요.');
+        // Token expired: clear cache and return to login
+        sessionStorage.removeItem('sephora_auth');
+        sessionStorage.removeItem('sephora_token');
+        if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+        const lo = document.getElementById('loadingOverlay');
+        if (lo) lo.style.display = 'none';
+        const loginOv = document.getElementById('loginOverlay');
+        if (loginOv) loginOv.style.display = 'flex';
+        const loginErr = document.getElementById('loginErr');
+        if (loginErr) loginErr.textContent = '세션이 만료되었습니다. 다시 로그인해주세요.';
+        return;
       }
       throw new Error(data.error + (data.detail ? ': ' + data.detail : ''));
     }
@@ -2585,7 +2618,16 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     autoRefreshTimer = setInterval(() => loadFromAppsScript(appsScriptUrl, true), AUTO_REFRESH_MS);
   } catch(e) {
     const _lo2 = document.getElementById('loadingOverlay');
-    if (_lo2) _lo2.style.display = 'none';
+    const ldLoading = document.getElementById('ldStateLoading');
+    const ldError   = document.getElementById('ldStateError');
+    const ldErrMsg  = document.getElementById('ldErrorMsg');
+    if (_lo2) {
+      // Show error state inside overlay instead of hiding
+      if (ldLoading) ldLoading.style.display = 'none';
+      if (ldErrMsg)  ldErrMsg.textContent = e.message;
+      if (ldError)   ldError.style.display = 'block';
+      _lo2.style.display = 'flex';
+    }
     showStgStatus('❌ 로드 실패: ' + e.message, 'err');
     console.error(e);
   }
