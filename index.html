@@ -2854,4 +2854,13 @@ function showStgStatus(msg, type) {
 // ── window 전역 등록 (onclick 참조용) ────────────────────────────────────────
 // eval 대신 직접 참조로 등록 (strict mode 호환)
 setTimeout(function() {
-  var f
+  var fns = {addEvent:addEvent, clearChFilter:clearChFilter, clearFilter:clearFilter,
+             editEvent:editEvent, removeEvent:removeEvent, removeEventFull:removeEventFull,
+             renderEventList:renderEventList, saveEvent:saveEvent, switchTab:switchTab,
+             toggleAdSpend:toggleAdSpend, toggleChDD:toggleChDD, toggleDD:toggleDD,
+             toggleSidebar:toggleSidebar, toggleVisits:toggleVisits};
+  Object.assign(window, fns);
+}, 0);
+</script>
+</body>
+</html>
