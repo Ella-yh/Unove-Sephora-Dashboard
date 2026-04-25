@@ -273,6 +273,30 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .page-title{font-size:13px;font-weight:700;color:#222;letter-spacing:0.3px;}
 .main-scroll{flex:1;overflow-y:auto;}
 
+
+/* Channel Best/Worst */
+.bw-section-wrap{padding:14px 28px 0;}
+.bw-period-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.bw-period-lbl{font-size:10px;color:#888;}
+.bw-period-tag{font-size:11px;font-weight:600;background:#dbeafe;color:#1d4ed8;padding:2px 10px;border-radius:20px;}
+.bw-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.bw-card{background:#fff;border:0.5px solid #E8E8EC;border-radius:14px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
+.bw-card-title{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#9ca3af;margin-bottom:10px;}
+.bw-blk{margin-bottom:9px;}
+.bw-blk:last-child{margin-bottom:0;}
+.bw-badge{font-size:8px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:1px 6px;border-radius:3px;display:inline-block;margin-bottom:5px;}
+.bw-badge.best{background:#dcfce7;color:#166534;}
+.bw-badge.worst{background:#fee2e2;color:#991b1b;}
+.bw-row{display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:0.5px solid #f0f0f2;}
+.bw-row:last-child{border-bottom:none;}
+.bw-rank{font-size:10px;font-weight:600;color:#bbb;min-width:14px;}
+.bw-ch{font-size:11px;font-weight:500;color:#222;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bw-bar-bg{width:36px;height:3px;background:#ebebeb;border-radius:2px;flex-shrink:0;}
+.bw-bar-fill{height:3px;border-radius:2px;}
+.bw-val{font-size:11px;font-weight:600;color:#222;white-space:nowrap;min-width:44px;text-align:right;}
+.bw-delta{font-size:9px;font-weight:600;padding:1px 4px;border-radius:3px;white-space:nowrap;}
+.bw-delta.up{background:#dcfce7;color:#16a34a;}
+.bw-delta.dn{background:#fee2e2;color:#dc2626;}
 </style>
 </head>
 <body>
@@ -392,25 +416,6 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     </div>
   </div>
 
-  <div class="filter-block">
-    <div class="filter-lbl">Category</div>
-    <div class="dd-wrap" id="ddWrap-cat">
-      <div class="dd-btn" id="ddBtn-cat" onclick="toggleDD('cat')"><span id="ddLabel-cat">ALL</span><span class="arr">▾</span></div>
-      <div class="dd-panel" id="ddPanel-cat">
-        <div class="dd-all" onclick="clearFilter('cat')"><input type="checkbox" id="chk-cat-all" checked readonly> ALL</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="filter-block">
-    <div class="filter-lbl">SKU</div>
-    <div class="dd-wrap" id="ddWrap-sku">
-      <div class="dd-btn" id="ddBtn-sku" onclick="toggleDD('sku')"><span id="ddLabel-sku">ALL</span><span class="arr">▾</span></div>
-      <div class="dd-panel" id="ddPanel-sku" style="min-width:280px;">
-        <div class="dd-all" onclick="clearFilter('sku')"><input type="checkbox" id="chk-sku-all" checked readonly> ALL</div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <div class="chart-sec">
@@ -431,10 +436,10 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
           <button class="stgl" data-type="total" onclick="setSalesType(this)">TTL</button>
           <button class="stgl" data-type="bam" onclick="setSalesType(this)">B&M</button>
         </div>
-        <button class="mkr-btn active" id="btnMarkerToggle" onclick="toggleMarkers(this)">이벤트 마커</button>
+        <button class="mkr-btn" id="btnMarkerToggle" onclick="toggleMarkers(this)" style="min-width:72px;">마커 OFF</button>
       </div>
     </div>
-    <div id="markerZone" class="marker-zone"></div>
+    <div id="markerZone" class="marker-zone hidden"></div>
     <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
     <div class="chart-note">* CVR = 주문 수량 / Visits TY × 100</div>
   </div>
@@ -537,6 +542,14 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     </div>
     <div class="chart-wrap" style="height:360px;"><canvas id="chComboChart"></canvas></div>
   </div>
+</div>
+
+<div class="bw-section-wrap">
+  <div class="bw-period-bar">
+    <span class="bw-period-lbl">기준 기간</span>
+    <span class="bw-period-tag" id="bwPeriodTag">전체</span>
+  </div>
+  <div class="bw-grid" id="bwGrid"></div>
 </div>
 
 <div class="chart-sec">
@@ -824,18 +837,18 @@ window.toggleAdsMedia = function(btn) {
   refreshAds();
 };
 let selSalesType = 'com'; // 'com' | 'total' | 'bam'
-let showMarkers = true;
+let showMarkers = false;
 let showVisits   = false;
 let showAdSpend  = false;
 
 window.toggleMarkers = function(btn) {
   showMarkers = !showMarkers;
   btn.classList.toggle('active', showMarkers);
-  btn.textContent = showMarkers ? '이벤트 마커 표시' : '이벤트 마커 숨김';
+  btn.textContent = showMarkers ? '마커 ON' : '마커 OFF';
   const zone = document.getElementById('markerZone');
   if (zone) zone.classList.toggle('hidden', !showMarkers);
   if (showMarkers) positionMarkers();
-  renderChart(); // 점선(annotation) 동기화
+  renderChart();
 }
 function toggleVisits(btn) {
   showVisits = !showVisits;
@@ -2149,6 +2162,121 @@ function refreshChannel() {
   renderChLineChart('chVisitsChart', activeWeeks, activeChans, pivot, 'v', 'chVisitsChart', 0);
   renderChLineChart('chSalesChart', activeWeeks, activeChans, pivot, 's', 'chSalesChart', 1);
   renderChLineChart('chCvrChart', activeWeeks, activeChans, pivot, 'c', 'chCvrChart', 2);
+  renderChannelBestWorst();
+}
+
+
+function renderChannelBestWorst() {
+  const allData = CH_RAW;
+  if (!allData.length) return;
+
+  // 선택된 주차 파악
+  const activeWeeks = getActiveWeeks();
+  const selW = selChWeeks.size > 0 ? [...selChWeeks].sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1))) : [];
+
+  // 기간 태그 텍스트
+  let periodTxt = '전체';
+  if (selW.length === 1) periodTxt = selW[0];
+  else if (selW.length > 1) periodTxt = selW[0] + '~' + selW[selW.length-1];
+  const tag = document.getElementById('bwPeriodTag');
+  if (tag) tag.textContent = periodTxt;
+
+  // WoW 비교 주차 (단일 주차 선택 시만)
+  let prevWeek = null;
+  if (selW.length === 1) {
+    const idx = CH_WEEKS.indexOf(selW[0]);
+    if (idx > 0) prevWeek = CH_WEEKS[idx - 1];
+  }
+
+  // 채널별 집계 (현재 기간)
+  const chans = selChChans.size > 0 ? [...selChChans] : [...CH_CHANNELS];
+  const cur = {}, prv = {};
+  chans.forEach(ch => {
+    cur[ch] = {v:0, s:0, cvrSum:0, cvrCnt:0};
+    prv[ch] = {v:0, s:0, cvrSum:0, cvrCnt:0};
+  });
+  allData.forEach(r => {
+    if (!cur[r.channel]) return;
+    if (activeWeeks.includes(r.week)) {
+      cur[r.channel].v += r.visits;
+      cur[r.channel].s += r.sales;
+      cur[r.channel].cvrSum += r.cvr;
+      cur[r.channel].cvrCnt++;
+    }
+    if (prevWeek && r.week === prevWeek) {
+      prv[r.channel].v += r.visits;
+      prv[r.channel].s += r.sales;
+      prv[r.channel].cvrSum += r.cvr;
+      prv[r.channel].cvrCnt++;
+    }
+  });
+
+  // CVR 평균
+  const curArr = chans.map(ch => ({
+    ch,
+    v: cur[ch].v,
+    s: cur[ch].s,
+    cvr: cur[ch].cvrCnt > 0 ? cur[ch].cvrSum / cur[ch].cvrCnt * 100 : 0,
+    pv: prv[ch].v,
+    ps: prv[ch].s,
+    pcvr: prv[ch].cvrCnt > 0 ? prv[ch].cvrSum / prv[ch].cvrCnt * 100 : 0
+  }));
+
+  function delta(cur, prev, hasPrev) {
+    if (!hasPrev || prev === 0) return null;
+    return (cur - prev) / prev * 100;
+  }
+  const hasPrev = !!prevWeek;
+
+  function makeBW(sorted, key, fmtFn, prevKey) {
+    const best  = sorted.slice().sort((a,b) => b[key] - a[key]).slice(0,3);
+    const worst = sorted.slice().sort((a,b) => a[key] - b[key]).slice(0,3);
+    const maxVal = Math.max(...sorted.map(d => d[key]));
+
+    function rows(arr, isBest) {
+      return arr.map((d, i) => {
+        const barPct = maxVal > 0 ? Math.round(d[key] / maxVal * 100) : 0;
+        const barColor = isBest ? '#16a34a' : '#e24b4a';
+        const d_pct = hasPrev ? delta(d[key], d[prevKey], hasPrev) : null;
+        const dCls  = d_pct === null ? '' : d_pct >= 0 ? 'up' : 'dn';
+        const dTxt  = d_pct === null ? '' : (d_pct>=0?'▲ +':'▼ ') + Math.abs(d_pct).toFixed(1) + '%';
+        return \`<div class="bw-row">
+          <span class="bw-rank">\${i+1}</span>
+          <span class="bw-ch" title="\${d.ch}">\${d.ch}</span>
+          <div class="bw-bar-bg"><div class="bw-bar-fill" style="width:\${barPct}%;background:\${barColor};"></div></div>
+          <span class="bw-val">\${fmtFn(d[key])}</span>
+          \${dTxt ? \`<span class="bw-delta \${dCls}">\${dTxt}</span>\` : ''}
+        </div>\`;
+      }).join('');
+    }
+
+    return \`
+      <div class="bw-blk">
+        <span class="bw-badge best">Best 3</span>
+        \${rows(best, true)}
+      </div>
+      <div class="bw-blk">
+        <span class="bw-badge worst">Worst 3</span>
+        \${rows(worst, false)}
+      </div>\`;
+  }
+
+  const fmtV   = v => Math.round(v).toLocaleString();
+  const fmtS   = v => '$' + (v >= 1000 ? (v/1000).toFixed(1)+'K' : Math.round(v).toLocaleString());
+  const fmtCvr = v => v.toFixed(2) + '%';
+
+  const grid = document.getElementById('bwGrid');
+  if (!grid) return;
+  grid.innerHTML = [
+    { title:'Visits',  key:'v',   prevKey:'pv',   fmt:fmtV   },
+    { title:'Sales',   key:'s',   prevKey:'ps',   fmt:fmtS   },
+    { title:'CVR (%)', key:'cvr', prevKey:'pcvr', fmt:fmtCvr },
+  ].map(col => \`
+    <div class="bw-card">
+      <div class="bw-card-title">\${col.title}</div>
+      \${makeBW(curArr, col.key, col.fmt, col.prevKey)}
+    </div>\`
+  ).join('');
 }
 
 function kpiCard(title, period, value, wow, compLabel, compVal) {
@@ -2510,6 +2638,29 @@ function onAuthSuccess(user) {
   const urlInput = document.getElementById('appsScriptUrl');
   if (urlInput) urlInput.value = appsScriptUrl;
   if (appsScriptUrl) {
+    // 캐시 데이터 있으면 즉시 표시 (1시간 이내)
+    try {
+      const cached = localStorage.getItem('sephora_data_cache');
+      if (cached) {
+        const c = JSON.parse(cached);
+        const age = (Date.now() - c.ts) / 60000; // minutes
+        if (age < 60 && c.commerce && c.sales && c.channel) {
+          RAW_SKU.length = 0;   c.commerce.forEach(r => RAW_SKU.push(r));
+          RAW_SALES.length = 0; c.sales.forEach(r => RAW_SALES.push(r));
+          CH_RAW.length = 0;    c.channel.forEach(r => CH_RAW.push(r));
+          ADS_RAW.length = 0;   (c.ads || []).forEach(r => ADS_RAW.push(r));
+          Object.keys(SALES_BY_DATE).forEach(k => delete SALES_BY_DATE[k]);
+          RAW_SALES.forEach(r => { SALES_BY_DATE[r.date] = { total: r.total||0, com: r.com||0, bam: r.bam||0 }; });
+          rebuildDerivedData();
+          const lbl = document.getElementById('lastUpdatedLabel');
+          if (lbl) lbl.textContent = '캐시: ' + Math.round(age) + '분 전';
+          initDashboard();
+          // 백그라운드 갱신
+          setTimeout(() => loadFromAppsScript(appsScriptUrl, true), 500);
+          return;
+        }
+      }
+    } catch(e) {}
     loadFromAppsScript(appsScriptUrl);
   } else {
     showStgStatus('⚠ Settings 탭에서 Apps Script URL을 설정해주세요.', 'err');
@@ -2607,6 +2758,14 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     const ts = data.updatedAt ? new Date(data.updatedAt).toLocaleString('ko-KR') : '—';
     const label = document.getElementById('lastUpdatedLabel');
     if (label) label.textContent = '업데이트: ' + ts;
+    // 캐시 저장 (빠른 재로딩용)
+    try {
+      localStorage.setItem('sephora_data_cache', JSON.stringify({
+        ts: Date.now(),
+        commerce: newSku, sales: newSales, channel: newCh,
+        ads: Array.from(ADS_RAW), updatedAt: data.updatedAt
+      }));
+    } catch(e) { /* localStorage 용량 초과 시 무시 */ }
     showStgStatus('✅ 로드 완료 — SKU ' + RAW_SKU.length + '행 / 매출 ' + RAW_SALES.length + '행 / Channel ' + CH_RAW.length + '행 / Ads ' + ADS_RAW.length + '행', 'ok');
     const _lo = document.getElementById('loadingOverlay');
     if (_lo) _lo.style.display = 'none';
