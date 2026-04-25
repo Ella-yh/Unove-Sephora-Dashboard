@@ -2,6 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sephora Dashboard</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
@@ -17,19 +19,20 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .hdr-r{font-size:10px;color:#555;}
 
 /* KPI */
-.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:14px 28px 0;}
-.kpi{background:#ffffff;border:0.5px solid #E8E8EC;padding:14px 16px 14px 18px;display:flex;align-items:stretch;gap:12px;border-radius:3px;position:relative;}
-.kpi-bar{width:4px;border-radius:2px;align-self:stretch;flex-shrink:0;}
-.kpi-left{flex:1;min-width:0;}
-.kpi-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:5px;padding-right:20px;}
-.kpi-value{font-size:22px;font-weight:700;color:#1a1a1a;line-height:1;margin-bottom:4px;}
-.kpi-delta{font-size:10px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
-.up{color:#16a34a;}.dn{color:#c8102e;}.na-c{color:#aaa;}
-.kpi-info-btn{position:absolute;top:10px;right:10px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,0.07);border:none;cursor:pointer;font-size:9px;font-weight:700;color:#aaa;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;transition:background .15s,color .15s;}
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;padding:16px 28px 0;}
+.kpi{background:#ffffff;border:0.5px solid #E8E8EC;padding:18px 20px 16px;display:flex;flex-direction:column;border-radius:14px;position:relative;box-shadow:0 1px 6px rgba(0,0,0,0.05);}
+.kpi-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:8px;}
+.kpi-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#9ca3af;line-height:1.4;}
+.kpi-badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
+.kpi-badge.up{color:#16a34a;background:#dcfce7;}
+.kpi-badge.dn{color:#dc2626;background:#fee2e2;}
+.kpi-value{font-size:24px;font-weight:700;color:#111827;line-height:1.1;margin-bottom:6px;}
+.kpi-vs{font-size:10px;color:#9ca3af;}
+.up{color:#16a34a;}.dn{color:#dc2626;}.na-c{color:#aaa;}
+.kpi-info-btn{position:absolute;top:14px;right:14px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,0.07);border:none;cursor:pointer;font-size:9px;font-weight:700;color:#aaa;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;transition:background .15s,color .15s;}
 .kpi-info-btn:hover{background:#e8e8ec;color:#555;}
-.kpi-tooltip{display:none;position:absolute;top:28px;right:0;z-index:500;background:#fff;border:0.5px solid #D8D8DC;border-radius:4px;padding:9px 12px;font-size:9px;color:#666;line-height:1.7;width:220px;box-shadow:0 4px 16px rgba(0,0,0,.12);white-space:normal;pointer-events:none;}
+.kpi-tooltip{display:none;position:absolute;top:32px;right:0;z-index:500;background:#fff;border:0.5px solid #D8D8DC;border-radius:8px;padding:9px 12px;font-size:9px;color:#666;line-height:1.7;width:220px;box-shadow:0 4px 16px rgba(0,0,0,.12);white-space:normal;pointer-events:none;}
 .kpi-info-btn:hover + .kpi-tooltip,.kpi-info-btn:focus + .kpi-tooltip{display:block;}
-.kpi-krw{font-size:12px;font-weight:400;color:#bbb;margin-left:6px;letter-spacing:0;}
 
 /* Filters */
 .filter-row{padding:12px 28px 0;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;}
@@ -53,7 +56,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .chart-sec{padding:12px 28px;}
 .sec-hdr{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#777;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
 .sec-hdr::after{content:'';flex:1;height:1px;background:#E8E8EC;}
-.chart-card{background:#ffffff;border:0.5px solid #E8E8EC;padding:14px 16px 10px;}
+.chart-card{background:#ffffff;border:0.5px solid #E8E8EC;padding:14px 16px 10px;border-radius:14px;box-shadow:0 1px 6px rgba(0,0,0,0.04);}
 .leg-row{display:flex;gap:16px;margin-bottom:10px;flex-wrap:wrap;}
 .leg{display:flex;align-items:center;gap:5px;font-size:11px;color:#777;}
 .leg-dot{width:11px;height:11px;border-radius:2px;flex-shrink:0;}
@@ -235,17 +238,17 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 
 /* ── LAYOUT ── */
 .app-layout{display:flex;height:100vh;overflow:hidden;}
-.sidebar{width:200px;background:#3A3A3C;display:flex;flex-direction:column;transition:width .22s ease;flex-shrink:0;overflow:hidden;border-right:0.5px solid rgba(255,255,255,0.06);}
+.sidebar{width:200px;background:#1D2847;display:flex;flex-direction:column;transition:width .22s ease;flex-shrink:0;overflow:hidden;border-right:0.5px solid rgba(255,255,255,0.06);}
 .sidebar.collapsed{width:54px;}
 .sb-top{display:flex;align-items:center;justify-content:space-between;padding:16px 12px 14px;border-bottom:0.5px solid rgba(255,255,255,0.07);min-height:56px;}
 .sb-logo{display:flex;align-items:center;gap:9px;overflow:hidden;white-space:nowrap;min-width:0;}
 .sb-logo-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
 .sb-logo-text{font-size:12px;font-weight:700;color:#fff;letter-spacing:2px;white-space:nowrap;transition:opacity .2s;}
 .sidebar.collapsed .sb-logo-text{opacity:0;pointer-events:none;width:0;overflow:hidden;}
-.sb-toggle{background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);color:#aaa;width:22px;height:22px;border-radius:4px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .22s;line-height:1;}
+.sb-toggle{background:rgba(255,255,255,0.1);border:0.5px solid rgba(255,255,255,0.15);color:#8da8d4;width:22px;height:22px;border-radius:4px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .22s;line-height:1;}
 .sidebar.collapsed .sb-toggle{transform:rotate(180deg);}
 .sb-nav{flex:1;padding:10px 7px;display:flex;flex-direction:column;gap:1px;overflow:hidden;}
-.sb-section-lbl{font-size:8.5px;letter-spacing:1.5px;text-transform:uppercase;color:#595959;padding:10px 9px 4px;white-space:nowrap;overflow:hidden;transition:opacity .2s;}
+.sb-section-lbl{font-size:8.5px;letter-spacing:1.5px;text-transform:uppercase;color:#4a6090;padding:10px 9px 4px;white-space:nowrap;overflow:hidden;transition:opacity .2s;}
 .sidebar.collapsed .sb-section-lbl{opacity:0;}
 .sb-item{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:6px;color:#888;cursor:pointer;transition:all .13s;white-space:nowrap;overflow:hidden;}
 .sb-item:hover{background:rgba(255,255,255,0.07);color:#ccc;}
@@ -265,7 +268,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .sidebar.collapsed .sb-refresh{opacity:0;pointer-events:none;}
 .sb-upd{font-size:8.5px;color:#666;white-space:nowrap;}
 /* Main area */
-.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#F2F2F5;min-width:0;}
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#F0F1F5;min-width:0;}
 .top-bar{display:flex;align-items:center;justify-content:space-between;padding:9px 22px;border-bottom:0.5px solid #E0E0E4;flex-shrink:0;background:#F2F2F5;}
 .page-title{font-size:13px;font-weight:700;color:#222;letter-spacing:0.3px;}
 .main-scroll{flex:1;overflow-y:auto;}
@@ -1117,16 +1120,13 @@ function renderKPI() {
   }
 
   function dHtml(curVal, prevVal, fmt, prevFmt) {
-    if (prevVal == null || prevVal === undefined) return '';
+    if (prevVal == null || prevVal === undefined) return null;
     const d   = curVal - prevVal;
     const pct = prevVal !== 0 ? (d / prevVal * 100).toFixed(1) : null;
     const cls = d >= 0 ? 'up' : 'dn', arr = d >= 0 ? '▲' : '▼';
-    const pctPart = pct ? '<span class="' + cls + '">' + (d>=0?'+':'') + pct + '%</span>' : '';
-    const prevTag = prevFmt ? ' <span style="color:#c0c0c0;font-size:9px;">(' + prevFmt(prevVal) + ')</span>' : '';
-    return '<span class="' + cls + '">' + arr + ' ' + (d>=0?'+':'') + fmt(d) + '</span>'
-         + '<span style="color:#ddd;margin:0 3px;">|</span>'
-         + pctPart
-         + '<span class="na-c" style="margin-left:4px;">' + cmpLbl + prevTag + '</span>';
+    const badge = pct ? arr + ' ' + (d >= 0 ? '+' : '') + pct + '%' : null;
+    const vsVal = prevFmt ? prevFmt(prevVal) : fmt(Math.abs(prevVal));
+    return { badge, cls, vs: 'vs ' + vsVal + '  ' + cmpLbl };
   }
 
 
@@ -1156,36 +1156,35 @@ function renderKPI() {
   const prevRoasTotal = (prevAdSpend > 0 && prev) ? prev.sales / prevAdSpend : null;
   const prevRoasCom   = (prevAdSpend > 0 && prev) ? prev.com   / prevAdSpend : null;
 
+  const _dV  = dHtml(cur.visits,  prev?.visits,  v => Math.abs(Math.round(v)).toLocaleString(), v => Math.round(v).toLocaleString());
+  const _dS  = dHtml(cur.sales,   prev?.sales,   v => (Math.abs(v)/1000000).toFixed(1)+'M',     v => (v/1000000).toFixed(1)+'M');
+  const _dC  = dHtml(cur.cvr,     prev?.cvr,     v => Math.abs(v).toFixed(2)+'%',               v => v.toFixed(2)+'%');
+  const _dRT = (roasTotal !== null && prevRoasTotal !== null)
+    ? dHtml(roasTotal*100, prevRoasTotal*100, v => Math.abs(v).toFixed(1)+'%', v => v.toFixed(1)+'%') : null;
+  const _dRC = (roasCom !== null && prevRoasCom !== null)
+    ? dHtml(roasCom*100, prevRoasCom*100, v => Math.abs(v).toFixed(1)+'%', v => v.toFixed(1)+'%') : null;
+
   const items = [
-    { key:'visits', label:'TOTAL VISITS', bar:'#555555', wide:false,
-      val: cur.visits.toLocaleString(),
-      delta: dHtml(cur.visits, prev?.visits, v => Math.abs(Math.round(v)).toLocaleString(), v => Math.round(v).toLocaleString()) },
-    { key:'sales', label:'TOTAL Sales (₩) - 단위 : 백만 원', bar:'#d97070', wide:true,
-      val: salesVal + salesBreakdown,
-      delta: dHtml(cur.sales, prev?.sales, v => fmtKRW(v), v => (v/1000000).toFixed(1)) },
-    { key:'cvr', label:'CVR (주문/방문)', bar:'#8878d0', wide:false,
-      val: cur.cvr.toFixed(2) + '%',
-      delta: dHtml(cur.cvr, prev?.cvr, v => Math.abs(v).toFixed(2) + '%', v => v.toFixed(2) + '%') },
-    { key:'roas_total', label:'전체 ROAS', bar:'#e8c84a', wide:false,
-      val: fmtRoas(roasTotal),
-      delta: (roasTotal !== null && prevRoasTotal !== null)
-        ? dHtml(roasTotal * 100, prevRoasTotal * 100, v => Math.abs(v).toFixed(1) + '%', v => v.toFixed(1) + '%')
-        : null },
-    { key:'roas_com', label:'닷컴 ROAS', bar:'#e8c84a', wide:false,
-      val: fmtRoas(roasCom),
-      delta: (roasCom !== null && prevRoasCom !== null)
-        ? dHtml(roasCom * 100, prevRoasCom * 100, v => Math.abs(v).toFixed(1) + '%', v => v.toFixed(1) + '%')
-        : null },
+    { key:'visits',    label:'TOTAL VISITS',                 wide:false, val: cur.visits.toLocaleString(),
+      badge:_dV?.badge,  badgeCls:_dV?.cls,  vs:_dV?.vs },
+    { key:'sales',     label:'TOTAL Sales (₩) · 단위:백만 원', wide:true,  val: salesVal + salesBreakdown,
+      badge:_dS?.badge,  badgeCls:_dS?.cls,  vs:_dS?.vs },
+    { key:'cvr',       label:'CVR (주문/방문)',                wide:false, val: cur.cvr.toFixed(2) + '%',
+      badge:_dC?.badge,  badgeCls:_dC?.cls,  vs:_dC?.vs },
+    { key:'roas_total',label:'전체 ROAS',                     wide:false, val: fmtRoas(roasTotal),
+      badge:_dRT?.badge, badgeCls:_dRT?.cls, vs:_dRT?.vs },
+    { key:'roas_com',  label:'닷컴 ROAS',                     wide:false, val: fmtRoas(roasCom),
+      badge:_dRC?.badge, badgeCls:_dRC?.cls, vs:_dRC?.vs },
   ];
 
   document.getElementById('kpiRow').innerHTML = items.map(k => `
     <div class="kpi"${k.wide ? ' style="grid-column:span 2;"' : ''}>
-      <div class="kpi-bar" style="background:${k.bar};"></div>
-      <div class="kpi-left">
+      <div class="kpi-header">
         <div class="kpi-label">${k.label}</div>
-        <div class="kpi-value">${k.val}</div>
-        ${k.delta ? `<div class="kpi-delta">${k.delta}</div>` : ''}
+        ${k.badge ? `<span class="kpi-badge ${k.badgeCls}">${k.badge}</span>` : ''}
       </div>
+      <div class="kpi-value">${k.val}</div>
+      ${k.vs ? `<div class="kpi-vs">${k.vs}</div>` : ''}
       ${KPI_NOTES[k.key] ? `<button class="kpi-info-btn" tabindex="-1">i</button><div class="kpi-tooltip">${KPI_NOTES[k.key]}</div>` : ''}
     </div>`).join('');
 }
