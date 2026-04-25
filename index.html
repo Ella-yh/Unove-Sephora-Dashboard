@@ -948,8 +948,9 @@ document.querySelectorAll('[data-group="month"]').forEach(cb => {
 
 // ─── CATEGORY & SKU FILTERS ───────────────────────────────────────────────────
 function buildCatOptions() {
-  const cats = [...new Set(Object.values(SKU_META).map(m => m.cat))].sort();
   const panel = document.getElementById('ddPanel-cat');
+  if (!panel) return;
+  const cats = [...new Set(Object.values(SKU_META).map(m => m.cat))].sort();
   cats.forEach(cat => {
     const lbl = document.createElement('label');
     lbl.className = 'dd-opt';
@@ -966,9 +967,8 @@ function buildCatOptions() {
 }
 
 function rebuildSkuOptions() {
-  // Rebuild SKU dropdown based on current category selection
   const panel = document.getElementById('ddPanel-sku');
-  // Remove all except the ALL option
+  if (!panel) return;
   while (panel.children.length > 1) panel.removeChild(panel.lastChild);
   // Reset SKU selection to avoid stale values
   selSkus.clear();
