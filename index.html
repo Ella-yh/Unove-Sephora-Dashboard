@@ -9,7 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#09090e;color:#cccccc;font-size:13px;}
+body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#1E1E20;color:#cccccc;font-size:13px;}
 
 .hdr{background:#000;color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #c8102e;}
 .logo{font-size:20px;font-weight:800;letter-spacing:5px;}
@@ -18,7 +18,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#0909
 
 /* KPI */
 .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:14px 28px 0;}
-.kpi{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);padding:14px 16px 14px 18px;display:flex;align-items:stretch;gap:12px;border-radius:3px;}
+.kpi{background:#2B2B2D;border:0.5px solid rgba(255,255,255,0.08);padding:14px 16px 14px 18px;display:flex;align-items:stretch;gap:12px;border-radius:3px;}
 .kpi-bar{width:4px;border-radius:2px;align-self:stretch;flex-shrink:0;}
 .kpi-left{flex:1;min-width:0;}
 .kpi-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:5px;}
@@ -37,9 +37,9 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#0909
 .dd-btn:hover{border-color:rgba(255,255,255,0.25);color:#ccc;}
 .dd-btn .arr{font-size:9px;color:#555;transition:transform .15s;}
 .dd-btn.open .arr{transform:rotate(180deg);}
-.dd-panel{display:none;position:absolute;top:calc(100% + 2px);left:0;background:#14141e;border:0.5px solid rgba(255,255,255,0.12);z-index:300;min-width:100%;box-shadow:0 4px 20px rgba(0,0,0,.6);max-height:260px;overflow-y:auto;}
+.dd-panel{display:none;position:absolute;top:calc(100% + 2px);left:0;background:#232335;border:0.5px solid rgba(255,255,255,0.12);z-index:300;min-width:100%;box-shadow:0 4px 20px rgba(0,0,0,.6);max-height:260px;overflow-y:auto;}
 .dd-panel.show{display:block;}
-.dd-all{padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;color:#555;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:8px;}
+.dd-all{padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;color:#555;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:8px;}
 .dd-all:hover{background:rgba(255,255,255,0.06);}
 .dd-opt{padding:6px 12px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:8px;color:#888;white-space:nowrap;}
 #ddPanel-week .dd-opt{font-size:9.5px;padding:5px 10px;}
@@ -50,7 +50,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#0909
 .chart-sec{padding:12px 28px;}
 .sec-hdr{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
 .sec-hdr::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.07);}
-.chart-card{background:#111114;border:0.5px solid rgba(255,255,255,0.07);padding:14px 16px 10px;}
+.chart-card{background:#2B2B2D;border:0.5px solid rgba(255,255,255,0.07);padding:14px 16px 10px;}
 .leg-row{display:flex;gap:16px;margin-bottom:10px;flex-wrap:wrap;}
 .leg{display:flex;align-items:center;gap:5px;font-size:11px;color:#555;}
 .leg-dot{width:11px;height:11px;border-radius:2px;flex-shrink:0;}
@@ -69,12 +69,12 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#0909
 .sales-toggle{display:flex;gap:4px;margin-left:auto;}
 .stgl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
   padding:3px 9px;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#555;cursor:pointer;border-radius:3px;transition:all .15s;}
-.stgl:hover{border-color:#c8102e;color:#c8102e;}
-.stgl.active{background:#c8102e;border-color:#c8102e;color:#fff;}
+.stgl:hover{border-color:#d97070;color:#d97070;}
+.stgl.active{background:#d97070;border-color:#d97070;color:#fff;}
 
 /* Event section */
 .ev-sec{padding:0 28px 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.ev-card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);padding:16px 18px;border-radius:3px;}
+.ev-card{background:#2B2B2D;border:0.5px solid rgba(255,255,255,0.08);padding:16px 18px;border-radius:3px;}
 .ev-card-ttl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:12px;}
 .type-leg{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
 .tleg{display:flex;align-items:center;gap:3px;font-size:9px;color:#555;}
@@ -95,8 +95,8 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#0909
 .ev-list-hdr .ttl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#aaa;}
 .ev-filter-dd .dd-btn{min-width:110px;font-size:10px;padding:4px 9px;}
 .ev-list{max-height:230px;overflow-y:auto;}
-.ev-item{display:flex;align-items:flex-start;gap:7px;padding:7px 0;border-bottom:1px solid #f4f4f4;}
-.ev-stats{width:220px;flex-shrink:0;border-left:1px solid #f0f0f0;padding-left:10px;align-self:center;}
+.ev-item{display:flex;align-items:flex-start;gap:7px;padding:7px 0;border-bottom:0.5px solid rgba(255,255,255,0.07);}
+.ev-stats{width:220px;flex-shrink:0;border-left:0.5px solid rgba(255,255,255,0.08);padding-left:10px;align-self:center;}
 .ev-stat-cols{display:flex;align-items:center;gap:2px;}
 .ev-stat-cmp{font-size:7.5px;color:#bbb;white-space:nowrap;flex-shrink:0;margin-right:4px;letter-spacing:0.2px;}
 .ev-stat-col{flex:1;text-align:center;min-width:0;}
@@ -115,7 +115,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#0909
 .btn-rm:hover{color:#c8102e;}
 .empty-msg{font-size:11px;color:#ccc;text-align:center;padding:16px 0;}
 
-.footer{background:#05050a;color:#333;text-align:center;padding:9px;font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-top:6px;}
+.footer{background:#14141f;color:#333;text-align:center;padding:9px;font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-top:6px;}
 
 /* Tab Navigation */
 .tab-nav{display:flex;gap:0;padding:0 28px;background:#07070c;border-bottom:0.5px solid rgba(255,255,255,0.08);}
@@ -125,7 +125,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#0909
 
 /* Channel KPI */
 .ch-kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 28px 0;}
-.ch-kpi{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);padding:16px 20px;border-radius:3px;}
+.ch-kpi{background:#2B2B2D;border:0.5px solid rgba(255,255,255,0.08);padding:16px 20px;border-radius:3px;}
 .ch-kpi-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:6px;}
 .ch-kpi-val{font-size:24px;font-weight:700;color:#ffffff;line-height:1;margin-bottom:5px;}
 .ch-kpi-wow{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;}
@@ -152,15 +152,15 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#0909
 /* Analysis section */
 .analysis-sec{padding:0 28px 20px;}
 .analysis-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.analysis-card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);padding:16px 18px;border-radius:3px;}
+.analysis-card{background:#2B2B2D;border:0.5px solid rgba(255,255,255,0.08);padding:16px 18px;border-radius:3px;}
 .analysis-ttl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
 .analysis-ttl::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.06);}
 .analysis-sub{font-size:8px;color:#ccc;margin-bottom:10px;}
 /* Type summary table */
 .sum-tbl{width:100%;border-collapse:collapse;font-size:10px;}
-.sum-tbl th{font-size:8px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;padding:4px 6px;border-bottom:1px solid #f0f0f0;text-align:right;}
+.sum-tbl th{font-size:8px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;padding:4px 6px;border-bottom:1px solid rgba(255,255,255,0.08);text-align:right;}
 .sum-tbl th:first-child{text-align:left;}
-.sum-tbl td{padding:5px 6px;border-bottom:1px solid #f8f8f8;text-align:right;color:#555;}
+.sum-tbl td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:right;color:#555;}
 .sum-tbl td:first-child{text-align:left;font-weight:600;}
 .sum-tbl tr:last-child td{border-bottom:none;}
 .sum-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle;}
@@ -202,7 +202,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#0909
 
 /* ── SETTINGS TAB ── */
 .tab-content{max-width:760px;margin:0 auto;padding:32px 24px;}
-.stg-card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:4px;padding:28px 32px;margin-bottom:24px;}
+.stg-card{background:#2B2B2D;border:0.5px solid rgba(255,255,255,0.08);border-radius:4px;padding:28px 32px;margin-bottom:24px;}
 .stg-ttl{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:20px;padding-bottom:12px;border-bottom:0.5px solid rgba(255,255,255,0.07);}
 .stg-row{margin-bottom:20px;}
 .stg-lbl{font-size:11px;font-weight:700;color:#aaa;display:block;margin-bottom:6px;}
@@ -223,6 +223,44 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#0909
 .user-em{font-size:10px;color:#aaa;}
 .btn-signout{margin-left:auto;padding:5px 14px;background:transparent;color:#666;border:1px solid #ddd;font-size:10px;cursor:pointer;border-radius:2px;}
 .btn-signout:hover{border-color:#999;color:#333;}
+
+
+/* ── LAYOUT ── */
+.app-layout{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:200px;background:#3A3A3C;display:flex;flex-direction:column;transition:width .22s ease;flex-shrink:0;overflow:hidden;border-right:0.5px solid rgba(255,255,255,0.06);}
+.sidebar.collapsed{width:54px;}
+.sb-top{display:flex;align-items:center;justify-content:space-between;padding:16px 12px 14px;border-bottom:0.5px solid rgba(255,255,255,0.07);min-height:56px;}
+.sb-logo{display:flex;align-items:center;gap:9px;overflow:hidden;white-space:nowrap;min-width:0;}
+.sb-logo-icon{width:28px;height:28px;background:#c8102e;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;flex-shrink:0;letter-spacing:0;}
+.sb-logo-text{font-size:12px;font-weight:700;color:#fff;letter-spacing:2px;white-space:nowrap;transition:opacity .2s;}
+.sidebar.collapsed .sb-logo-text{opacity:0;pointer-events:none;width:0;overflow:hidden;}
+.sb-toggle{background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);color:#aaa;width:22px;height:22px;border-radius:4px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .22s;line-height:1;}
+.sidebar.collapsed .sb-toggle{transform:rotate(180deg);}
+.sb-nav{flex:1;padding:10px 7px;display:flex;flex-direction:column;gap:1px;overflow:hidden;}
+.sb-section-lbl{font-size:8.5px;letter-spacing:1.5px;text-transform:uppercase;color:#595959;padding:10px 9px 4px;white-space:nowrap;overflow:hidden;transition:opacity .2s;}
+.sidebar.collapsed .sb-section-lbl{opacity:0;}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:6px;color:#888;cursor:pointer;transition:all .13s;white-space:nowrap;overflow:hidden;}
+.sb-item:hover{background:rgba(255,255,255,0.07);color:#ccc;}
+.sb-item.active{background:#1E1E20;color:#fff;}
+.sb-item.active .sb-icon{color:#d97070;}
+.sb-icon{font-size:14px;flex-shrink:0;width:18px;text-align:center;line-height:1;}
+.sb-text{font-size:11px;font-weight:500;transition:opacity .2s;white-space:nowrap;}
+.sidebar.collapsed .sb-text{opacity:0;pointer-events:none;width:0;overflow:hidden;}
+.sb-footer{padding:10px 8px;border-top:0.5px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;gap:7px;overflow:hidden;}
+.sb-user{display:flex;align-items:center;gap:8px;overflow:hidden;}
+.sb-avatar{width:26px;height:26px;border-radius:50%;background:#555;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#ddd;flex-shrink:0;}
+.sb-user-info{overflow:hidden;min-width:0;transition:opacity .2s;}
+.sidebar.collapsed .sb-user-info{opacity:0;width:0;overflow:hidden;}
+.sb-user-nm{font-size:10.5px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-user-em{font-size:8.5px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-refresh{display:flex;align-items:center;gap:6px;transition:opacity .2s;}
+.sidebar.collapsed .sb-refresh{opacity:0;pointer-events:none;}
+.sb-upd{font-size:8.5px;color:#666;white-space:nowrap;}
+/* Main area */
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#1E1E20;min-width:0;}
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:9px 22px;border-bottom:0.5px solid rgba(255,255,255,0.07);flex-shrink:0;background:#1E1E20;}
+.page-title{font-size:13px;font-weight:700;color:#fff;letter-spacing:0.3px;}
+.main-scroll{flex:1;overflow-y:auto;}
 
 </style>
 </head>
@@ -250,29 +288,56 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#0909
   </div>
 </div>
 
-
-<div class="hdr">
-  <div><div class="logo">SEPHORA</div><div class="hdr-sub">Sales & Traffic Dashboard · [UN_US]</div></div>
-  <div class="hdr-r" style="display:flex;align-items:center;gap:16px;">
-    <div style="text-align:right;">
-      <div id="lastUpdatedLabel" style="font-size:9px;color:#888;">—</div>
-      <div style="font-size:10px;color:#777;">관리자 : 데이터마케팅팀 이윤희</div>
+<div class="app-layout">
+<!-- ── SIDEBAR ── -->
+<nav class="sidebar" id="sidebar">
+  <div class="sb-top">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">S</div>
+      <span class="sb-logo-text">SEPHORA</span>
     </div>
-    <button id="btnRefresh" onclick="manualRefresh()" style="
-      padding:7px 16px;background:#1a1a1a;color:#fff;border:none;
-      font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
-      cursor:pointer;border-radius:2px;white-space:nowrap;display:none;
-    ">↻ RAW 업데이트</button>
+    <button class="sb-toggle" onclick="toggleSidebar()" title="접기/펼치기">‹</button>
   </div>
-</div>
-
-<!-- TAB NAV -->
-<div class="tab-nav">
-  <div class="tab-btn active" data-tab="main" onclick="switchTab('main')">Commerce Overview</div>
-  <div class="tab-btn" data-tab="channel" onclick="switchTab('channel')">Channel Analysis</div>
-  <div class="tab-btn" data-tab="ads" onclick="switchTab('ads')">Performance Ads</div>
-  <div class="tab-btn" data-tab="settings" onclick="switchTab('settings')">⚙ Settings</div>
-</div>
+  <div class="sb-nav">
+    <div class="sb-section-lbl">Analytics</div>
+    <div class="sb-item active" data-tab="main" onclick="switchTab('main')">
+      <span class="sb-icon">▣</span><span class="sb-text">Commerce</span>
+    </div>
+    <div class="sb-item" data-tab="channel" onclick="switchTab('channel')">
+      <span class="sb-icon">◈</span><span class="sb-text">Channel</span>
+    </div>
+    <div class="sb-item" data-tab="ads" onclick="switchTab('ads')">
+      <span class="sb-icon">◉</span><span class="sb-text">Perf. Ads</span>
+    </div>
+    <div class="sb-section-lbl">System</div>
+    <div class="sb-item" data-tab="events" onclick="switchTab('events')">
+      <span class="sb-icon">✦</span><span class="sb-text">이벤트 관리</span>
+    </div>
+    <div class="sb-item" data-tab="settings" onclick="switchTab('settings')">
+      <span class="sb-icon">⚙</span><span class="sb-text">Settings</span>
+    </div>
+  </div>
+  <div class="sb-footer">
+    <div class="sb-user">
+      <div class="sb-avatar" id="sbAvatar">YH</div>
+      <div class="sb-user-info">
+        <div class="sb-user-nm" id="sbUserNm">—</div>
+        <div class="sb-user-em" id="sbUserEm">—</div>
+      </div>
+    </div>
+    <div class="sb-refresh">
+      <div class="sb-upd" id="lastUpdatedLabel">—</div>
+      <button id="btnRefresh" onclick="manualRefresh()" style="padding:4px 10px;background:#c8102e;color:#fff;border:none;font-size:9px;font-weight:700;letter-spacing:.5px;cursor:pointer;border-radius:3px;white-space:nowrap;display:none;">↻ RAW</button>
+    </div>
+  </div>
+</nav>
+<!-- ── MAIN AREA ── -->
+<div class="main-area">
+  <div class="top-bar">
+    <span class="page-title" id="pageTitle">Commerce Overview</span>
+    <div style="font-size:9px;color:#666;letter-spacing:0.5px;">Sephora KR · [UN_US] · 데이터마케팅팀</div>
+  </div>
+  <div class="main-scroll">
 
 <div id="tabMain">
 <div class="kpi-row" id="kpiRow"></div>
@@ -323,20 +388,24 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#0909
 </div>
 
 <div class="chart-sec">
-  <div class="sec-hdr">일자별 Visits · Sales · CVR</div>
+  <div class="sec-hdr">일자별 Sales · CVR</div>
   <div class="chart-card">
-    <div class="leg-row" style="align-items:center;">
-      <div class="leg"><div class="leg-dot" style="background:rgba(106,173,213,0.3);border:1.5px solid #6aadd5;"></div>Visits</div>
+    <div class="leg-row" style="align-items:center;flex-wrap:wrap;gap:6px;">
       <div class="leg"><div class="leg-dot" style="background:#d97070;"></div><span id="salesLegLabel">Sales (.COM)</span></div>
       <div class="leg"><div class="leg-dot" style="background:#8878d0;border-radius:50%;"></div>CVR (%)</div>
-      <div class="leg"><div class="leg-dot" style="background:#e8c84a;border-radius:50%;"></div>광고비(net)</div>
       <div class="sales-toggle">
         <button class="stgl active" data-type="com" onclick="setSalesType(this)">COM</button>
         <button class="stgl" data-type="total" onclick="setSalesType(this)">TTL</button>
         <button class="stgl" data-type="bam" onclick="setSalesType(this)">B&M</button>
       </div>
-      <div class="marker-toggle">
-        <button class="mkr-btn active" id="btnMarkerToggle" onclick="toggleMarkers(this)">이벤트 마커 표시</button>
+      <div style="display:flex;gap:5px;margin-left:auto;">
+        <button class="mkr-btn" id="btnVisitsToggle" onclick="toggleVisits(this)" style="display:flex;align-items:center;gap:5px;">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#6aadd5;"></span>Visits
+        </button>
+        <button class="mkr-btn" id="btnAdSpendToggle" onclick="toggleAdSpend(this)" style="display:flex;align-items:center;gap:5px;">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e8c84a;"></span>광고비
+        </button>
+        <button class="mkr-btn active" id="btnMarkerToggle" onclick="toggleMarkers(this)">이벤트 마커</button>
       </div>
     </div>
     <div id="markerZone" class="marker-zone"></div>
@@ -345,6 +414,30 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#0909
   </div>
 </div>
 
+<div style="padding:0 28px 20px;">
+  <div class="ev-card" style="max-width:600px;">
+    <div class="ev-list-hdr">
+      <div class="ttl">이벤트 마커 <span style="font-weight:400;color:#bbb;" id="evCount"></span></div>
+      <div class="dd-wrap ev-filter-dd" id="ddWrap-evtype">
+        <div class="dd-btn" id="ddBtn-evtype" onclick="toggleDD('evtype')"><span id="ddLabel-evtype">ALL</span><span class="arr">▾</span></div>
+        <div class="dd-panel" id="ddPanel-evtype" style="right:0;left:auto;">
+          <div class="dd-all" onclick="clearFilter('evtype')"><input type="checkbox" id="chk-evtype-all" checked readonly> ALL</div>
+        </div>
+      </div>
+    </div>
+    <div class="ev-list" id="evList"></div>
+  </div>
+</div>
+
+
+</div><!-- /tabMain -->
+
+
+<!-- ═══════════ EVENTS TAB ═══════════ -->
+<div id="tabEvents" style="display:none;">
+<div class="filter-row" style="padding:14px 28px 0;">
+  <div style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:2px;text-transform:uppercase;">이벤트 마커 등록 / 관리</div>
+</div>
 <div class="ev-sec">
   <div class="ev-card">
     <div class="ev-card-ttl">이벤트 마커 등록</div>
@@ -373,23 +466,14 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#0909
     </div>
     <button class="btn-add" id="btnAdd" onclick="addEvent()">+ 이벤트 추가</button>
   </div>
-
   <div class="ev-card">
     <div class="ev-list-hdr">
-      <div class="ttl">등록된 이벤트 <span style="font-weight:400;color:#bbb;" id="evCount"></span></div>
-      <div class="dd-wrap ev-filter-dd" id="ddWrap-evtype">
-        <div class="dd-btn" id="ddBtn-evtype" onclick="toggleDD('evtype')"><span id="ddLabel-evtype">ALL</span><span class="arr">▾</span></div>
-        <div class="dd-panel" id="ddPanel-evtype" style="right:0;left:auto;">
-          <div class="dd-all" onclick="clearFilter('evtype')"><input type="checkbox" id="chk-evtype-all" checked readonly> ALL</div>
-        </div>
-      </div>
+      <div class="ttl">등록된 이벤트 전체 목록 <span style="font-weight:400;color:#bbb;" id="evCountFull"></span></div>
     </div>
-    <div class="ev-list" id="evList"></div>
+    <div class="ev-list" id="evListFull" style="max-height:480px;"></div>
   </div>
 </div>
-
-
-</div><!-- /tabMain -->
+</div><!-- /tabEvents -->
 
 <!-- ═══════════ CHANNEL ANALYSIS TAB ═══════════ -->
 <div id="tabChannel" style="display:none;">
@@ -579,6 +663,10 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#0909
 </div>
 </div><!-- /tabSettings -->
 
+  </div><!-- /main-scroll -->
+</div><!-- /main-area -->
+</div><!-- /app-layout -->
+
 <div class="footer">SEPHORA · [UN_US] COMMERCE DASHBOARD · 2026</div>
 
 <script>
@@ -711,6 +799,8 @@ window.toggleAdsMedia = function(btn) {
 };
 let selSalesType = 'com'; // 'com' | 'total' | 'bam'
 let showMarkers = true;
+let showVisits   = false;
+let showAdSpend  = false;
 
 window.toggleMarkers = function(btn) {
   showMarkers = !showMarkers;
@@ -719,6 +809,16 @@ window.toggleMarkers = function(btn) {
   const zone = document.getElementById('markerZone');
   if (zone) zone.classList.toggle('hidden', !showMarkers);
   if (showMarkers) positionMarkers();
+}
+function toggleVisits(btn) {
+  showVisits = !showVisits;
+  btn.classList.toggle('active', showVisits);
+  renderChart();
+}
+function toggleAdSpend(btn) {
+  showAdSpend = !showAdSpend;
+  btn.classList.toggle('active', showAdSpend);
+  renderChart();
 };
 
 window.setSalesType = function(btn) {
@@ -736,6 +836,18 @@ let chart = null;
 function hexToRgba(hex, a) {
   const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
   return `rgba(${r},${g},${b},${a})`;
+}
+function makeGrad(canvasId, hex, aTop=0.35, aBot=0.0) {
+  try {
+    const c = document.getElementById(canvasId);
+    if (!c) return hexToRgba(hex, aTop);
+    const ctx2 = c.getContext('2d');
+    const h = c.offsetHeight || 300;
+    const g = ctx2.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, hexToRgba(hex, aTop));
+    g.addColorStop(1, hexToRgba(hex, aBot));
+    return g;
+  } catch(e) { return hexToRgba(hex, aTop); }
 }
 
 // ─── DROPDOWN ────────────────────────────────────────────────────────────────
@@ -1011,7 +1123,7 @@ function renderKPI() {
     .reduce((sum, r) => sum + r.spend, 0);
   const roasTotal = totalAdSpend > 0 ? cur.sales / totalAdSpend : null;
   const roasCom   = totalAdSpend > 0 ? cur.com   / totalAdSpend : null;
-  const fmtRoas   = v => v === null ? '—' : v.toFixed(2) + 'x';
+  const fmtRoas   = v => v === null ? '—' : Math.round(v * 100) + '%';
 
   const items = [
     { key:'visits', label:'TOTAL VISITS', bar:'#555555',
@@ -1109,14 +1221,15 @@ function renderChart() {
     type: 'bar',
     data: {
       labels,
-      datasets: [
-        // Visits → area chart (behind)
-        {
+      datasets: (() => {
+        const ds = [];
+        // Visits → 토글 ON일 때만
+        if (showVisits) ds.push({
           label: 'Visits',
           data: data.map(d => d.visits),
           type: 'line',
           fill: true,
-          backgroundColor: 'rgba(106,173,213,0.1)',
+          backgroundColor: makeGrad('mainChart','#6aadd5',0.22,0.0),
           borderColor: '#6aadd5',
           borderWidth: 1.5,
           pointRadius: 0,
@@ -1124,9 +1237,9 @@ function renderChart() {
           pointHoverBackgroundColor: '#6aadd5',
           yAxisID: 'yV', order: 3,
           tension: 0.25,
-        },
-        // Sales → bar (prominent, KRW)
-        {
+        });
+        // Sales → 항상 표시
+        ds.push({
           label: selSalesType === 'com' ? 'Sales (.COM)' : selSalesType === 'bam' ? 'Sales (B&M)' : 'Sales (TTL)',
           data: data.map(d => { const sb = SALES_BY_DATE[d.date] || {}; return selSalesType === 'com' ? (sb.com||0) : selSalesType === 'bam' ? (sb.bam||0) : (sb.total||0); }),
           type: 'bar',
@@ -1135,24 +1248,24 @@ function renderChart() {
           yAxisID: 'yS', order: 2,
           barPercentage: 0.5,
           categoryPercentage: 0.85,
-        },
-        // CVR → line
-        {
+        });
+        // CVR → 항상 표시
+        ds.push({
           label: 'CVR',
           data: data.map(d => d.cvr),
           type: 'line',
           borderColor: '#8878d0',
-          backgroundColor: 'transparent',
+          backgroundColor: makeGrad('mainChart','#8878d0',0.28,0.0),
           borderWidth: 2,
           pointRadius: n > 50 ? 0 : n > 25 ? 2 : 3,
           pointHoverRadius: 5,
           pointBackgroundColor: '#8878d0',
-          fill: false,
+          fill: true,
           yAxisID: 'yC', order: 1,
           tension: 0.3,
-        },
-        // 광고비(net) → line (yellow)
-        {
+        });
+        // 광고비(net) → 토글 ON일 때만
+        if (showAdSpend) ds.push({
           label: '광고비(net)',
           data: data.map(d => {
             const dateSpend = ADS_RAW.filter(r => r.date === d.date).reduce((s,r) => s + r.spend, 0);
@@ -1160,7 +1273,7 @@ function renderChart() {
           }),
           type: 'line',
           borderColor: '#e8c84a',
-          backgroundColor: 'transparent',
+          backgroundColor: makeGrad('mainChart','#e8c84a',0.12,0.0),
           borderWidth: 1.5,
           borderDash: [4, 3],
           pointRadius: 0,
@@ -1170,8 +1283,9 @@ function renderChart() {
           fill: false,
           yAxisID: 'yA', order: 0,
           tension: 0.25,
-        }
-      ]
+        });
+        return ds;
+      })()
     },
     options: {
       responsive: true,
@@ -1214,7 +1328,7 @@ function renderChart() {
           }
         },
         yV: {
-          type: 'linear', position: 'left',
+          type: 'linear', position: 'left', display: showVisits,
           grid: { color: 'rgba(255,255,255,0.05)' },
           ticks: { font:{size:9}, color:'#ffffff', callback: v => v>=1000?(v/1000).toFixed(0)+'K':v },
           title: { display:true, text:'Visits', font:{size:9}, color:'#6aadd5' }
@@ -1230,7 +1344,7 @@ function renderChart() {
           grid: { drawOnChartArea: false }
         },
         yA: {
-          type: 'linear', position: 'right',
+          type: 'linear', position: 'right', display: showAdSpend,
           grid: { drawOnChartArea: false },
           ticks: { font:{size:9}, color:'#e8c84a', callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v },
           title: { display:true, text:'광고비(₩)', font:{size:9}, color:'#e8c84a' }
@@ -1538,6 +1652,32 @@ function removeEvent(idx) {
   EVENTS.splice(idx, 1);
   renderEventList(); renderChart();
 }
+function renderEventListFull() {
+  const el = document.getElementById('evListFull');
+  const cnt = document.getElementById('evCountFull');
+  if (!el) return;
+  if (cnt) cnt.textContent = '(' + EVENTS.length + ')';
+  let list = [...EVENTS].sort((a,b) => b.start.localeCompare(a.start));
+  if (!list.length) { el.innerHTML = '<div class="empty-msg">등록된 이벤트가 없습니다</div>'; return; }
+  el.innerHTML = list.map((ev, ri) => {
+    const col = TYPES[ev.type] || '#888';
+    const ds = ev.start === ev.end ? ev.start.slice(5) : ev.start.slice(5) + ' ~ ' + ev.end.slice(5);
+    const origIdx = EVENTS.indexOf(ev);
+    return '<div class="ev-item" data-evid="' + origIdx + '">' +
+      '<span class="ev-tag" style="background:' + col + ';">' + ev.type + '</span>' +
+      '<div class="ev-info"><div class="ev-date">' + ds + '</div>' +
+      '<div class="ev-place">' + (ev.placement||'-') + '</div>' +
+      (ev.product ? '<div class="ev-prod">' + ev.product + '</div>' : '') + '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">' +
+      '<button class="btn-rm" onclick="removeEventFull(' + origIdx + ')">×</button></div></div>';
+  }).join('');
+}
+function removeEventFull(idx) {
+  if (!confirm('이벤트를 삭제하시겠습니까?')) return;
+  EVENTS.splice(idx, 1);
+  renderEventListFull(); renderEventList(); renderChart();
+}
+
 
 
 // ─── EVENT EDIT ───────────────────────────────────────────────────────────────
@@ -1827,17 +1967,22 @@ let selChChans = new Set();
 let chVisitsChart, chSalesChart, chCvrChart;
 
 function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  const tabMain     = document.getElementById('tabMain');
-  const tabChannel  = document.getElementById('tabChannel');
-  const tabAds      = document.getElementById('tabAds');
-  const tabSettings = document.getElementById('tabSettings');
-  if (tabMain)     tabMain.style.display     = tab === 'main'     ? '' : 'none';
-  if (tabChannel)  tabChannel.style.display  = tab === 'channel'  ? '' : 'none';
-  if (tabAds)      tabAds.style.display      = tab === 'ads'      ? '' : 'none';
-  if (tabSettings) tabSettings.style.display = tab === 'settings' ? '' : 'none';
+  document.querySelectorAll('.sb-item').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  const tabs = {main:'tabMain',channel:'tabChannel',ads:'tabAds',settings:'tabSettings',events:'tabEvents'};
+  Object.entries(tabs).forEach(([k,id]) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = k === tab ? '' : 'none';
+  });
+  const titles = {main:'Commerce Overview',channel:'Channel Analysis',ads:'Performance Ads',events:'이벤트 관리',settings:'Settings'};
+  const pt = document.getElementById('pageTitle');
+  if (pt) pt.textContent = titles[tab] || '';
   if (tab === 'channel') { try { refreshChannel(); } catch(e){} }
   if (tab === 'ads')     { try { refreshAds();     } catch(e){} }
+  if (tab === 'events')  { try { renderTypeLegend(); renderEventListFull(); } catch(e){} }
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
 }
 
 function buildChWeekOptions() {
@@ -2104,11 +2249,11 @@ function renderChLineChart(canvasId, weeks, channels, pivot, key, _unused, idx) 
               if (key==='s') return '$'+(v>=1000?(v/1000)+'K':v);
               return v+'%';
             },
-            font: { size: 10 }
+            font: { size: 10 }, color: '#ffffff'
           },
           grid: { color: 'rgba(255,255,255,0.05)' }
         },
-        x: { ticks: { font: { size: 9 } }, grid: { display: false } }
+        x: { ticks: { font: { size: 9 }, color:'#ffffff' }, grid: { display: false } }
       }
     }
   });
@@ -2148,7 +2293,7 @@ function renderComboChart(weeks, channels, pivot) {
           label: 'Visits',
           data: totVisits,
           borderColor: 'rgba(47,84,150,0.8)',
-          backgroundColor: 'rgba(47,84,150,0.10)',
+          backgroundColor: 'rgba(47,84,150,0.20)',
           borderWidth: 2.5,
           pointRadius: 2.5,
           pointBackgroundColor: '#2F5496',
@@ -2314,6 +2459,12 @@ function onAuthSuccess(user) {
   document.getElementById('loginOverlay').style.display = 'none';
   document.getElementById('userNm').textContent = user.name;
   document.getElementById('userEm').textContent = user.email;
+  const sbNm = document.getElementById('sbUserNm');
+  const sbEm = document.getElementById('sbUserEm');
+  const sbAv = document.getElementById('sbAvatar');
+  if (sbNm) sbNm.textContent = user.name;
+  if (sbEm) sbEm.textContent = user.email;
+  if (sbAv) sbAv.textContent = (user.name || user.email || 'YH').slice(0,2).toUpperCase();
   if (user.picture) {
     const av = document.getElementById('userAv');
     if (av) { av.src = user.picture; av.style.display = ''; }
@@ -2551,9 +2702,9 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
   datasets.push({
     label: getSalesLabel(),
     data: weeks.map(wk => (sepWeekly[wk]?.[salesKey] || 0)),
-    type: 'line', borderColor: '#d97070', backgroundColor: 'transparent',
+    type: 'line', borderColor: '#d97070', backgroundColor: 'rgba(217,112,112,0.12)',
     borderWidth: 2, pointRadius: 3, pointHoverRadius: 5,
-    pointBackgroundColor: '#d97070', fill: false,
+    pointBackgroundColor: '#d97070', fill: true,
     yAxisID: 'yS', order: 1, tension: 0.3,
   });
 
@@ -2561,9 +2712,9 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
   datasets.push({
     label: '세포라 유입',
     data: weeks.map(wk => (sepWeekly[wk]?.visits || 0)),
-    type: 'line', borderColor: '#5dcaa5', backgroundColor: 'transparent',
+    type: 'line', borderColor: '#5dcaa5', backgroundColor: 'rgba(93,202,165,0.12)',
     borderWidth: 2, pointRadius: 3, pointHoverRadius: 5,
-    pointBackgroundColor: '#5dcaa5', fill: false,
+    pointBackgroundColor: '#5dcaa5', fill: true,
     yAxisID: 'yV', order: 2, tension: 0.3,
   });
 
