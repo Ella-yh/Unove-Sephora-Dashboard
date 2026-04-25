@@ -2192,6 +2192,18 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     CH_RAW.length = 0;    newCh.forEach(r    => CH_RAW.push(r));
     Object.keys(SALES_BY_DATE).forEach(k => delete SALES_BY_DATE[k]);
     RAW_SALES.forEach(r => { SALES_BY_DATE[r.date] = { total: r.total || 0, com: r.com || 0, bam: r.bam || 0 }; });
+
+    // ── 디버그: 실매출 컬럼/값 확인 (콘솔에서 _DEBUG_SALES 확인 후 제거) ──
+    if (data._debug_sales) {
+      console.group('%c[SALES DEBUG] Raw_실매출 시트 분석', 'color:#c8102e;font-weight:bold');
+      console.log('총 데이터 행수:', data._debug_sales.total_rows);
+      console.log('헤더 원본:', data._debug_sales.headers);
+      console.log('감지된 컬럼 인덱스:', data._debug_sales.detected_cols);
+      console.log('첫 3행 샘플 (날짜/B&M/COM/전체 원본→변환):', data._debug_sales.samples);
+      console.log('전체 SALES_BY_DATE 첫5개:', Object.entries(SALES_BY_DATE).slice(0,5));
+      console.groupEnd();
+    }
+
     rebuildDerivedData();
     const ts = data.updatedAt ? new Date(data.updatedAt).toLocaleString('ko-KR') : '—';
     const label = document.getElementById('lastUpdatedLabel');
