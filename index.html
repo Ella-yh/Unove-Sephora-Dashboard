@@ -2167,37 +2167,32 @@ function refreshChannel() {
 
 
 function renderChannelBestWorst() {
-  const allData = CH_RAW;
+  var allData = CH_RAW;
   if (!allData.length) return;
+  var activeWeeks = getActiveWeeks();
+  var selW = selChWeeks.size > 0 ? Array.from(selChWeeks).sort(function(a,b){return parseInt(a.slice(1))-parseInt(b.slice(1));}) : [];
 
-  // 선택된 주차 파악
-  const activeWeeks = getActiveWeeks();
-  const selW = selChWeeks.size > 0 ? [...selChWeeks].sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1))) : [];
-
-  // 기간 태그 텍스트
-  let periodTxt = '전체';
+  var periodTxt = '전체';
   if (selW.length === 1) periodTxt = selW[0];
   else if (selW.length > 1) periodTxt = selW[0] + '~' + selW[selW.length-1];
-  const tag = document.getElementById('bwPeriodTag');
+  var tag = document.getElementById('bwPeriodTag');
   if (tag) tag.textContent = periodTxt;
 
-  // WoW 비교 주차 (단일 주차 선택 시만)
-  let prevWeek = null;
+  var prevWeek = null;
   if (selW.length === 1) {
-    const idx = CH_WEEKS.indexOf(selW[0]);
+    var idx = CH_WEEKS.indexOf(selW[0]);
     if (idx > 0) prevWeek = CH_WEEKS[idx - 1];
   }
 
-  // 채널별 집계 (현재 기간)
-  const chans = selChChans.size > 0 ? [...selChChans] : [...CH_CHANNELS];
-  const cur = {}, prv = {};
-  chans.forEach(ch => {
+  var chans = selChChans.size > 0 ? Array.from(selChChans) : Array.from(CH_CHANNELS);
+  var cur = {}, prv = {};
+  chans.forEach(function(ch) {
     cur[ch] = {v:0, s:0, cvrSum:0, cvrCnt:0};
     prv[ch] = {v:0, s:0, cvrSum:0, cvrCnt:0};
   });
-  allData.forEach(r => {
+  allData.forEach(function(r) {
     if (!cur[r.channel]) return;
-    if (activeWeeks.includes(r.week)) {
+    if (activeWeeks.indexOf(r.week) >= 0) {
       cur[r.channel].v += r.visits;
       cur[r.channel].s += r.sales;
       cur[r.channel].cvrSum += r.cvr;
@@ -2211,72 +2206,73 @@ function renderChannelBestWorst() {
     }
   });
 
-  // CVR 평균
-  const curArr = chans.map(ch => ({
-    ch,
-    v: cur[ch].v,
-    s: cur[ch].s,
-    cvr: cur[ch].cvrCnt > 0 ? cur[ch].cvrSum / cur[ch].cvrCnt * 100 : 0,
-    pv: prv[ch].v,
-    ps: prv[ch].s,
-    pcvr: prv[ch].cvrCnt > 0 ? prv[ch].cvrSum / prv[ch].cvrCnt * 100 : 0
-  }));
+  var curArr = chans.map(function(ch) {
+    return {
+      ch: ch,
+      v:   cur[ch].v,
+      s:   cur[ch].s,
+      cvr: cur[ch].cvrCnt > 0 ? cur[ch].cvrSum / cur[ch].cvrCnt * 100 : 0,
+      pv:  prv[ch].v,
+      ps:  prv[ch].s,
+      pcvr: prv[ch].cvrCnt > 0 ? prv[ch].cvrSum / prv[ch].cvrCnt * 100 : 0
+    };
+  });
 
-  function delta(cur, prev, hasPrev) {
-    if (!hasPrev || prev === 0) return null;
-    return (cur - prev) / prev * 100;
-  }
-  const hasPrev = !!prevWeek;
+  var hasPrev = !!prevWeek;
 
-  function makeBW(sorted, key, fmtFn, prevKey) {
-    const best  = sorted.slice().sort((a,b) => b[key] - a[key]).slice(0,3);
-    const worst = sorted.slice().sort((a,b) => a[key] - b[key]).slice(0,3);
-    const maxVal = Math.max(...sorted.map(d => d[key]));
-
-    function rows(arr, isBest) {
-      return arr.map((d, i) => {
-        const barPct = maxVal > 0 ? Math.round(d[key] / maxVal * 100) : 0;
-        const barColor = isBest ? '#16a34a' : '#e24b4a';
-        const d_pct = hasPrev ? delta(d[key], d[prevKey], hasPrev) : null;
-        const dCls  = d_pct === null ? '' : d_pct >= 0 ? 'up' : 'dn';
-        const dTxt  = d_pct === null ? '' : (d_pct>=0?'▲ +':'▼ ') + Math.abs(d_pct).toFixed(1) + '%';
-        return \`<div class="bw-row">
-          <span class="bw-rank">\${i+1}</span>
-          <span class="bw-ch" title="\${d.ch}">\${d.ch}</span>
-          <div class="bw-bar-bg"><div class="bw-bar-fill" style="width:\${barPct}%;background:\${barColor};"></div></div>
-          <span class="bw-val">\${fmtFn(d[key])}</span>
-          \${dTxt ? \`<span class="bw-delta \${dCls}">\${dTxt}</span>\` : ''}
-        </div>\`;
-      }).join('');
-    }
-
-    return \`
-      <div class="bw-blk">
-        <span class="bw-badge best">Best 3</span>
-        \${rows(best, true)}
-      </div>
-      <div class="bw-blk">
-        <span class="bw-badge worst">Worst 3</span>
-        \${rows(worst, false)}
-      </div>\`;
+  function getDelta(curV, prevV) {
+    if (!hasPrev || prevV === 0) return null;
+    return (curV - prevV) / prevV * 100;
   }
 
-  const fmtV   = v => Math.round(v).toLocaleString();
-  const fmtS   = v => '$' + (v >= 1000 ? (v/1000).toFixed(1)+'K' : Math.round(v).toLocaleString());
-  const fmtCvr = v => v.toFixed(2) + '%';
+  function makeRows(arr, key, prevKey, fmtFn, maxVal, isBest) {
+    return arr.map(function(d, i) {
+      var barPct = maxVal > 0 ? Math.round(d[key] / maxVal * 100) : 0;
+      var barClr = isBest ? '#16a34a' : '#e24b4a';
+      var dp = getDelta(d[key], d[prevKey]);
+      var dCls = dp === null ? '' : dp >= 0 ? 'up' : 'dn';
+      var dTxt = dp === null ? '' : (dp >= 0 ? '&#9650; +' : '&#9660; ') + Math.abs(dp).toFixed(1) + '%';
+      var deltaHtml = dTxt ? '<span class="bw-delta ' + dCls + '">' + dTxt + '</span>' : '';
+      return '<div class="bw-row">'
+        + '<span class="bw-rank">' + (i+1) + '</span>'
+        + '<span class="bw-ch" title="' + d.ch + '">' + d.ch + '</span>'
+        + '<div class="bw-bar-bg"><div class="bw-bar-fill" style="width:' + barPct + '%;background:' + barClr + ';"></div></div>'
+        + '<span class="bw-val">' + fmtFn(d[key]) + '</span>'
+        + deltaHtml
+        + '</div>';
+    }).join('');
+  }
 
-  const grid = document.getElementById('bwGrid');
+  function makeBW(key, prevKey, fmtFn) {
+    var best  = curArr.slice().sort(function(a,b){return b[key]-a[key];}).slice(0,3);
+    var worst = curArr.slice().sort(function(a,b){return a[key]-b[key];}).slice(0,3);
+    var maxVal = Math.max.apply(null, curArr.map(function(d){return d[key];}));
+    return '<div class="bw-blk"><span class="bw-badge best">Best 3</span>'
+      + makeRows(best,  key, prevKey, fmtFn, maxVal, true)
+      + '</div>'
+      + '<div class="bw-blk"><span class="bw-badge worst">Worst 3</span>'
+      + makeRows(worst, key, prevKey, fmtFn, maxVal, false)
+      + '</div>';
+  }
+
+  var fmtV   = function(v){ return Math.round(v).toLocaleString(); };
+  var fmtS   = function(v){ return '$' + (v >= 1000 ? (v/1000).toFixed(1)+'K' : Math.round(v).toLocaleString()); };
+  var fmtCvr = function(v){ return v.toFixed(2) + '%'; };
+
+  var cols = [
+    {title:'Visits',  key:'v',   pk:'pv',   fmt:fmtV},
+    {title:'Sales',   key:'s',   pk:'ps',   fmt:fmtS},
+    {title:'CVR (%)', key:'cvr', pk:'pcvr', fmt:fmtCvr}
+  ];
+
+  var grid = document.getElementById('bwGrid');
   if (!grid) return;
-  grid.innerHTML = [
-    { title:'Visits',  key:'v',   prevKey:'pv',   fmt:fmtV   },
-    { title:'Sales',   key:'s',   prevKey:'ps',   fmt:fmtS   },
-    { title:'CVR (%)', key:'cvr', prevKey:'pcvr', fmt:fmtCvr },
-  ].map(col => \`
-    <div class="bw-card">
-      <div class="bw-card-title">\${col.title}</div>
-      \${makeBW(curArr, col.key, col.fmt, col.prevKey)}
-    </div>\`
-  ).join('');
+  grid.innerHTML = cols.map(function(col) {
+    return '<div class="bw-card">'
+      + '<div class="bw-card-title">' + col.title + '</div>'
+      + makeBW(col.key, col.pk, col.fmt)
+      + '</div>';
+  }).join('');
 }
 
 function kpiCard(title, period, value, wow, compLabel, compVal) {
