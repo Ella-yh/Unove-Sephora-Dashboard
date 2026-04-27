@@ -700,7 +700,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     <div class="stg-row">
       <label class="stg-lbl">🔗 Apps Script Web App URL <span style="color:#c8102e;">*</span></label>
       <div class="stg-hint">Google Apps Script 배포 후 발급되는 웹 앱 URL을 입력하세요.</div>
-      <input type="text" class="stg-inp" id="appsScriptUrl" placeholder="https://script.google.com/macros/s/…/exec">
+      <input type="text" class="stg-inp" id="appsScriptUrl" placeholder="https://script.google.com/macros/s/…/exec" value="https://script.google.com/macros/s/AKfycbxdVtqIozPiUEO25dmTjb_9BD-KikjEtfChYI2FGXDt6OkeOZRT65Tliq7bsmyLYw06Mg/exec">
     </div>
     <button class="btn-stg" onclick="saveAndLoad()">💾 저장 및 연결</button>
     <div id="stgStatus" class="stg-status"></div>
@@ -2674,7 +2674,7 @@ function onAuthSuccess(user) {
   }
   const btnRef = document.getElementById('btnRefresh');
   if (btnRef) btnRef.style.display = '';
-  const appsScriptUrl = localStorage.getItem('sephora_apps_script_url') || '';
+  const appsScriptUrl = localStorage.getItem('sephora_apps_script_url') || 'https://script.google.com/macros/s/AKfycbxdVtqIozPiUEO25dmTjb_9BD-KikjEtfChYI2FGXDt6OkeOZRT65Tliq7bsmyLYw06Mg/exec';
   const urlInput = document.getElementById('appsScriptUrl');
   if (urlInput) urlInput.value = appsScriptUrl;
   if (appsScriptUrl) {
@@ -2727,7 +2727,7 @@ window.saveAndLoad = function() {
 };
 
 window.manualRefresh = function() {
-  const url = localStorage.getItem('sephora_apps_script_url') || '';
+  const url = localStorage.getItem('sephora_apps_script_url') || 'https://script.google.com/macros/s/AKfycbxdVtqIozPiUEO25dmTjb_9BD-KikjEtfChYI2FGXDt6OkeOZRT65Tliq7bsmyLYw06Mg/exec';
   if (!url) { switchTab('settings'); return; }
   const btn = document.getElementById('btnRefresh');
   if (btn) { btn.disabled = true; btn.textContent = '↻ 업데이트 중...'; }
@@ -2741,7 +2741,7 @@ function ldRetry() {
   const ldError   = document.getElementById('ldStateError');
   if (ldLoading) ldLoading.style.display = '';
   if (ldError)   ldError.style.display = 'none';
-  const url = localStorage.getItem('sephora_apps_script_url') || '';
+  const url = localStorage.getItem('sephora_apps_script_url') || 'https://script.google.com/macros/s/AKfycbxdVtqIozPiUEO25dmTjb_9BD-KikjEtfChYI2FGXDt6OkeOZRT65Tliq7bsmyLYw06Mg/exec';
   if (url) loadFromAppsScript(url);
 }
 
