@@ -740,6 +740,7 @@ const SKU_META = {
 };
 
 let RAW_SKU = [];
+let _refTime = 0; // week 계산 기준시간 (rebuildDerivedData에서 설정)
 let RAW_SALES = [];
 let SALES_BY_DATE = {};
 
@@ -1064,6 +1065,15 @@ function skuPassesCatSku(sku) {
   return cOk && sOk;
 }
 
+function getWeekNum(dateStr) {
+  if (_refTime === 0) return 1;
+  return Math.floor((new Date(dateStr+'T00:00:00').getTime() - _refTime) / (7*86400000)) + 1;
+}
+
+function getMonthStr(dateStr) {
+  return dateStr.slice(5, 7); // "YYYY-MM-DD" → "MM"
+}
+
 function getFiltered() {
   // 1. Filter per-SKU rows
   const skuFiltered = RAW_SKU.filter(d => {
@@ -1078,7 +1088,17 @@ function getFiltered() {
     byDate[d.date].visits += d.visits;
     byDate[d.date].orders += d.orders;
   });
-  // 3. Inject sales from SALES_BY_DATE, compute CVR, sort by date
+  // 3. SALES_BY_DATE에만 있는 날짜 병합 (RAW_commerce 미입력 날짜도 매출 반영)
+  Object.keys(SALES_BY_DATE).forEach(function(date) {
+    if (byDate[date]) return; // 이미 RAW_SKU에 있으면 스킵
+    var month = getMonthStr(date);
+    var week  = getWeekNum(date);
+    var mOk = selMonths.size === 0 || selMonths.has(month);
+    var wOk = selWeeks.size  === 0 || selWeeks.has(week);
+    if (!mOk || !wOk) return;
+    byDate[date] = {date: date, month: month, week: week, visits: 0, orders: 0};
+  });
+  // 4. Inject sales from SALES_BY_DATE, compute CVR, sort by date
   return Object.values(byDate)
     .sort((a,b) => a.date.localeCompare(b.date))
     .map(d => ({...d, sales: (SALES_BY_DATE[d.date] || {}).total || 0, cvr: d.visits > 0 ? d.orders/d.visits*100 : 0}));
@@ -1096,6 +1116,16 @@ function getFilteredForPeriod(monthSet, weekSet) {
     if (!byDate[d.date]) byDate[d.date] = {date: d.date, visits:0, sales:0, orders:0};
     byDate[d.date].visits += d.visits;
     byDate[d.date].orders += d.orders;
+  });
+  // SALES_BY_DATE 전용 날짜 병합
+  Object.keys(SALES_BY_DATE).forEach(function(date) {
+    if (byDate[date]) return;
+    var month = getMonthStr(date);
+    var week  = getWeekNum(date);
+    var mOk = monthSet.size === 0 || monthSet.has(month);
+    var wOk = weekSet.size  === 0 || weekSet.has(week);
+    if (!mOk || !wOk) return;
+    byDate[date] = {date: date, visits: 0, sales: 0, orders: 0};
   });
   return Object.values(byDate).map(d => ({...d, sales: (SALES_BY_DATE[d.date] || {}).total || 0, cvr: d.visits > 0 ? d.orders/d.visits*100 : 0}));
 }
@@ -3111,7 +3141,8 @@ function rebuildDerivedData() {
     const minD   = new Date(allDates[0] + 'T00:00:00');
     const refSun = new Date(minD);
     refSun.setDate(minD.getDate() - minD.getDay());
-    const refTime = refSun.getTime();
+    _refTime = refSun.getTime();
+    const refTime = _refTime;
     RAW_SKU.forEach(r => {
       r.week = Math.floor((new Date(r.date+'T00:00:00').getTime() - refTime) / (7*86400000)) + 1;
     });
