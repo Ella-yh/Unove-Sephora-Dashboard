@@ -431,7 +431,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     </div>
     <div class="leg-row" style="align-items:center;flex-wrap:wrap;gap:6px;padding-right:90px;">
       <div class="leg"><div class="leg-dot" style="background:#d97070;"></div><span id="salesLegLabel">Sales (.COM)</span></div>
-      <div class="leg"><div class="leg-dot" style="background:#8878d0;border-radius:50%;"></div>CVR (%)</div>
+      <button class="mkr-btn active" id="btnCvrToggle" onclick="toggleCvr(this)" style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#8878d0;"></span>CVR</button>
       <button class="mkr-btn" id="btnVisitsToggle" onclick="toggleVisits(this)" style="display:flex;align-items:center;gap:4px;">
         <span style="font-size:12px;font-weight:700;line-height:1;color:#6aadd5;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#6aadd5;"></span>Visits
       </button>
@@ -942,6 +942,7 @@ let showMarkers = false;
 let showVisits   = false;
 let showAdSpend  = false;
 let showRoas     = false;
+let showCvr      = true;
 let mainPeriod   = 'daily';
 
 window.toggleMarkers = function(btn) {
@@ -963,6 +964,11 @@ function toggleAdSpend(btn) {
   btn.classList.toggle('active', showAdSpend);
   renderChart();
 };
+function toggleCvr(btn) {
+  showCvr = !showCvr;
+  btn.classList.toggle('active', showCvr);
+  renderChart();
+}
 function toggleRoas(btn) {
   showRoas = !showRoas;
   btn.classList.toggle('active', showRoas);
@@ -1501,8 +1507,8 @@ function renderChart() {
           barPercentage: 0.5,
           categoryPercentage: 0.85,
         });
-        // CVR → 항상 표시
-        ds.push({
+        // CVR → 토글
+        if (showCvr) ds.push({
           label: 'CVR',
           data: data.map(d => d.cvr),
           type: 'line',
@@ -1586,8 +1592,10 @@ function renderChart() {
           ticks: {
             font: { size: 9 }, color: '#888', maxRotation: 45,
             callback(val, idx) {
-              if (n > 50 && idx % 7 !== 0) return '';
-              if (n > 25 && idx % 2 !== 0) return '';
+              if (mainPeriod !== 'daily') {
+                if (n > 50 && idx % 7 !== 0) return '';
+                if (n > 25 && idx % 2 !== 0) return '';
+              }
               return this.getLabelForValue(val);
             }
           }
@@ -1605,8 +1613,10 @@ function renderChart() {
           title: { display:true, text:'Sales (₩)', font:{size:9}, color:'#d97070' }
         },
         yC: {
-          type: 'linear', position: 'right', display: false,
-          grid: { drawOnChartArea: false }
+          type: 'linear', position: 'right', display: showCvr,
+          grid: { drawOnChartArea: false },
+          ticks: { font:{size:9}, color:'#8878d0', callback: v => v.toFixed(1)+'%' },
+          title: { display:true, text:'CVR(%)', font:{size:9}, color:'#8878d0' }
         },
         yA: {
           type: 'linear', position: 'right', display: showAdSpend,
