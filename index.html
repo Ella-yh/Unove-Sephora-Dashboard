@@ -656,6 +656,12 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 
 </div>
 
+<!-- 기간 서브 선택 row -->
+<div id="adsPeriodSubRow" style="display:none;padding:6px 28px 10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-top:1px solid #eee;background:#fafafa;">
+  <span id="adsPeriodSubLabel" style="font-size:9px;font-weight:700;color:#999;letter-spacing:1px;text-transform:uppercase;min-width:20px;"></span>
+  <div id="adsPeriodSubBtns" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+</div>
+
 <!-- Chart 1: 전체 퍼포먼스 -->
 <div class="chart-sec">
   <div class="sec-hdr">퍼포먼스 / 세포라 매출 / 세포라 유입</div>
@@ -864,6 +870,8 @@ let selAdsSales  = 'com';    // com | total | bam
 let selAdsMetric = 'spend';  // spend | impressions | clicks
 let selAdsMedia  = new Set(['meta','tiktok','gsa']);
 const adsChartPeriod = {1:'weekly', 2:'weekly', 3:'weekly'};
+let adsGlobalPeriod2 = 'weekly'; // 글로벌 기간 (sub-row 연동)
+let adsSelectedRange = null;     // null = 전체, 'YYYY-MM' / 'YYYY-MM-DD' / weekKey
 const metaActiveCampaigns = new Set(['전환(구매)','전환(장바구니)','트래픽(lpv)','트래픽(click)','조회']);
 let metaChartType = 'bar';
 const ttActiveCampaigns = new Set(['검색','조회']);
@@ -901,6 +909,8 @@ window.setChartPeriod = function(chartNum, btn, period) {
   refreshAdsChart(chartNum);
 };
 window.setAdsGlobalPeriod = function(btn, period) {
+  adsGlobalPeriod2 = period;
+  adsSelectedRange = null; // 범위 초기화
   // 글로벌 버튼 active
   document.querySelectorAll('[data-ads-gperiod]').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
@@ -911,7 +921,48 @@ window.setAdsGlobalPeriod = function(btn, period) {
     var pb = document.querySelector('[data-chart="' + n + '"][data-period="' + period + '"]');
     if (pb) pb.classList.add('active');
   });
+  // sub-row 생성
+  buildAdsPeriodSubRow(period);
   refreshAds();
+};
+window.setAdsPeriodRange = function(btn, rangeKey) {
+  // 같은 버튼 다시 누르면 전체 해제
+  if (adsSelectedRange === rangeKey) {
+    adsSelectedRange = null;
+    document.querySelectorAll('[data-ads-range]').forEach(function(b){ b.classList.remove('active'); });
+  } else {
+    adsSelectedRange = rangeKey;
+    document.querySelectorAll('[data-ads-range]').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+  }
+  refreshAds();
+};
+function buildAdsPeriodSubRow(period) {
+  var row = document.getElementById('adsPeriodSubRow');
+  var lbl = document.getElementById('adsPeriodSubLabel');
+  var btnsDiv = document.getElementById('adsPeriodSubBtns');
+  if (!row || !btnsDiv) return;
+  // 데이터에서 고유 period key 추출
+  var keys = new Set();
+  ADS_RAW.forEach(function(r){ keys.add(getPeriodKey(r.date, period)); });
+  Object.keys(SALES_BY_DATE).forEach(function(d){ keys.add(getPeriodKey(d, period)); });
+  var sorted = Array.from(keys).sort();
+  if (sorted.length === 0) { row.style.display='none'; return; }
+  // 레이블 텍스트
+  var lblMap = { monthly:'월', weekly:'주', daily:'일' };
+  lbl.textContent = lblMap[period] || '';
+  // 버튼 렌더
+  btnsDiv.innerHTML = sorted.map(function(k) {
+    var active = adsSelectedRange === k ? ' active' : '';
+    var label = fmtPeriodLabel(k, period);
+    // monthly면 'MM월' 포맷
+    if (period === 'monthly') {
+      var parts = k.split('-');
+      label = parseInt(parts[1]) + '월';
+    }
+    return '<button class="stgl' + active + '" data-ads-range="' + k + '" onclick="setAdsPeriodRange(this,\'' + k + '\')">' + label + '</button>';
+  }).join('');
+  row.style.display = 'flex';
 };
 window.toggleMetaCamp = function(btn) {
   var obj = btn.getAttribute('data-meta-obj');
@@ -3102,6 +3153,7 @@ function buildAdsByPeriod(mediaFilter, period) {
   const byP = {};
   ADS_RAW.forEach(r => {
     if (mediaFilter && !mediaFilter.has(r.media)) return;
+    if (adsSelectedRange !== null && getPeriodKey(r.date, adsGlobalPeriod2) !== adsSelectedRange) return;
     const k = getPeriodKey(r.date, period);
     if (!byP[k]) byP[k] = { spend:0, impressions:0, clicks:0, byObj:{} };
     byP[k].spend       += r.spend;
@@ -3118,6 +3170,7 @@ function buildAdsByPeriod(mediaFilter, period) {
 function buildSephoraByPeriod(period) {
   const byP = {};
   Object.entries(SALES_BY_DATE).forEach(([date, s]) => {
+    if (adsSelectedRange !== null && getPeriodKey(date, adsGlobalPeriod2) !== adsSelectedRange) return;
     const k = getPeriodKey(date, period);
     if (!byP[k]) byP[k] = {sales_com:0, sales_bam:0, sales_total:0, visits:0};
     byP[k].sales_com   += s.com   || 0;
