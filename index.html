@@ -668,13 +668,8 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   <div class="sec-hdr">퍼포먼스 / 세포라 매출 / 세포라 유입</div>
   <div class="chart-card" style="position:relative;">
     <div style="position:absolute;top:10px;right:14px;display:flex;gap:3px;z-index:2;"><button class="ads-p-btn" data-chart="1" data-period="monthly" onclick="setChartPeriod(1,this,'monthly')">월</button><button class="ads-p-btn active" data-chart="1" data-period="weekly" onclick="setChartPeriod(1,this,'weekly')">주</button><button class="ads-p-btn" data-chart="1" data-period="daily" onclick="setChartPeriod(1,this,'daily')">일</button></div>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-      <div class="leg-row" id="adsChart1Leg" style="flex-wrap:wrap;gap:8px;margin-bottom:0;flex:1;"></div>
-      <div style="display:flex;gap:4px;flex-shrink:0;">
-        <button class="mkr-btn active" id="btnAdsSalesToggle" onclick="toggleAdsSales(this)" style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#d97070;"></span>매출</button>
-        <button class="mkr-btn active" id="btnAdsVisitsToggle" onclick="toggleAdsVisits(this)" style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#5dcaa5;"></span>유입</button>
-      </div>
-    </div>
+    <div style="position:absolute;top:10px;left:14px;display:flex;gap:3px;z-index:2;"><button class="mkr-btn active" id="btnSales1" onclick="toggleChartSales(1,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:2px 6px;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#d97070;"></span>매출</button><button class="mkr-btn active" id="btnVisits1" onclick="toggleChartVisits(1,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:2px 6px;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#5dcaa5;"></span>유입</button></div>
+    <div class="leg-row" id="adsChart1Leg" style="flex-wrap:wrap;gap:8px;margin-bottom:8px;padding-left:110px;padding-right:90px;"></div>
     <div class="chart-wrap" style="height:300px;"><canvas id="adsChart1"></canvas></div>
     <div class="chart-note">* 좌축: 퍼포먼스 지표, 우축(빨강): 세포라 매출(₩), 우축(파랑): 세포라 유입</div>
   </div>
@@ -685,7 +680,8 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   <div class="sec-hdr">Meta — 캠페인 목표별 퍼포먼스 / 세포라 매출 / 세포라 유입</div>
   <div class="chart-card" style="position:relative;">
     <div style="position:absolute;top:10px;right:14px;display:flex;gap:3px;z-index:2;"><button class="ads-p-btn" data-chart="2" data-period="monthly" onclick="setChartPeriod(2,this,'monthly')">월</button><button class="ads-p-btn active" data-chart="2" data-period="weekly" onclick="setChartPeriod(2,this,'weekly')">주</button><button class="ads-p-btn" data-chart="2" data-period="daily" onclick="setChartPeriod(2,this,'daily')">일</button></div>
-    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:8px;padding-right:90px;">
+    <div style="position:absolute;top:10px;left:14px;display:flex;gap:3px;z-index:2;"><button class="mkr-btn active" id="btnSales2" onclick="toggleChartSales(2,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:2px 6px;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#d97070;"></span>매출</button><button class="mkr-btn active" id="btnVisits2" onclick="toggleChartVisits(2,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:2px 6px;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#5dcaa5;"></span>유입</button></div>
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:8px;padding-right:90px;padding-left:110px;">
       <span style="font-size:9px;font-weight:700;color:#999;letter-spacing:1px;text-transform:uppercase;min-width:36px;">캠페인</span>
       <button class="ads-p-btn active" data-meta-obj="전환(구매)" onclick="toggleMetaCamp(this)">전환(구매)</button>
       <button class="ads-p-btn active" data-meta-obj="전환(장바구니)" onclick="toggleMetaCamp(this)">전환(장바구니)</button>
@@ -707,7 +703,8 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   <div class="sec-hdr">TikTok — 캠페인 목표별 퍼포먼스 / 세포라 매출 / 세포라 유입</div>
   <div class="chart-card" style="position:relative;">
     <div style="position:absolute;top:10px;right:14px;display:flex;gap:3px;z-index:2;"><button class="ads-p-btn" data-chart="3" data-period="monthly" onclick="setChartPeriod(3,this,'monthly')">월</button><button class="ads-p-btn active" data-chart="3" data-period="weekly" onclick="setChartPeriod(3,this,'weekly')">주</button><button class="ads-p-btn" data-chart="3" data-period="daily" onclick="setChartPeriod(3,this,'daily')">일</button></div>
-    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:8px;padding-right:90px;">
+    <div style="position:absolute;top:10px;left:14px;display:flex;gap:3px;z-index:2;"><button class="mkr-btn active" id="btnSales3" onclick="toggleChartSales(3,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:2px 6px;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#d97070;"></span>매출</button><button class="mkr-btn active" id="btnVisits3" onclick="toggleChartVisits(3,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:2px 6px;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#5dcaa5;"></span>유입</button></div>
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:8px;padding-right:90px;padding-left:110px;">
       <span style="font-size:9px;font-weight:700;color:#999;letter-spacing:1px;text-transform:uppercase;min-width:36px;">캠페인</span>
       <button class="ads-p-btn active" data-tt-obj="검색" onclick="toggleTtCamp(this)">검색</button>
       <button class="ads-p-btn active" data-tt-obj="조회" onclick="toggleTtCamp(this)">조회</button>
@@ -879,8 +876,9 @@ let selAdsMedia  = new Set(['meta','tiktok','gsa']);
 const adsChartPeriod = {1:'weekly', 2:'weekly', 3:'weekly'};
 let adsGlobalPeriod2 = 'weekly'; // 글로벌 기간 (드롭다운 연동)
 let adsSelectedRange = null;     // null = 전체, 'YYYY-MM' / 'YYYY-MM-DD' / weekKey
-let showAdsSales  = true;  // 세포라 매출 토글
-let showAdsVisits = true;  // 세포라 유입 토글
+// 차트별 독립 매출/유입 토글
+const adsShowSales  = {1: true, 2: true, 3: true};
+const adsShowVisits = {1: true, 2: true, 3: true};
 const metaActiveCampaigns = new Set(['전환(구매)','전환(장바구니)','트래픽(lpv)','트래픽(click)','조회']);
 let metaChartType = 'bar';
 const ttActiveCampaigns = new Set(['검색','조회']);
@@ -1020,16 +1018,16 @@ function updateAdsDDLabel() {
   }
   lbl.textContent = pLabel + ' · ' + detail;
 }
-// 매출/유입 토글
-window.toggleAdsSales = function(btn) {
-  showAdsSales = !showAdsSales;
-  btn.classList.toggle('active', showAdsSales);
-  refreshAds();
+// 차트별 매출/유입 토글
+window.toggleChartSales = function(chartNum, btn) {
+  adsShowSales[chartNum] = !adsShowSales[chartNum];
+  btn.classList.toggle('active', adsShowSales[chartNum]);
+  refreshAdsChart(chartNum);
 };
-window.toggleAdsVisits = function(btn) {
-  showAdsVisits = !showAdsVisits;
-  btn.classList.toggle('active', showAdsVisits);
-  refreshAds();
+window.toggleChartVisits = function(chartNum, btn) {
+  adsShowVisits[chartNum] = !adsShowVisits[chartNum];
+  btn.classList.toggle('active', adsShowVisits[chartNum]);
+  refreshAdsChart(chartNum);
 };
 // 구버전 호환
 window.setAdsGlobalPeriod = function(btn, period) { setAdsDDTab(period); };
@@ -3302,7 +3300,9 @@ const OBJ_COLORS = {
   '검색광고':     '#34495e',
 };
 
-function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, mediaLabel, period) {
+function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, mediaLabel, period, chartNum) {
+  var _showSales  = chartNum ? adsShowSales[chartNum]  : true;
+  var _showVisits = chartNum ? adsShowVisits[chartNum] : true;
   const labels = weeks.map(k => fmtPeriodLabel(k, period || 'weekly'));
   const metricKey = selAdsMetric;
   const salesKey  = getSalesKey();
@@ -3341,7 +3341,7 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
   }
 
   // Sephora 매출 라인 (토글)
-  if (showAdsSales) datasets.push({
+  if (_showSales) datasets.push({
     label: getSalesLabel(),
     data: weeks.map(wk => (sepWeekly[wk]?.[salesKey] || 0)),
     type: 'line', borderColor: '#d97070', backgroundColor: 'rgba(217,112,112,0.12)',
@@ -3351,7 +3351,7 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
   });
 
   // Sephora 유입 라인 (토글)
-  if (showAdsVisits) datasets.push({
+  if (_showVisits) datasets.push({
     label: '세포라 유입',
     data: weeks.map(wk => (sepWeekly[wk]?.visits || 0)),
     type: 'line', borderColor: '#5dcaa5', backgroundColor: 'rgba(93,202,165,0.12)',
@@ -3393,14 +3393,14 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
           title:{ display:false }
         },
         yS: {
-          type:'linear', position:'right', display: showAdsSales, grid:{drawOnChartArea:false},
+          type:'linear', position:'right', display: _showSales, grid:{drawOnChartArea:false},
           ticks:{ font:{size:9}, color:'#aaa',
             callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v
           },
           title:{ display:false }
         },
         yV: {
-          type:'linear', position:'right', display: showAdsVisits, grid:{drawOnChartArea:false},
+          type:'linear', position:'right', display: _showVisits, grid:{drawOnChartArea:false},
         }
       }
     }
@@ -3426,7 +3426,7 @@ function refreshAdsChart(chartNum) {
   if (chartNum === 1) {
     const ads1 = buildAdsByPeriod(selAdsMedia, p);
     const weeks1 = [...new Set([...Object.keys(ads1), ...Object.keys(sep)])].sort();
-    const cfg1 = makeAdsChartCfg(weeks1, ads1, sep, false, [], getMetricLabel(), p);
+    const cfg1 = makeAdsChartCfg(weeks1, ads1, sep, false, [], getMetricLabel(), p, 1);
     renderLegend('adsChart1Leg', cfg1.data.datasets);
     const ctx1 = document.getElementById('adsChart1');
     if (ctx1) { if (adsChart1) adsChart1.destroy(); adsChart1 = new Chart(ctx1.getContext('2d'), cfg1); }
@@ -3435,7 +3435,7 @@ function refreshAdsChart(chartNum) {
     const weeks2 = [...new Set([...Object.keys(ads2), ...Object.keys(sep)])].sort();
     const allMetaObjs = ['전환(장바구니)','전환(구매)','트래픽(click)','트래픽(lpv)','조회'];
     const metaObjs = allMetaObjs.filter(o => metaActiveCampaigns.has(o));
-    const cfg2 = makeAdsChartCfg(weeks2, ads2, sep, true, metaObjs, '', p);
+    const cfg2 = makeAdsChartCfg(weeks2, ads2, sep, true, metaObjs, '', p, 2);
     if (metaChartType === 'line') {
       cfg2.data.datasets = cfg2.data.datasets.map(function(ds) {
         if (ds.yAxisID !== 'yA') return ds;
@@ -3453,7 +3453,7 @@ function refreshAdsChart(chartNum) {
     const weeks3 = [...new Set([...Object.keys(ads3), ...Object.keys(sep)])].sort();
     const allTtObjs = ['검색','조회'];
     const ttObjs = allTtObjs.filter(o => ttActiveCampaigns.has(o));
-    const cfg3 = makeAdsChartCfg(weeks3, ads3, sep, true, ttObjs, '', p);
+    const cfg3 = makeAdsChartCfg(weeks3, ads3, sep, true, ttObjs, '', p, 3);
     if (ttChartType === 'line') {
       cfg3.data.datasets = cfg3.data.datasets.map(function(ds) {
         if (ds.yAxisID !== 'yA') return ds;
