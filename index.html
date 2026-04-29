@@ -423,7 +423,12 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 
 <div class="chart-sec">
   <div class="sec-hdr">일자별 Sales · CVR</div>
-  <div class="chart-card">
+  <div class="chart-card" style="position:relative;">
+    <div style="position:absolute;top:10px;right:14px;display:flex;gap:3px;z-index:2;">
+      <button class="ads-p-btn" data-main-period="monthly" onclick="setMainPeriod(this,'monthly')">월</button>
+      <button class="ads-p-btn" data-main-period="weekly" onclick="setMainPeriod(this,'weekly')">주</button>
+      <button class="ads-p-btn active" data-main-period="daily" onclick="setMainPeriod(this,'daily')">일</button>
+    </div>
     <div class="leg-row" style="align-items:center;flex-wrap:wrap;gap:6px;">
       <div class="leg"><div class="leg-dot" style="background:#d97070;"></div><span id="salesLegLabel">Sales (.COM)</span></div>
       <div class="leg"><div class="leg-dot" style="background:#8878d0;border-radius:50%;"></div>CVR (%)</div>
@@ -432,6 +437,9 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       </button>
       <button class="mkr-btn" id="btnAdSpendToggle" onclick="toggleAdSpend(this)" style="display:flex;align-items:center;gap:4px;">
         <span style="font-size:12px;font-weight:700;line-height:1;color:#e8c84a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e8c84a;"></span>광고비
+      </button>
+      <button class="mkr-btn" id="btnRoasToggle" onclick="toggleRoas(this)" style="display:flex;align-items:center;gap:4px;">
+        <span style="font-size:12px;font-weight:700;line-height:1;color:#4bc8a0;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4bc8a0;"></span>ROAS(닷컴)
       </button>
       <div style="display:flex;gap:4px;align-items:center;margin-left:auto;">
         <div class="sales-toggle" style="margin-left:0;">
@@ -655,6 +663,18 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   <div class="sec-hdr">Meta — 캠페인 목표별 퍼포먼스 / 세포라 매출 / 세포라 유입</div>
   <div class="chart-card" style="position:relative;">
     <div style="position:absolute;top:10px;right:14px;display:flex;gap:3px;z-index:2;"><button class="ads-p-btn" data-chart="2" data-period="monthly" onclick="setChartPeriod(2,this,'monthly')">월</button><button class="ads-p-btn active" data-chart="2" data-period="weekly" onclick="setChartPeriod(2,this,'weekly')">주</button><button class="ads-p-btn" data-chart="2" data-period="daily" onclick="setChartPeriod(2,this,'daily')">일</button></div>
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:8px;padding-right:90px;">
+      <span style="font-size:9px;font-weight:700;color:#999;letter-spacing:1px;text-transform:uppercase;min-width:36px;">캠페인</span>
+      <button class="ads-p-btn active" data-meta-obj="전환(구매)" onclick="toggleMetaCamp(this)">전환(구매)</button>
+      <button class="ads-p-btn active" data-meta-obj="전환(장바구니)" onclick="toggleMetaCamp(this)">전환(장바구니)</button>
+      <button class="ads-p-btn active" data-meta-obj="트래픽(lpv)" onclick="toggleMetaCamp(this)">트래픽(lpv)</button>
+      <button class="ads-p-btn active" data-meta-obj="트래픽(click)" onclick="toggleMetaCamp(this)">트래픽(click)</button>
+      <button class="ads-p-btn active" data-meta-obj="조회" onclick="toggleMetaCamp(this)">조회</button>
+      <div style="display:flex;gap:3px;margin-left:8px;">
+        <button class="ads-p-btn active" data-meta-type="bar" onclick="setMetaChartType(this,'bar')">Bar</button>
+        <button class="ads-p-btn" data-meta-type="line" onclick="setMetaChartType(this,'line')">Line</button>
+      </div>
+    </div>
     <div class="leg-row" id="adsChart2Leg" style="flex-wrap:wrap;gap:10px;margin-bottom:10px;"></div>
     <div class="chart-wrap" style="height:300px;"><canvas id="adsChart2"></canvas></div>
   </div>
@@ -665,6 +685,15 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   <div class="sec-hdr">TikTok — 캠페인 목표별 퍼포먼스 / 세포라 매출 / 세포라 유입</div>
   <div class="chart-card" style="position:relative;">
     <div style="position:absolute;top:10px;right:14px;display:flex;gap:3px;z-index:2;"><button class="ads-p-btn" data-chart="3" data-period="monthly" onclick="setChartPeriod(3,this,'monthly')">월</button><button class="ads-p-btn active" data-chart="3" data-period="weekly" onclick="setChartPeriod(3,this,'weekly')">주</button><button class="ads-p-btn" data-chart="3" data-period="daily" onclick="setChartPeriod(3,this,'daily')">일</button></div>
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:8px;padding-right:90px;">
+      <span style="font-size:9px;font-weight:700;color:#999;letter-spacing:1px;text-transform:uppercase;min-width:36px;">캠페인</span>
+      <button class="ads-p-btn active" data-tt-obj="검색" onclick="toggleTtCamp(this)">검색</button>
+      <button class="ads-p-btn active" data-tt-obj="조회" onclick="toggleTtCamp(this)">조회</button>
+      <div style="display:flex;gap:3px;margin-left:8px;">
+        <button class="ads-p-btn active" data-tt-type="bar" onclick="setTtChartType(this,'bar')">Bar</button>
+        <button class="ads-p-btn" data-tt-type="line" onclick="setTtChartType(this,'line')">Line</button>
+      </div>
+    </div>
     <div class="leg-row" id="adsChart3Leg" style="flex-wrap:wrap;gap:10px;margin-bottom:10px;"></div>
     <div class="chart-wrap" style="height:300px;"><canvas id="adsChart3"></canvas></div>
   </div>
@@ -826,6 +855,10 @@ let selAdsSales  = 'com';    // com | total | bam
 let selAdsMetric = 'spend';  // spend | impressions | clicks
 let selAdsMedia  = new Set(['meta','tiktok','gsa']);
 const adsChartPeriod = {1:'weekly', 2:'weekly', 3:'weekly'};
+const metaActiveCampaigns = new Set(['전환(구매)','전환(장바구니)','트래픽(lpv)','트래픽(click)','조회']);
+let metaChartType = 'bar';
+const ttActiveCampaigns = new Set(['검색','조회']);
+let ttChartType = 'bar';
 let adsChart1 = null, adsChart2 = null, adsChart3 = null;
 
 window.setAdsSales = function(btn) {
@@ -851,10 +884,36 @@ window.setChartPeriod = function(chartNum, btn, period) {
   adsChartPeriod[chartNum] = period;
   refreshAdsChart(chartNum);
 };
+window.toggleMetaCamp = function(btn) {
+  var obj = btn.getAttribute('data-meta-obj');
+  if (metaActiveCampaigns.has(obj)) { metaActiveCampaigns.delete(obj); btn.classList.remove('active'); }
+  else { metaActiveCampaigns.add(obj); btn.classList.add('active'); }
+  refreshAdsChart(2);
+};
+window.setMetaChartType = function(btn, type) {
+  document.querySelectorAll('[data-meta-type]').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  metaChartType = type;
+  refreshAdsChart(2);
+};
+window.toggleTtCamp = function(btn) {
+  var obj = btn.getAttribute('data-tt-obj');
+  if (ttActiveCampaigns.has(obj)) { ttActiveCampaigns.delete(obj); btn.classList.remove('active'); }
+  else { ttActiveCampaigns.add(obj); btn.classList.add('active'); }
+  refreshAdsChart(3);
+};
+window.setTtChartType = function(btn, type) {
+  document.querySelectorAll('[data-tt-type]').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  ttChartType = type;
+  refreshAdsChart(3);
+};
 let selSalesType = 'com'; // 'com' | 'total' | 'bam'
 let showMarkers = false;
 let showVisits   = false;
 let showAdSpend  = false;
+let showRoas     = false;
+let mainPeriod   = 'daily';
 
 window.toggleMarkers = function(btn) {
   showMarkers = !showMarkers;
@@ -873,6 +932,18 @@ function toggleVisits(btn) {
 function toggleAdSpend(btn) {
   showAdSpend = !showAdSpend;
   btn.classList.toggle('active', showAdSpend);
+  renderChart();
+};
+function toggleRoas(btn) {
+  showRoas = !showRoas;
+  btn.classList.toggle('active', showRoas);
+  renderChart();
+}
+window.toggleRoas = toggleRoas;
+window.setMainPeriod = function(btn, period) {
+  document.querySelectorAll('[data-main-period]').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  mainPeriod = period;
   renderChart();
 };
 
@@ -1302,10 +1373,45 @@ function buildAnnotations(labels) {
   return annotations;
 }
 
+// ─── MAIN CHART DATA (period-aware) ──────────────────────────────────────────
+function getMainChartData() {
+  var raw = getFiltered();
+  if (mainPeriod === 'daily') {
+    return raw.map(function(d) {
+      var sb = SALES_BY_DATE[d.date] || {};
+      var spend = ADS_RAW.filter(function(r){return r.date===d.date;}).reduce(function(s,r){return s+r.spend;},0);
+      return Object.assign({},d,{label:d.date.slice(5),sales_com:sb.com||0,sales_bam:sb.bam||0,spend:spend>0?spend:null,roas_com:spend>0?(sb.com||0)/spend:null});
+    });
+  }
+  var filteredDateSet = new Set(raw.map(function(d){return d.date;}));
+  var byP = {};
+  raw.forEach(function(d) {
+    var k = getPeriodKey(d.date, mainPeriod);
+    if (!byP[k]) byP[k] = {key:k,visits:0,orders:0,sales_com:0,sales_bam:0,sales_total:0,spend:0,label:fmtPeriodLabel(k,mainPeriod)};
+    byP[k].visits += d.visits;
+    byP[k].orders += d.orders;
+    var sb = SALES_BY_DATE[d.date] || {};
+    byP[k].sales_com   += sb.com||0;
+    byP[k].sales_bam   += sb.bam||0;
+    byP[k].sales_total += sb.total||0;
+  });
+  ADS_RAW.forEach(function(r) {
+    if (!filteredDateSet.has(r.date)) return;
+    var k = getPeriodKey(r.date, mainPeriod);
+    if (byP[k]) byP[k].spend += r.spend;
+  });
+  return Object.entries(byP)
+    .sort(function(a,b){return a[0].localeCompare(b[0]);})
+    .map(function(entry) {
+      var k = entry[0], v = entry[1];
+      return {date:k,label:v.label,visits:v.visits,orders:v.orders,sales:v.sales_total,sales_com:v.sales_com,sales_bam:v.sales_bam,cvr:v.visits>0?v.orders/v.visits*100:0,spend:v.spend>0?v.spend:null,roas_com:v.spend>0?v.sales_com/v.spend:null};
+    });
+}
+
 // ─── CHART ────────────────────────────────────────────────────────────────────
 function renderChart() {
-  const data = getFiltered();
-  const labels = data.map(d => d.date.slice(5));
+  const data = getMainChartData();
+  const labels = data.map(d => d.label || d.date.slice(5));
   const annotations = buildAnnotations(labels);
   const n = data.length;
 
@@ -1333,7 +1439,7 @@ function renderChart() {
         // Sales → 항상 표시
         ds.push({
           label: selSalesType === 'com' ? 'Sales (.COM)' : selSalesType === 'bam' ? 'Sales (B&M)' : 'Sales (TTL)',
-          data: data.map(d => { const sb = SALES_BY_DATE[d.date] || {}; return selSalesType === 'com' ? (sb.com||0) : selSalesType === 'bam' ? (sb.bam||0) : (sb.total||0); }),
+          data: data.map(d => selSalesType === 'com' ? (d.sales_com||0) : selSalesType === 'bam' ? (d.sales_bam||0) : (d.sales||0)),
           type: 'bar',
           backgroundColor: makeGrad('mainChart','#d97070',0.85,0.45),
           hoverBackgroundColor: makeGrad('mainChart','#d97070',0.95,0.6),
@@ -1359,10 +1465,7 @@ function renderChart() {
         // 광고비(net) → 토글 ON일 때만
         if (showAdSpend) ds.push({
           label: '광고비(net)',
-          data: data.map(d => {
-            const dateSpend = ADS_RAW.filter(r => r.date === d.date).reduce((s,r) => s + r.spend, 0);
-            return dateSpend > 0 ? dateSpend : null;
-          }),
+          data: data.map(d => d.spend || null),
           type: 'line',
           borderColor: '#e8c84a',
           backgroundColor: makeGrad('mainChart','#e8c84a',0.12,0.0),
@@ -1373,6 +1476,22 @@ function renderChart() {
           spanGaps: false,
           fill: false,
           yAxisID: 'yA', order: 0,
+          tension: 0.25,
+        });
+        // ROAS(닷컴) → 토글 ON일 때만
+        if (showRoas) ds.push({
+          label: 'ROAS(닷컴)',
+          data: data.map(d => d.roas_com !== null ? Math.round((d.roas_com||0)*100) : null),
+          type: 'line',
+          borderColor: '#4bc8a0',
+          backgroundColor: 'rgba(75,200,160,0.08)',
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: '#4bc8a0',
+          spanGaps: false,
+          fill: false,
+          yAxisID: 'yR', order: -1,
           tension: 0.25,
         });
         return ds;
@@ -1393,13 +1512,14 @@ function renderChart() {
           borderWidth: 1,
           padding: 10,
           callbacks: {
-            title: ctx => '📅 ' + data[ctx[0].dataIndex].date,
+            title: ctx => { const d = data[ctx[0].dataIndex]; return '📅 ' + (d.label || d.date.slice(5)); },
             label: ctx => {
               const v = ctx.raw;
               if (ctx.dataset.label === 'Visits') return `  Visits: ${v.toLocaleString()}`;
               if (ctx.dataset.label.startsWith('Sales')) return '  ' + ctx.dataset.label + ': ₩' + Math.round(Math.abs(v)).toLocaleString('ko-KR');
               if (ctx.dataset.label === 'CVR') return `  CVR: ${v.toFixed(2)}%`;
               if (ctx.dataset.label === '광고비(net)') return v != null ? `  광고비: ₩${Math.round(v).toLocaleString('ko-KR')}` : null;
+              if (ctx.dataset.label === 'ROAS(닷컴)') return v != null ? `  ROAS(닷컴): ${v}%` : null;
               return ctx.dataset.label + ': ' + v;
             }
           }
@@ -1439,6 +1559,12 @@ function renderChart() {
           grid: { drawOnChartArea: false },
           ticks: { font:{size:9}, color:'#e8c84a', callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v },
           title: { display:true, text:'광고비(₩)', font:{size:9}, color:'#e8c84a' }
+        },
+        yR: {
+          type: 'linear', position: 'left', display: showRoas,
+          grid: { drawOnChartArea: false },
+          ticks: { font:{size:9}, color:'#4bc8a0', callback: v => v+'%' },
+          title: { display:true, text:'ROAS(%)', font:{size:9}, color:'#4bc8a0' }
         }
       }
     }
@@ -3011,11 +3137,15 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
     datasets.push({
       label: mediaLabel || getMetricLabel(),
       data: weeks.map(wk => (adsWeekly[wk]?.[metricKey] || 0)),
-      type: 'bar',
-      backgroundColor: makeGrad('adsChart1','#3d82c8',0.8,0.4),
-      hoverBackgroundColor: 'rgba(70,130,200,1)',
+      type: 'line',
+      borderColor: '#e8c84a',
+      backgroundColor: 'rgba(232,200,74,0.10)',
+      borderWidth: 2.5,
+      pointRadius: 3, pointHoverRadius: 5,
+      pointBackgroundColor: '#e8c84a',
+      fill: false,
       yAxisID: 'yA', order: 3,
-      barPercentage: 0.5, categoryPercentage: 0.8,
+      tension: 0.25,
     });
   }
 
@@ -3112,16 +3242,36 @@ function refreshAdsChart(chartNum) {
   } else if (chartNum === 2) {
     const ads2 = buildAdsByPeriod(new Set(['meta']), p);
     const weeks2 = [...new Set([...Object.keys(ads2), ...Object.keys(sep)])].sort();
-    const metaObjs = ['전환(장바구니)','전환(구매)','트래픽(click)','트래픽(lpv)','조회'];
+    const allMetaObjs = ['전환(장바구니)','전환(구매)','트래픽(click)','트래픽(lpv)','조회'];
+    const metaObjs = allMetaObjs.filter(o => metaActiveCampaigns.has(o));
     const cfg2 = makeAdsChartCfg(weeks2, ads2, sep, true, metaObjs, '', p);
+    if (metaChartType === 'line') {
+      cfg2.data.datasets = cfg2.data.datasets.map(function(ds) {
+        if (ds.yAxisID !== 'yA') return ds;
+        var col = OBJ_COLORS[ds.label] || '#999';
+        return Object.assign({}, ds, {type:'line', borderColor:col, backgroundColor:'transparent', fill:false, borderWidth:2, pointRadius:2.5, pointHoverRadius:4, tension:0.3, stack:undefined});
+      });
+      cfg2.options.scales.x.stacked = false;
+      cfg2.options.scales.yA.stacked = false;
+    }
     renderLegend('adsChart2Leg', cfg2.data.datasets);
     const ctx2 = document.getElementById('adsChart2');
     if (ctx2) { if (adsChart2) adsChart2.destroy(); adsChart2 = new Chart(ctx2.getContext('2d'), cfg2); }
   } else if (chartNum === 3) {
     const ads3 = buildAdsByPeriod(new Set(['tiktok']), p);
     const weeks3 = [...new Set([...Object.keys(ads3), ...Object.keys(sep)])].sort();
-    const ttObjs = ['검색','조회'];
+    const allTtObjs = ['검색','조회'];
+    const ttObjs = allTtObjs.filter(o => ttActiveCampaigns.has(o));
     const cfg3 = makeAdsChartCfg(weeks3, ads3, sep, true, ttObjs, '', p);
+    if (ttChartType === 'line') {
+      cfg3.data.datasets = cfg3.data.datasets.map(function(ds) {
+        if (ds.yAxisID !== 'yA') return ds;
+        var col = OBJ_COLORS[ds.label] || '#999';
+        return Object.assign({}, ds, {type:'line', borderColor:col, backgroundColor:'transparent', fill:false, borderWidth:2, pointRadius:2.5, pointHoverRadius:4, tension:0.3, stack:undefined});
+      });
+      cfg3.options.scales.x.stacked = false;
+      cfg3.options.scales.yA.stacked = false;
+    }
     renderLegend('adsChart3Leg', cfg3.data.datasets);
     const ctx3 = document.getElementById('adsChart3');
     if (ctx3) { if (adsChart3) adsChart3.destroy(); adsChart3 = new Chart(ctx3.getContext('2d'), cfg3); }
