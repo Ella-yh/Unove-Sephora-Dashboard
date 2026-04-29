@@ -452,7 +452,11 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     </div>
     <div id="markerZone" class="marker-zone hidden"></div>
     <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
-    <div class="chart-note">* CVR = 주문 수량 / Visits TY × 100</div>
+    <div class="chart-note" style="line-height:1.7;">
+      * CVR = 주문 수량 / Visits TY × 100<br>
+      <span style="color:#d97070;">— —</span> Sales KPI: ₩3,900,000&nbsp;&nbsp;
+      <span style="color:#4bc8a0;">— —</span> ROAS KPI: 263%
+    </div>
   </div>
 </div>
 
@@ -1574,15 +1578,7 @@ function renderChart() {
     borderColor: '#d97070',
     borderWidth: 1.5,
     borderDash: [5, 4],
-    label: {
-      content: 'Sales KPI: ₩3,900,000',
-      display: true,
-      position: 'end',
-      color: '#d97070',
-      font: { size: 9, weight: '700' },
-      backgroundColor: 'rgba(255,255,255,0.85)',
-      padding: { x: 4, y: 2 },
-    }
+    label: { display: false }
   };
   // ROAS(닷컴) 기준선 점선 annotation
   if (showRoas) {
@@ -1597,15 +1593,7 @@ function renderChart() {
         borderColor: '#4bc8a0',
         borderWidth: 1.5,
         borderDash: [5, 4],
-        label: {
-          content: 'ROAS KPI: ' + roasBase + '%',
-          display: true,
-          position: 'start',
-          color: '#4bc8a0',
-          font: { size: 9, weight: '700' },
-          backgroundColor: 'rgba(255,255,255,0.85)',
-          padding: { x: 4, y: 2 },
-        }
+        label: { display: false }
       };
     }
   }
