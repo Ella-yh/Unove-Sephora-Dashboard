@@ -429,7 +429,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <button class="ads-p-btn" data-main-period="weekly" onclick="setMainPeriod(this,'weekly')">주</button>
       <button class="ads-p-btn active" data-main-period="daily" onclick="setMainPeriod(this,'daily')">일</button>
     </div>
-    <div class="leg-row" style="align-items:center;flex-wrap:wrap;gap:6px;">
+    <div class="leg-row" style="align-items:center;flex-wrap:wrap;gap:6px;padding-right:90px;">
       <div class="leg"><div class="leg-dot" style="background:#d97070;"></div><span id="salesLegLabel">Sales (.COM)</span></div>
       <div class="leg"><div class="leg-dot" style="background:#8878d0;border-radius:50%;"></div>CVR (%)</div>
       <button class="mkr-btn" id="btnVisitsToggle" onclick="toggleVisits(this)" style="display:flex;align-items:center;gap:4px;">
@@ -1413,6 +1413,31 @@ function renderChart() {
   const data = getMainChartData();
   const labels = data.map(d => d.label || d.date.slice(5));
   const annotations = buildAnnotations(labels);
+  // ROAS(닷컴) 기준선 점선 annotation
+  if (showRoas) {
+    const totalCom   = data.reduce((s,d) => s + (d.sales_com||0), 0);
+    const totalSpend = data.reduce((s,d) => s + (d.spend||0), 0);
+    const roasBase   = totalSpend > 0 ? Math.round(totalCom/totalSpend*100) : null;
+    if (roasBase !== null) {
+      annotations['roasBaseline'] = {
+        type: 'line',
+        yMin: roasBase, yMax: roasBase,
+        scaleID: 'yR',
+        borderColor: '#4bc8a0',
+        borderWidth: 1.5,
+        borderDash: [5, 4],
+        label: {
+          content: 'ROAS 평균: ' + roasBase + '%',
+          display: true,
+          position: 'start',
+          color: '#4bc8a0',
+          font: { size: 9, weight: '700' },
+          backgroundColor: 'rgba(255,255,255,0.85)',
+          padding: { x: 4, y: 2 },
+        }
+      };
+    }
+  }
   const n = data.length;
 
   const cfg = {
