@@ -1417,8 +1417,8 @@ function renderChart() {
   if (showRoas) {
     const totalCom   = data.reduce((s,d) => s + (d.sales_com||0), 0);
     const totalSpend = data.reduce((s,d) => s + (d.spend||0), 0);
-    const roasBase   = totalSpend > 0 ? Math.round(totalCom/totalSpend*100) : null;
-    if (roasBase !== null) {
+    const roasBase   = 263;
+    if (true) {
       annotations['roasBaseline'] = {
         type: 'line',
         value: roasBase,
@@ -1427,7 +1427,7 @@ function renderChart() {
         borderWidth: 1.5,
         borderDash: [5, 4],
         label: {
-          content: 'ROAS 평균: ' + roasBase + '%',
+          content: 'ROAS KPI: ' + roasBase + '%',
           display: true,
           position: 'start',
           color: '#4bc8a0',
