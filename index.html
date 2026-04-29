@@ -1566,6 +1566,24 @@ function renderChart() {
   const data = getMainChartData();
   const labels = data.map(d => d.label || d.date.slice(5));
   const annotations = buildAnnotations(labels);
+  // Sales(.COM) KPI 기준선 — 390만원 고정
+  annotations['salesBaseline'] = {
+    type: 'line',
+    value: 3900000,
+    scaleID: 'yS',
+    borderColor: '#d97070',
+    borderWidth: 1.5,
+    borderDash: [5, 4],
+    label: {
+      content: 'Sales KPI: ₩3,900,000',
+      display: true,
+      position: 'end',
+      color: '#d97070',
+      font: { size: 9, weight: '700' },
+      backgroundColor: 'rgba(255,255,255,0.85)',
+      padding: { x: 4, y: 2 },
+    }
+  };
   // ROAS(닷컴) 기준선 점선 annotation
   if (showRoas) {
     const totalCom   = data.reduce((s,d) => s + (d.sales_com||0), 0);
