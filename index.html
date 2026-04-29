@@ -644,6 +644,15 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     </div>
   </div>
 
+  <!-- 기간 -->
+  <div class="filter-block">
+    <div class="filter-lbl">기간</div>
+    <div style="display:flex;gap:4px;" id="adsGlobalPeriodBtns">
+      <button class="stgl" data-ads-gperiod="monthly" onclick="setAdsGlobalPeriod(this,'monthly')">월</button>
+      <button class="stgl active" data-ads-gperiod="weekly" onclick="setAdsGlobalPeriod(this,'weekly')">주</button>
+      <button class="stgl" data-ads-gperiod="daily" onclick="setAdsGlobalPeriod(this,'daily')">일</button>
+    </div>
+  </div>
 
 </div>
 
@@ -882,7 +891,27 @@ window.setChartPeriod = function(chartNum, btn, period) {
   document.querySelectorAll('[data-chart="' + chartNum + '"]').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
   adsChartPeriod[chartNum] = period;
+  // 글로벌 버튼 상태 동기화 (3개 모두 같은 period면 active)
+  var allSame = [1,2,3].every(function(n){ return adsChartPeriod[n] === period; });
+  if (allSame) {
+    document.querySelectorAll('[data-ads-gperiod]').forEach(function(b){ b.classList.remove('active'); });
+    var gb = document.querySelector('[data-ads-gperiod="' + period + '"]');
+    if (gb) gb.classList.add('active');
+  }
   refreshAdsChart(chartNum);
+};
+window.setAdsGlobalPeriod = function(btn, period) {
+  // 글로벌 버튼 active
+  document.querySelectorAll('[data-ads-gperiod]').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  // 각 차트별 버튼도 동기화
+  [1,2,3].forEach(function(n) {
+    adsChartPeriod[n] = period;
+    document.querySelectorAll('[data-chart="' + n + '"]').forEach(function(b){ b.classList.remove('active'); });
+    var pb = document.querySelector('[data-chart="' + n + '"][data-period="' + period + '"]');
+    if (pb) pb.classList.add('active');
+  });
+  refreshAds();
 };
 window.toggleMetaCamp = function(btn) {
   var obj = btn.getAttribute('data-meta-obj');
@@ -1555,7 +1584,7 @@ function renderChart() {
         x: {
           grid: { color: 'rgba(0,0,0,0.07)' },
           ticks: {
-            font: { size: 9 }, color: '#ffffff', maxRotation: 45,
+            font: { size: 9 }, color: '#888', maxRotation: 45,
             callback(val, idx) {
               if (n > 50 && idx % 7 !== 0) return '';
               if (n > 25 && idx % 2 !== 0) return '';
