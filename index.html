@@ -644,22 +644,23 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     </div>
   </div>
 
-  <!-- 기간 -->
+  <!-- 기간 드롭다운 -->
   <div class="filter-block">
     <div class="filter-lbl">기간</div>
-    <div style="display:flex;gap:4px;" id="adsGlobalPeriodBtns">
-      <button class="stgl" data-ads-gperiod="monthly" onclick="setAdsGlobalPeriod(this,'monthly')">월</button>
-      <button class="stgl active" data-ads-gperiod="weekly" onclick="setAdsGlobalPeriod(this,'weekly')">주</button>
-      <button class="stgl" data-ads-gperiod="daily" onclick="setAdsGlobalPeriod(this,'daily')">일</button>
+    <div class="dd-wrap" id="ddWrap-adsPeriod">
+      <div class="dd-btn" id="ddBtn-adsPeriod" onclick="toggleAdsDD()"><span id="ddLabel-adsPeriod">주 · ALL</span><span class="arr">▾</span></div>
+      <div class="dd-panel" id="ddPanel-adsPeriod" style="min-width:180px;">
+        <div style="display:flex;border-bottom:1px solid #eee;padding:4px 8px;gap:4px;">
+          <button id="adsDD-tab-monthly" class="ads-p-btn" onclick="setAdsDDTab('monthly')">월</button>
+          <button id="adsDD-tab-weekly"  class="ads-p-btn active" onclick="setAdsDDTab('weekly')">주</button>
+          <button id="adsDD-tab-daily"   class="ads-p-btn" onclick="setAdsDDTab('daily')">일</button>
+        </div>
+        <div class="dd-all" onclick="clearAdsPeriodDD()"><input type="checkbox" id="chk-adsPeriod-all" checked readonly> ALL</div>
+        <div id="ddPanel-adsPeriod-opts"></div>
+      </div>
     </div>
   </div>
 
-</div>
-
-<!-- 기간 서브 선택 row -->
-<div id="adsPeriodSubRow" style="display:none;padding:6px 28px 10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-top:1px solid #eee;background:#fafafa;">
-  <span id="adsPeriodSubLabel" style="font-size:9px;font-weight:700;color:#999;letter-spacing:1px;text-transform:uppercase;min-width:20px;"></span>
-  <div id="adsPeriodSubBtns" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
 </div>
 
 <!-- Chart 1: 전체 퍼포먼스 -->
@@ -667,7 +668,13 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   <div class="sec-hdr">퍼포먼스 / 세포라 매출 / 세포라 유입</div>
   <div class="chart-card" style="position:relative;">
     <div style="position:absolute;top:10px;right:14px;display:flex;gap:3px;z-index:2;"><button class="ads-p-btn" data-chart="1" data-period="monthly" onclick="setChartPeriod(1,this,'monthly')">월</button><button class="ads-p-btn active" data-chart="1" data-period="weekly" onclick="setChartPeriod(1,this,'weekly')">주</button><button class="ads-p-btn" data-chart="1" data-period="daily" onclick="setChartPeriod(1,this,'daily')">일</button></div>
-    <div class="leg-row" id="adsChart1Leg" style="flex-wrap:wrap;gap:10px;margin-bottom:10px;"></div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+      <div class="leg-row" id="adsChart1Leg" style="flex-wrap:wrap;gap:8px;margin-bottom:0;flex:1;"></div>
+      <div style="display:flex;gap:4px;flex-shrink:0;">
+        <button class="mkr-btn active" id="btnAdsSalesToggle" onclick="toggleAdsSales(this)" style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#d97070;"></span>매출</button>
+        <button class="mkr-btn active" id="btnAdsVisitsToggle" onclick="toggleAdsVisits(this)" style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#5dcaa5;"></span>유입</button>
+      </div>
+    </div>
     <div class="chart-wrap" style="height:300px;"><canvas id="adsChart1"></canvas></div>
     <div class="chart-note">* 좌축: 퍼포먼스 지표, 우축(빨강): 세포라 매출(₩), 우축(파랑): 세포라 유입</div>
   </div>
@@ -870,8 +877,10 @@ let selAdsSales  = 'com';    // com | total | bam
 let selAdsMetric = 'spend';  // spend | impressions | clicks
 let selAdsMedia  = new Set(['meta','tiktok','gsa']);
 const adsChartPeriod = {1:'weekly', 2:'weekly', 3:'weekly'};
-let adsGlobalPeriod2 = 'weekly'; // 글로벌 기간 (sub-row 연동)
+let adsGlobalPeriod2 = 'weekly'; // 글로벌 기간 (드롭다운 연동)
 let adsSelectedRange = null;     // null = 전체, 'YYYY-MM' / 'YYYY-MM-DD' / weekKey
+let showAdsSales  = true;  // 세포라 매출 토글
+let showAdsVisits = true;  // 세포라 유입 토글
 const metaActiveCampaigns = new Set(['전환(구매)','전환(장바구니)','트래픽(lpv)','트래픽(click)','조회']);
 let metaChartType = 'bar';
 const ttActiveCampaigns = new Set(['검색','조회']);
@@ -908,62 +917,122 @@ window.setChartPeriod = function(chartNum, btn, period) {
   }
   refreshAdsChart(chartNum);
 };
-window.setAdsGlobalPeriod = function(btn, period) {
+// ── 기간 드롭다운 ──────────────────────────────────────────────
+window.toggleAdsDD = function() {
+  var btn = document.getElementById('ddBtn-adsPeriod');
+  var panel = document.getElementById('ddPanel-adsPeriod');
+  if (!btn || !panel) return;
+  var isOpen = panel.classList.contains('show');
+  // 다른 모든 드롭다운 닫기
+  document.querySelectorAll('.dd-panel.show').forEach(function(p){ p.classList.remove('show'); });
+  document.querySelectorAll('.dd-btn.open').forEach(function(b){ b.classList.remove('open'); });
+  if (!isOpen) {
+    panel.classList.add('show');
+    btn.classList.add('open');
+    populateAdsPeriodOpts(adsGlobalPeriod2);
+  }
+};
+window.setAdsDDTab = function(period) {
   adsGlobalPeriod2 = period;
-  adsSelectedRange = null; // 범위 초기화
-  // 글로벌 버튼 active
-  document.querySelectorAll('[data-ads-gperiod]').forEach(function(b){ b.classList.remove('active'); });
-  btn.classList.add('active');
-  // 각 차트별 버튼도 동기화
+  adsSelectedRange = null;
+  // 탭 active
+  ['monthly','weekly','daily'].forEach(function(p){
+    var t = document.getElementById('adsDD-tab-' + p);
+    if (t) t.classList.toggle('active', p === period);
+  });
+  // ALL 체크
+  var allChk = document.getElementById('chk-adsPeriod-all');
+  if (allChk) allChk.checked = true;
+  // 옵션 재빌드
+  populateAdsPeriodOpts(period);
+  // 차트 업데이트
   [1,2,3].forEach(function(n) {
     adsChartPeriod[n] = period;
     document.querySelectorAll('[data-chart="' + n + '"]').forEach(function(b){ b.classList.remove('active'); });
     var pb = document.querySelector('[data-chart="' + n + '"][data-period="' + period + '"]');
     if (pb) pb.classList.add('active');
   });
-  // sub-row 생성
-  buildAdsPeriodSubRow(period);
+  updateAdsDDLabel();
   refreshAds();
 };
-window.setAdsPeriodRange = function(btn, rangeKey) {
-  // 같은 버튼 다시 누르면 전체 해제
-  if (adsSelectedRange === rangeKey) {
-    adsSelectedRange = null;
-    document.querySelectorAll('[data-ads-range]').forEach(function(b){ b.classList.remove('active'); });
-  } else {
+window.clearAdsPeriodDD = function() {
+  adsSelectedRange = null;
+  var allChk = document.getElementById('chk-adsPeriod-all');
+  if (allChk) allChk.checked = true;
+  document.querySelectorAll('#ddPanel-adsPeriod-opts .dd-opt input').forEach(function(c){ c.checked = false; });
+  updateAdsDDLabel();
+  refreshAds();
+};
+window.setAdsPeriodRange = function(chk, rangeKey) {
+  if (chk.checked) {
     adsSelectedRange = rangeKey;
-    document.querySelectorAll('[data-ads-range]').forEach(function(b){ b.classList.remove('active'); });
-    btn.classList.add('active');
+    // 다른 체크 해제 (single select)
+    document.querySelectorAll('#ddPanel-adsPeriod-opts .dd-opt input').forEach(function(c){
+      if (c.value !== rangeKey) c.checked = false;
+    });
+    var allChk = document.getElementById('chk-adsPeriod-all');
+    if (allChk) allChk.checked = false;
+  } else {
+    adsSelectedRange = null;
+    var allChk = document.getElementById('chk-adsPeriod-all');
+    if (allChk) allChk.checked = true;
   }
+  updateAdsDDLabel();
   refreshAds();
 };
-function buildAdsPeriodSubRow(period) {
-  var row = document.getElementById('adsPeriodSubRow');
-  var lbl = document.getElementById('adsPeriodSubLabel');
-  var btnsDiv = document.getElementById('adsPeriodSubBtns');
-  if (!row || !btnsDiv) return;
-  // 데이터에서 고유 period key 추출
+function populateAdsPeriodOpts(period) {
+  var container = document.getElementById('ddPanel-adsPeriod-opts');
+  if (!container) return;
   var keys = new Set();
   ADS_RAW.forEach(function(r){ keys.add(getPeriodKey(r.date, period)); });
   Object.keys(SALES_BY_DATE).forEach(function(d){ keys.add(getPeriodKey(d, period)); });
   var sorted = Array.from(keys).sort();
-  if (sorted.length === 0) { row.style.display='none'; return; }
-  // 레이블 텍스트
-  var lblMap = { monthly:'월', weekly:'주', daily:'일' };
-  lbl.textContent = lblMap[period] || '';
-  // 버튼 렌더
-  btnsDiv.innerHTML = sorted.map(function(k) {
-    var active = adsSelectedRange === k ? ' active' : '';
-    var label = fmtPeriodLabel(k, period);
-    // monthly면 'MM월' 포맷
+  container.innerHTML = sorted.map(function(k) {
+    var label = '';
     if (period === 'monthly') {
       var parts = k.split('-');
       label = parseInt(parts[1]) + '월';
+    } else if (period === 'weekly') {
+      label = fmtPeriodLabel(k, 'weekly');
+    } else {
+      var d = new Date(k + 'T00:00:00');
+      label = (d.getMonth()+1) + '/' + d.getDate() + ' (' + ['일','월','화','수','목','금','토'][d.getDay()] + ')';
     }
-    return '<button class="stgl' + active + '" data-ads-range="' + k + '" onclick="setAdsPeriodRange(this,\'' + k + '\')">' + label + '</button>';
+    var checked = adsSelectedRange === k ? ' checked' : '';
+    return '<label class="dd-opt"><input type="checkbox" value="' + k + '"' + checked + ' onchange="setAdsPeriodRange(this,\'' + k + '\')"> ' + label + '</label>';
   }).join('');
-  row.style.display = 'flex';
+}
+function updateAdsDDLabel() {
+  var lbl = document.getElementById('ddLabel-adsPeriod');
+  if (!lbl) return;
+  var pMap = { monthly:'월', weekly:'주', daily:'일' };
+  var pLabel = pMap[adsGlobalPeriod2] || '주';
+  if (!adsSelectedRange) { lbl.textContent = pLabel + ' · ALL'; return; }
+  var detail = '';
+  if (adsGlobalPeriod2 === 'monthly') {
+    var parts = adsSelectedRange.split('-');
+    detail = parseInt(parts[1]) + '월';
+  } else if (adsGlobalPeriod2 === 'weekly') {
+    detail = fmtPeriodLabel(adsSelectedRange, 'weekly');
+  } else {
+    var d = new Date(adsSelectedRange + 'T00:00:00');
+    detail = (d.getMonth()+1) + '/' + d.getDate();
+  }
+  lbl.textContent = pLabel + ' · ' + detail;
+}
+// 매출/유입 토글
+window.toggleAdsSales = function(btn) {
+  showAdsSales = !showAdsSales;
+  btn.classList.toggle('active', showAdsSales);
+  refreshAds();
 };
+window.toggleAdsVisits = function(btn) {
+  showAdsVisits = !showAdsVisits;
+  btn.classList.toggle('active', showAdsVisits);
+  refreshAds();
+};
+// 구버전 호환
+window.setAdsGlobalPeriod = function(btn, period) { setAdsDDTab(period); };
 window.toggleMetaCamp = function(btn) {
   var obj = btn.getAttribute('data-meta-obj');
   if (metaActiveCampaigns.has(obj)) { metaActiveCampaigns.delete(obj); btn.classList.remove('active'); }
@@ -3271,8 +3340,8 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
     });
   }
 
-  // Sephora 매출 라인
-  datasets.push({
+  // Sephora 매출 라인 (토글)
+  if (showAdsSales) datasets.push({
     label: getSalesLabel(),
     data: weeks.map(wk => (sepWeekly[wk]?.[salesKey] || 0)),
     type: 'line', borderColor: '#d97070', backgroundColor: 'rgba(217,112,112,0.12)',
@@ -3281,8 +3350,8 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
     yAxisID: 'yS', order: 1, tension: 0.3,
   });
 
-  // Sephora 유입 라인
-  datasets.push({
+  // Sephora 유입 라인 (토글)
+  if (showAdsVisits) datasets.push({
     label: '세포라 유입',
     data: weeks.map(wk => (sepWeekly[wk]?.visits || 0)),
     type: 'line', borderColor: '#5dcaa5', backgroundColor: 'rgba(93,202,165,0.12)',
@@ -3324,14 +3393,14 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
           title:{ display:false }
         },
         yS: {
-          type:'linear', position:'right', grid:{drawOnChartArea:false},
+          type:'linear', position:'right', display: showAdsSales, grid:{drawOnChartArea:false},
           ticks:{ font:{size:9}, color:'#aaa',
             callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v
           },
           title:{ display:false }
         },
         yV: {
-          type:'linear', position:'right', display:false, grid:{drawOnChartArea:false},
+          type:'linear', position:'right', display: showAdsVisits, grid:{drawOnChartArea:false},
         }
       }
     }
