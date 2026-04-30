@@ -867,6 +867,24 @@ let EVENTS = [
   {start:'2026-04-06',end:'2026-04-06',type:'KOL',placement:'natalie_IG/TT',product:'Shampoo+Conditioner'},
 ];
 
+// ─── EVENT PERSISTENCE (localStorage) ───────────────────────────────────────
+const EV_STORAGE_KEY = 'sephora_events_v1';
+function saveEventsToStorage() {
+  try { localStorage.setItem(EV_STORAGE_KEY, JSON.stringify(EVENTS)); } catch(e) {}
+}
+(function loadEventsFromStorage() {
+  try {
+    const saved = localStorage.getItem(EV_STORAGE_KEY);
+    if (saved) {
+      const arr = JSON.parse(saved);
+      if (Array.isArray(arr) && arr.length > 0) {
+        EVENTS.length = 0;
+        arr.forEach(function(e) { EVENTS.push(e); });
+      }
+    }
+  } catch(e) {}
+})();
+
 // ─── STATE ────────────────────────────────────────────────────────────────────
 const USD_TO_KRW = 1500; // 환율 기준: 1 USD = 1,500 KRW (수동 업데이트)
 
@@ -1914,6 +1932,7 @@ function addEvent() {
   if (end < start) { alert('종료일이 시작일보다 이전입니다.'); return; }
 
   EVENTS.push({ start, end, type, placement:place, product });
+  saveEventsToStorage();
   ['evStart','evEnd','evPlacement','evProduct'].forEach(id => {
     document.getElementById(id).value = '';
     document.getElementById(id).classList.remove('err');
@@ -2055,6 +2074,7 @@ function renderEventList() {
 function removeEvent(idx) {
   if (!confirm('등록된 이벤트를 정말 삭제하시겠습니까?')) return;
   EVENTS.splice(idx, 1);
+  saveEventsToStorage();
   renderEventList(); renderChart();
 }
 function renderEventListFull() {
@@ -2080,6 +2100,7 @@ function renderEventListFull() {
 function removeEventFull(idx) {
   if (!confirm('이벤트를 삭제하시겠습니까?')) return;
   EVENTS.splice(idx, 1);
+  saveEventsToStorage();
   renderEventListFull(); renderEventList(); renderChart();
 }
 
@@ -2127,6 +2148,7 @@ function saveEvent(idx) {
     placement: document.getElementById(`eeP${idx}`).value.trim(),
     product:   document.getElementById(`eePr${idx}`).value.trim(),
   };
+  saveEventsToStorage();
   renderEventList();
   renderChart();
 }
