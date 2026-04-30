@@ -516,7 +516,8 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     <div class="ev-list-hdr">
       <div class="ttl">등록된 이벤트 전체 목록 <span style="font-weight:400;color:#bbb;" id="evCountFull"></span></div>
     </div>
-    <div class="ev-list" id="evListFull" style="max-height:480px;"></div>
+    <div id="evFullFilterRow" style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 0 8px;border-bottom:1px solid #f0f0f2;margin-bottom:6px;"></div>
+    <div class="ev-list" id="evListFull" style="max-height:430px;"></div>
   </div>
 </div>
 </div><!-- /tabEvents -->
@@ -871,6 +872,7 @@ let EVENTS = [
 
 // ─── EVENT PERSISTENCE (localStorage) ───────────────────────────────────────
 const EV_STORAGE_KEY = 'sephora_events_v1';
+let evFullTypeFilter = 'ALL';
 function saveEventsToStorage() {
   try { localStorage.setItem(EV_STORAGE_KEY, JSON.stringify(EVENTS)); } catch(e) {}
 }
@@ -1940,7 +1942,7 @@ function addEvent() {
     document.getElementById(id).classList.remove('err');
   });
   document.getElementById('evType').value = '';
-  renderEventList(); renderChart();
+  renderEventListFull(); renderEventList(); renderChart();
 }
 
 
@@ -2079,23 +2081,55 @@ function removeEvent(idx) {
   saveEventsToStorage();
   renderEventList(); renderChart();
 }
+function buildEvFullFilterBtns() {
+  var row = document.getElementById('evFullFilterRow');
+  if (!row) return;
+  var types = Object.keys(TYPES);
+  var allAct = evFullTypeFilter === 'ALL' ? ' active' : '';
+  var btns = '<button class="ads-p-btn' + allAct + '" data-evf="ALL">ALL</button>';
+  types.forEach(function(t) {
+    var col = TYPES[t] || '#888';
+    var act = evFullTypeFilter === t ? ' active' : '';
+    btns += '<button class="ads-p-btn' + act + '" data-evf="' + t + '">' +
+      '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + col + ';margin-right:3px;vertical-align:middle;"></span>' + t + '</button>';
+  });
+  row.innerHTML = btns;
+  row.querySelectorAll('button[data-evf]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      evFullTypeFilter = this.getAttribute('data-evf');
+      row.querySelectorAll('button').forEach(function(b){ b.classList.remove('active'); });
+      this.classList.add('active');
+      renderEventListFull();
+    });
+  });
+}
+window.setEvFullFilter = function(btn, type) {
+  evFullTypeFilter = type;
+  document.querySelectorAll('#evFullFilterRow .ads-p-btn').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  renderEventListFull();
+};
 function renderEventListFull() {
-  const el = document.getElementById('evListFull');
-  const cnt = document.getElementById('evCountFull');
+  buildEvFullFilterBtns();
+  var el = document.getElementById('evListFull');
+  var cnt = document.getElementById('evCountFull');
   if (!el) return;
   if (cnt) cnt.textContent = '(' + EVENTS.length + ')';
-  let list = [...EVENTS].sort((a,b) => b.start.localeCompare(a.start));
-  if (!list.length) { el.innerHTML = '<div class="empty-msg">등록된 이벤트가 없습니다</div>'; return; }
-  el.innerHTML = list.map((ev, ri) => {
-    const col = TYPES[ev.type] || '#888';
-    const ds = ev.start === ev.end ? ev.start.slice(5) : ev.start.slice(5) + ' ~ ' + ev.end.slice(5);
-    const origIdx = EVENTS.indexOf(ev);
-    return '<div class="ev-item" data-evid="' + origIdx + '">' +
+  var list = EVENTS.map(function(ev, i){ return {ev:ev, idx:i}; })
+    .filter(function(o){ return evFullTypeFilter === 'ALL' || o.ev.type === evFullTypeFilter; })
+    .sort(function(a,b){ return b.ev.start.localeCompare(a.ev.start); });
+  if (!list.length) { el.innerHTML = '<div class="empty-msg">해당 구분의 이벤트가 없습니다</div>'; return; }
+  el.innerHTML = list.map(function(o) {
+    var ev = o.ev, origIdx = o.idx;
+    var col = TYPES[ev.type] || '#888';
+    var ds = ev.start === ev.end ? ev.start.slice(5) : ev.start.slice(5) + ' ~ ' + ev.end.slice(5);
+    return '<div class="ev-item" data-evidfull="' + origIdx + '">' +
       '<span class="ev-tag" style="background:' + col + ';">' + ev.type + '</span>' +
       '<div class="ev-info"><div class="ev-date">' + ds + '</div>' +
       '<div class="ev-place">' + (ev.placement||'-') + '</div>' +
       (ev.product ? '<div class="ev-prod">' + ev.product + '</div>' : '') + '</div>' +
-      '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">' +
+      '<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0;">' +
+      '<button class="btn-edit" onclick="editEventFull(' + origIdx + ')" title="편집" style="font-size:13px;padding:2px 6px;line-height:1;">✎</button>' +
       '<button class="btn-rm" onclick="removeEventFull(' + origIdx + ')">×</button></div></div>';
   }).join('');
 }
