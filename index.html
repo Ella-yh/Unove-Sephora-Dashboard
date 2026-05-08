@@ -450,14 +450,15 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 <div class="chart-sec">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
     <div class="sec-hdr" style="margin-bottom:0;flex:1;">일자별 Sales · CVR</div>
-    <button class="mkr-btn" id="btnMarkerToggle" onclick="toggleMarkers(this)" style="min-width:96px;font-size:9px;flex-shrink:0;margin-left:10px;">이벤트 마커 표시</button>
-  </div>
-  <div class="chart-card" style="position:relative;">
-    <div style="position:absolute;top:10px;right:14px;display:flex;gap:3px;z-index:2;align-items:center;">
+    <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+      <button class="mkr-btn" id="btnMarkerToggle" onclick="toggleMarkers(this)" style="min-width:96px;font-size:9px;">이벤트 마커 표시</button>
+      <div style="width:1px;height:13px;background:#E0E0E4;margin:0 2px;"></div>
       <button class="ads-p-btn" data-main-period="monthly" onclick="setMainPeriod(this,'monthly')">월</button>
       <button class="ads-p-btn" data-main-period="weekly" onclick="setMainPeriod(this,'weekly')">주</button>
       <button class="ads-p-btn active" data-main-period="daily" onclick="setMainPeriod(this,'daily')">일</button>
     </div>
+  </div>
+  <div class="chart-card" style="position:relative;">
     <div class="leg-row" style="align-items:center;flex-wrap:wrap;gap:6px;">
       <div class="leg"><div class="leg-dot" style="background:#d97070;"></div><span id="salesLegLabel">Sales (.COM)</span></div>
       <button class="mkr-btn active" id="btnCvrToggle" onclick="toggleCvr(this)" style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#8878d0;"></span>CVR</button>
@@ -2119,6 +2120,15 @@ function renderEventList() {
   document.getElementById('evCount').textContent = `(${EVENTS.length})`;
   let list = [...EVENTS].sort((a,b) => b.start.localeCompare(a.start));
   if (selEvType.size > 0) list = list.filter(ev => selEvType.has(ev.type));
+
+  // KOL 섹션: early return 전에 처리 (EVENTS에 KOL 없어도 실행되어야 함)
+  var kolSec = document.getElementById('kolSection');
+  if (kolSec) {
+    var showKol = selEvType.size > 0 && selEvType.has('KOL');
+    kolSec.style.display = showKol ? '' : 'none';
+    if (showKol) { try { renderKolTable(); } catch(e){} }
+  }
+
   if (!list.length) { el.innerHTML = '<div class="empty-msg">표시할 이벤트가 없습니다</div>'; return; }
 
   const byDate = getAggByDate();
@@ -2166,14 +2176,6 @@ function renderEventList() {
       </div>
     </div>`;
   }).join('');
-
-  // KOL 섹션: evtype 필터에서 KOL 선택 시 표시
-  var kolSec = document.getElementById('kolSection');
-  if (kolSec) {
-    var showKol = selEvType.size > 0 && selEvType.has('KOL');
-    kolSec.style.display = showKol ? '' : 'none';
-    if (showKol) { try { renderKolTable(); } catch(e){} }
-  }
 }
 
 function removeEvent(idx) {
