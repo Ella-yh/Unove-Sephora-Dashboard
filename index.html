@@ -198,6 +198,31 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .btn-save:hover{background:#555;}
 .btn-cancel{padding:5px 10px;background:#F5F5F8;color:#888;border:0.5px solid #D8D8DC;font-size:10px;cursor:pointer;border-radius:2px;}
 .btn-cancel:hover{background:rgba(0,0,0,0.05);}
+/* KOL Table */
+.kol-wrap{padding:24px 28px;}
+.kol-hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.kol-hdr-cnt{font-size:11px;color:#888;font-weight:400;}
+.kol-filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+.kol-fsel{padding:5px 8px;border:0.5px solid #D8D8DC;background:#fff;color:#333;font-size:11px;font-family:inherit;outline:none;border-radius:2px;cursor:pointer;height:28px;}
+.kol-fsel:focus{border-color:#888;}
+.kol-finput{padding:5px 8px;border:0.5px solid #D8D8DC;background:#fff;color:#333;font-size:11px;font-family:inherit;outline:none;border-radius:2px;height:28px;}
+.kol-tbl-wrap{overflow-x:auto;border:0.5px solid #E8E8EC;border-radius:3px;background:#fff;}
+.kol-tbl{width:100%;border-collapse:collapse;font-size:11px;}
+.kol-tbl th{padding:8px 10px;background:#F5F5F8;border-bottom:1px solid #E0E0E4;text-align:right;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;white-space:nowrap;cursor:pointer;user-select:none;}
+.kol-tbl th.left{text-align:left;}
+.kol-tbl th:hover{background:#EBEBEF;color:#444;}
+.kol-tbl td{padding:7px 10px;border-bottom:0.5px solid #EBEBEF;text-align:right;color:#555;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.kol-tbl td.left{text-align:left;}
+.kol-tbl tr:last-child td{border-bottom:none;}
+.kol-tbl tr:hover td{background:#F8F8FB;}
+.kol-lnk{color:#4a90c8;text-decoration:none;}
+.kol-lnk:hover{text-decoration:underline;}
+.kol-badge{display:inline-block;padding:1px 7px;border-radius:2px;font-size:9px;font-weight:700;letter-spacing:0.5px;}
+.kol-badge.paid{background:#fef3c7;color:#92400e;}
+.kol-badge.free{background:#f0f0f3;color:#666;}
+.kol-sort{margin-left:3px;opacity:0.4;font-size:8px;}
+.kol-sort.on{opacity:1;color:#333;}
+.kol-empty{text-align:center;padding:28px;color:#bbb;font-size:12px;}
 
 /* ── LOGIN OVERLAY ── */
 #loginOverlay{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;z-index:9999;}
@@ -361,6 +386,9 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     </div>
     <div class="sb-item" data-tab="ads" onclick="switchTab('ads')">
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><polyline points="1,11.5 4.5,7.5 7.5,9.5 13,3.5"/><polyline points="9.5,3.5 13,3.5 13,7"/></svg></span><span class="sb-text">Perf. Ads</span>
+    </div>
+    <div class="sb-item" data-tab="kol" onclick="switchTab('kol')">
+      <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><polygon points="7,1.5 8.8,5.2 13,5.7 10,8.6 10.8,12.8 7,10.8 3.2,12.8 4,8.6 1,5.7 5.2,5.2"/></svg></span><span class="sb-text">KOL</span>
     </div>
     <div class="sb-section-lbl">System</div>
     <div class="sb-item" data-tab="events" onclick="switchTab('events')">
@@ -726,6 +754,42 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 </div><!-- /tabAds -->
 
 <!-- ═══════════ SETTINGS TAB ═══════════ -->
+<div id="tabKol" style="display:none;">
+<div class="kol-wrap">
+  <div class="kol-hdr">
+    <span id="kolCount" class="kol-hdr-cnt">데이터 로딩 중...</span>
+  </div>
+  <div class="kol-filter-row">
+    <select class="kol-fsel" id="kolFMedia" onchange="renderKolTable()"><option value="">매체 · 전체</option></select>
+    <select class="kol-fsel" id="kolFType" onchange="renderKolTable()">
+      <option value="">유가/무가 · 전체</option>
+      <option value="유가">유가</option>
+      <option value="무가">무가</option>
+    </select>
+    <input class="kol-finput" type="month" id="kolFMonth" onchange="renderKolTable()" title="년-월 선택">
+    <button class="btn-cancel" style="padding:5px 12px;height:28px;" onclick="resetKolFilters()">날짜 초기화</button>
+  </div>
+  <div class="kol-tbl-wrap">
+    <table class="kol-tbl">
+      <thead><tr>
+        <th class="left" onclick="sortKol('date')">날짜<span class="kol-sort" id="ks-date"></span></th>
+        <th class="left" onclick="sortKol('media')">매체<span class="kol-sort" id="ks-media"></span></th>
+        <th class="left" onclick="sortKol('account')">계정 / 콘텐츠<span class="kol-sort" id="ks-account"></span></th>
+        <th class="left" onclick="sortKol('type')">유가/무가<span class="kol-sort" id="ks-type"></span></th>
+        <th onclick="sortKol('views')">조회수<span class="kol-sort" id="ks-views"></span></th>
+        <th onclick="sortKol('cpv')">CPV<span class="kol-sort" id="ks-cpv"></span></th>
+        <th onclick="sortKol('erTotal')">ER (전체)%<span class="kol-sort" id="ks-erTotal"></span></th>
+        <th onclick="sortKol('erLike')">ER (좋아요)%<span class="kol-sort" id="ks-erLike"></span></th>
+        <th onclick="sortKol('erComment')">ER (댓글)%<span class="kol-sort" id="ks-erComment"></span></th>
+        <th onclick="sortKol('erShare')">ER (공유)%<span class="kol-sort" id="ks-erShare"></span></th>
+        <th onclick="sortKol('erSave')">ER (저장)%<span class="kol-sort" id="ks-erSave"></span></th>
+      </tr></thead>
+      <tbody id="kolTbody"><tr><td colspan="11" class="kol-empty">—</td></tr></tbody>
+    </table>
+  </div>
+</div>
+</div><!-- /tabKol -->
+
 <div id="tabSettings" style="display:none;">
 <div class="tab-content">
 
@@ -896,6 +960,7 @@ let selMonths = new Set(), selWeeks = new Set(), selCats = new Set(), selSkus = 
 
 // ─── ADS STATE ────────────────────────────────────────────────────────────────
 const ADS_RAW = [];
+const KOL_RAW = [];
 let selAdsSales  = 'com';    // com | total | bam
 let selAdsMetric = 'spend';  // spend | impressions | clicks
 let selAdsMedia  = new Set(['meta','tiktok','gsa']);
@@ -2468,18 +2533,137 @@ let chVisitsChart, chSalesChart, chCvrChart;
 
 function switchTab(tab) {
   document.querySelectorAll('.sb-item').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  const tabs = {main:'tabMain',channel:'tabChannel',ads:'tabAds',settings:'tabSettings',events:'tabEvents'};
+  const tabs = {main:'tabMain',channel:'tabChannel',ads:'tabAds',kol:'tabKol',settings:'tabSettings',events:'tabEvents'};
   Object.entries(tabs).forEach(([k,id]) => {
     const el = document.getElementById(id);
     if (el) el.style.display = k === tab ? '' : 'none';
   });
-  const titles = {main:'Commerce Overview',channel:'Channel Analysis',ads:'Performance Ads',events:'이벤트 관리',settings:'Settings'};
+  const titles = {main:'Commerce Overview',channel:'Channel Analysis',ads:'Performance Ads',kol:'KOL 마케팅',events:'이벤트 관리',settings:'Settings'};
   const pt = document.getElementById('pageTitle');
   if (pt) pt.textContent = titles[tab] || '';
   if (tab === 'channel') { try { refreshChannel(); } catch(e){} }
   if (tab === 'ads')     { try { refreshAds();     } catch(e){} }
   if (tab === 'events')  { try { renderTypeLegend(); renderEventListFull(); } catch(e){} }
+  if (tab === 'kol')     { try { renderKolTable(); } catch(e){} }
 }
+
+// ── KOL Table ─────────────────────────────────────────────────────────────────
+let kolSortKey = 'date';
+let kolSortAsc = true;
+
+function buildKolMediaOpts() {
+  var sel = document.getElementById('kolFMedia');
+  if (!sel) return;
+  var cur = sel.value;
+  var medias = [];
+  KOL_RAW.forEach(function(r) { if (r.media && medias.indexOf(r.media) === -1) medias.push(r.media); });
+  medias.sort();
+  sel.innerHTML = '<option value="">매체 · 전체</option>';
+  medias.forEach(function(m) {
+    var o = document.createElement('option');
+    o.value = m; o.textContent = m;
+    if (m === cur) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+function resetKolFilters() {
+  var fm = document.getElementById('kolFMedia');
+  var ft = document.getElementById('kolFType');
+  var fd = document.getElementById('kolFMonth');
+  if (fm) fm.value = '';
+  if (ft) ft.value = '';
+  if (fd) fd.value = '';
+  renderKolTable();
+}
+
+function sortKol(key) {
+  if (kolSortKey === key) { kolSortAsc = !kolSortAsc; }
+  else { kolSortKey = key; kolSortAsc = (key === 'date'); }
+  renderKolTable();
+}
+
+function renderKolTable() {
+  buildKolMediaOpts();
+  var fMedia = (document.getElementById('kolFMedia')  || {}).value || '';
+  var fType  = (document.getElementById('kolFType')   || {}).value || '';
+  var fMonth = (document.getElementById('kolFMonth')  || {}).value || '';
+
+  var rows = KOL_RAW.map(function(r) {
+    return {
+      date:      r.date      || '',
+      media:     r.media     || '',
+      account:   r.account   || '',
+      url:       r.url       || '',
+      type:      r.type      || '',
+      views:     parseFloat(r.views)     || 0,
+      cpv:       parseFloat(r.cpv)       || 0,
+      erTotal:   parseFloat(r.erTotal)   || 0,  // Apps Script: (X+Y+Z+AA)/V*100
+      erLike:    parseFloat(r.erLike)    || 0,
+      erComment: parseFloat(r.erComment) || 0,
+      erShare:   parseFloat(r.erShare)   || 0,
+      erSave:    parseFloat(r.erSave)    || 0,
+    };
+  });
+
+  if (fMedia)  rows = rows.filter(function(r){ return r.media === fMedia; });
+  if (fType)   rows = rows.filter(function(r){ return r.type.indexOf(fType) !== -1; });
+  if (fMonth)  rows = rows.filter(function(r){ return r.date.slice(0,7) === fMonth; });
+
+  var sk = kolSortKey, asc = kolSortAsc;
+  rows.sort(function(a, b) {
+    var av = a[sk], bv = b[sk];
+    if (typeof av === 'string') return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+    return asc ? (av||0) - (bv||0) : (bv||0) - (av||0);
+  });
+
+  // sort arrows
+  ['date','media','account','type','views','cpv','erTotal','erLike','erComment','erShare','erSave'].forEach(function(k) {
+    var el = document.getElementById('ks-' + k);
+    if (!el) return;
+    if (k !== kolSortKey) { el.className = 'kol-sort'; el.textContent = ''; }
+    else { el.className = 'kol-sort on'; el.textContent = asc ? ' ▲' : ' ▼'; }
+  });
+
+  var cnt = document.getElementById('kolCount');
+  var filterDesc = (fMedia || fType || fMonth) ? ' (필터 적용)' : ' — 전체';
+  if (cnt) cnt.textContent = rows.length + '개' + filterDesc;
+
+  var tbody = document.getElementById('kolTbody');
+  if (!tbody) return;
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="11" class="kol-empty">데이터 없음</td></tr>';
+    return;
+  }
+
+  function fmt(v) { return v === 0 ? '0' : Number(v).toLocaleString('ko-KR'); }
+  function er(v)  { return (v || 0).toFixed(2); }
+
+  tbody.innerHTML = rows.map(function(r) {
+    var acct = r.url
+      ? '<a class="kol-lnk" href="' + r.url + '" target="_blank" rel="noopener">' + (r.account || '—') + ' ↗</a>'
+      : (r.account || '—');
+    var badge = r.type.indexOf('유가') !== -1
+      ? '<span class="kol-badge paid">유가</span>'
+      : r.type.indexOf('무가') !== -1
+        ? '<span class="kol-badge free">무가</span>'
+        : '<span style="color:#aaa;font-size:10px;">' + (r.type || '—') + '</span>';
+    return '<tr>' +
+      '<td class="left">' + (r.date || '—') + '</td>' +
+      '<td class="left">' + (r.media || '—') + '</td>' +
+      '<td class="left">' + acct + '</td>' +
+      '<td class="left">' + badge + '</td>' +
+      '<td>' + fmt(r.views) + '</td>' +
+      '<td>' + fmt(r.cpv) + '</td>' +
+      '<td>' + er(r.erTotal) + '</td>' +
+      '<td>' + er(r.erLike) + '</td>' +
+      '<td>' + er(r.erComment) + '</td>' +
+      '<td>' + er(r.erShare) + '</td>' +
+      '<td>' + er(r.erSave) + '</td>' +
+      '</tr>';
+  }).join('');
+}
+// ── end KOL ───────────────────────────────────────────────────────────────────
 
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('collapsed');
@@ -3102,6 +3286,7 @@ function onAuthSuccess(user) {
           RAW_SALES.length = 0; c.sales.forEach(r => RAW_SALES.push(r));
           CH_RAW.length = 0;    c.channel.forEach(r => CH_RAW.push(r));
           ADS_RAW.length = 0;   (c.ads || []).forEach(r => ADS_RAW.push(r));
+          KOL_RAW.length = 0;   (c.kol || []).forEach(r => KOL_RAW.push(r));
           Object.keys(SALES_BY_DATE).forEach(k => delete SALES_BY_DATE[k]);
           RAW_SALES.forEach(r => { SALES_BY_DATE[r.date] = { total: r.total||0, com: r.com||0, bam: r.bam||0 }; });
           rebuildDerivedData();
@@ -3206,6 +3391,8 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     RAW_SALES.forEach(r => { SALES_BY_DATE[r.date] = { total: r.total || 0, com: r.com || 0, bam: r.bam || 0 }; });
     ADS_RAW.length = 0;
     if (Array.isArray(data.ads)) data.ads.forEach(r => ADS_RAW.push(r));
+    KOL_RAW.length = 0;
+    if (Array.isArray(data.kol)) data.kol.forEach(r => KOL_RAW.push(r));
 
     rebuildDerivedData();
     const ts = data.updatedAt ? new Date(data.updatedAt).toLocaleString('ko-KR') : '—';
@@ -3216,7 +3403,7 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
       localStorage.setItem('sephora_data_cache', JSON.stringify({
         ts: Date.now(),
         commerce: newSku, sales: newSales, channel: newCh,
-        ads: Array.from(ADS_RAW), updatedAt: data.updatedAt
+        ads: Array.from(ADS_RAW), kol: Array.from(KOL_RAW), updatedAt: data.updatedAt
       }));
     } catch(e) { /* localStorage 용량 초과 시 무시 */ }
     showStgStatus('✅ 로드 완료 — SKU ' + RAW_SKU.length + '행 / 매출 ' + RAW_SALES.length + '행 / Channel ' + CH_RAW.length + '행 / Ads ' + ADS_RAW.length + '행', 'ok');
