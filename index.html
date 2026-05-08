@@ -156,7 +156,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .m-lbl-range{position:absolute;font-size:7px;font-weight:700;color:#fff;padding:1px 4px;border-radius:2px;white-space:nowrap;line-height:1.4;cursor:default;z-index:10;text-align:center;overflow:hidden;text-overflow:ellipsis;pointer-events:auto;}
 .m-tick{position:absolute;width:1px;background:rgba(0,0,0,0.06);top:0;bottom:0;}
 /* Hover tooltip */
-#mTooltip{display:none;position:fixed;background:#fff;color:#333;padding:7px 10px;border-radius:3px;font-size:9px;line-height:1.7;z-index:9999;pointer-events:none;max-width:240px;box-shadow:0 3px 12px rgba(0,0,0,0.35);white-space:pre-wrap;border-left:3px solid rgba(0,0,0,0.15);box-shadow:0 2px 10px rgba(0,0,0,0.15);}
+#mTooltip{display:none;position:fixed;background:#fff;color:#333;padding:8px 11px;border-radius:4px;font-size:10px;line-height:1.6;z-index:9999;pointer-events:none;max-width:220px;white-space:normal;border-left:3px solid #ccc;box-shadow:0 2px 12px rgba(0,0,0,0.14);}
 
 /* Analysis section */
 .analysis-sec{padding:0 28px 20px;}
@@ -379,13 +379,13 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   <div class="sb-nav">
     <div class="sb-section-lbl">Analytics</div>
     <div class="sb-item active" data-tab="main" onclick="switchTab('main')">
-      <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><rect x="0.5" y="6" width="3" height="7.5" rx="0.5"/><rect x="5.5" y="3.5" width="3" height="10" rx="0.5"/><rect x="10.5" y="0.5" width="3" height="13" rx="0.5"/></svg></span><span class="sb-text">Commerce</span>
+      <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><rect x="0.5" y="6" width="3" height="7.5" rx="0.5"/><rect x="5.5" y="3.5" width="3" height="10" rx="0.5"/><rect x="10.5" y="0.5" width="3" height="13" rx="0.5"/></svg></span><span class="sb-text">통합 대시보드</span>
     </div>
     <div class="sb-item" data-tab="channel" onclick="switchTab('channel')">
-      <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><ellipse cx="7" cy="7" rx="6" ry="6"/><ellipse cx="7" cy="7" rx="2.5" ry="6"/><line x1="1" y1="7" x2="13" y2="7"/></svg></span><span class="sb-text">Channel</span>
+      <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><ellipse cx="7" cy="7" rx="6" ry="6"/><ellipse cx="7" cy="7" rx="2.5" ry="6"/><line x1="1" y1="7" x2="13" y2="7"/></svg></span><span class="sb-text">유입 채널별</span>
     </div>
     <div class="sb-item" data-tab="ads" onclick="switchTab('ads')">
-      <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><polyline points="1,11.5 4.5,7.5 7.5,9.5 13,3.5"/><polyline points="9.5,3.5 13,3.5 13,7"/></svg></span><span class="sb-text">Perf. Ads</span>
+      <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><polyline points="1,11.5 4.5,7.5 7.5,9.5 13,3.5"/><polyline points="9.5,3.5 13,3.5 13,7"/></svg></span><span class="sb-text">퍼포먼스 광고</span>
     </div>
     <div class="sb-section-lbl">System</div>
     <div class="sb-item" data-tab="events" onclick="switchTab('events')">
@@ -449,12 +449,13 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 <div class="chart-sec">
   <div class="sec-hdr">일자별 Sales · CVR</div>
   <div class="chart-card" style="position:relative;">
-    <div style="position:absolute;top:10px;right:14px;display:flex;gap:3px;z-index:2;">
+    <div style="position:absolute;top:10px;right:14px;display:flex;gap:3px;z-index:2;align-items:center;">
       <button class="ads-p-btn" data-main-period="monthly" onclick="setMainPeriod(this,'monthly')">월</button>
       <button class="ads-p-btn" data-main-period="weekly" onclick="setMainPeriod(this,'weekly')">주</button>
       <button class="ads-p-btn active" data-main-period="daily" onclick="setMainPeriod(this,'daily')">일</button>
+      <button class="mkr-btn" id="btnMarkerToggle" onclick="toggleMarkers(this)" style="min-width:96px;margin-left:4px;">이벤트 마커 OFF</button>
     </div>
-    <div class="leg-row" style="align-items:center;flex-wrap:wrap;gap:6px;padding-right:90px;">
+    <div class="leg-row" style="align-items:center;flex-wrap:wrap;gap:6px;">
       <div class="leg"><div class="leg-dot" style="background:#d97070;"></div><span id="salesLegLabel">Sales (.COM)</span></div>
       <button class="mkr-btn active" id="btnCvrToggle" onclick="toggleCvr(this)" style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#8878d0;"></span>CVR</button>
       <button class="mkr-btn" id="btnVisitsToggle" onclick="toggleVisits(this)" style="display:flex;align-items:center;gap:4px;">
@@ -472,7 +473,6 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
           <button class="stgl" data-type="total" onclick="setSalesType(this)">TTL</button>
           <button class="stgl" data-type="bam" onclick="setSalesType(this)">B&M</button>
         </div>
-        <button class="mkr-btn" id="btnMarkerToggle" onclick="toggleMarkers(this)" style="min-width:72px;">마커 OFF</button>
       </div>
     </div>
     <div id="markerZone" class="marker-zone hidden"></div>
@@ -488,12 +488,14 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 <div style="padding:0 28px 20px;">
   <div class="ev-card">
     <div class="ev-list-hdr">
-      <div class="ttl">이벤트 마커 <span style="font-weight:400;color:#bbb;" id="evCount"></span></div>
-      <div class="dd-wrap ev-filter-dd" id="ddWrap-evtype">
-        <div class="dd-btn" id="ddBtn-evtype" onclick="toggleDD('evtype')"><span id="ddLabel-evtype">ALL</span><span class="arr">▾</span></div>
-        <div class="dd-panel" id="ddPanel-evtype" style="right:0;left:auto;">
-          <div class="dd-all" onclick="clearFilter('evtype')"><input type="checkbox" id="chk-evtype-all" checked readonly> ALL</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="dd-wrap ev-filter-dd" id="ddWrap-evtype">
+          <div class="dd-btn" id="ddBtn-evtype" onclick="toggleDD('evtype')"><span id="ddLabel-evtype">ALL</span><span class="arr">▾</span></div>
+          <div class="dd-panel" id="ddPanel-evtype" style="left:0;right:auto;">
+            <div class="dd-all" onclick="clearFilter('evtype')"><input type="checkbox" id="chk-evtype-all" checked readonly> ALL</div>
+          </div>
         </div>
+        <div class="ttl">이벤트 마커 <span style="font-weight:400;color:#bbb;" id="evCount"></span></div>
       </div>
     </div>
     <div class="ev-list" id="evList"></div>
@@ -561,7 +563,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
           <option value="Email">Email</option><option value="Site">Site</option>
           <option value="Social">Social</option><option value="Mobile Messaging">Mobile Messaging</option>
           <option value="Events">Events</option><option value="Marketing Campaign">Marketing Campaign</option>
-          <option value="KOL">KOL</option><option value="PR">PR</option><option value="오프라인">오프라인</option><option value="ETC">ETC</option>
+          <option value="프로모션">프로모션</option><option value="PR">PR</option><option value="오프라인">오프라인</option><option value="ETC">ETC</option>
         </select>
       </div>
       <div class="fel"><label>Placement <span class="req">*</span></label>
@@ -865,14 +867,14 @@ let SALES_BY_DATE = {};
 
 // ─── EVENT TYPES ──────────────────────────────────────────────────────────────
 const TYPES = {
-  'Email':              '#e88080',   // lighter red
+  'Email':              '#e88080',
   'Site':               '#c8a000',
   'Social':             '#7c5cbf',
   'Mobile Messaging':   '#c8102e',
   'Events':             '#2e86ab',
   'Marketing Campaign': '#888888',
-  'KOL':                '#1a1a1a',
-  'PR':                 '#e07b39',
+  '프로모션':            '#e07b39',
+  'PR':                 '#c06090',
   '오프라인':            '#4a90d9',
   'ETC':                '#333333',
 };
@@ -919,19 +921,19 @@ let EVENTS = [
   // ── Social ────────────────────────────────────────────────────────────────
   {start:'2026-03-25',end:'2026-03-25',type:'Social',placement:'Pinterest',product:'-'},
   // ── KOL ──────────────────────────────────────────────────────────────────
-  {start:'2026-01-16',end:'2026-01-16',type:'KOL',placement:'Julia torle_TT',product:'Deep Damage Repair Hydrating Hair Mask'},
-  {start:'2026-02-02',end:'2026-02-02',type:'KOL',placement:'Andrea_IG/TT',product:'Deep Damage Repair Hydrating Hair Mask'},
-  {start:'2026-02-04',end:'2026-02-04',type:'KOL',placement:'talia_IG',product:'Deep Damage Repair Hydrating Hair Mask'},
-  {start:'2026-02-05',end:'2026-02-05',type:'KOL',placement:'talia_TT',product:'Deep Damage Repair Hydrating Hair Mask'},
-  {start:'2026-02-05',end:'2026-02-05',type:'KOL',placement:'alysialoo_IG/TT',product:'Deep Damage Repair Hydrating Hair Mask'},
-  {start:'2026-02-11',end:'2026-02-11',type:'KOL',placement:'Talia_IG/TT',product:'Frizz Calming LIC'},
-  {start:'2026-02-12',end:'2026-02-12',type:'KOL',placement:'Talia_IG',product:'Detangle Heat Protectant'},
-  {start:'2026-02-13',end:'2026-02-13',type:'KOL',placement:'Talia_TT',product:'Detangle Heat Protectant'},
-  {start:'2026-03-01',end:'2026-03-01',type:'KOL',placement:'stxph.h_IG/TT',product:'Deep Damage Repair Hydrating Hair Mask'},
-  {start:'2026-03-06',end:'2026-03-06',type:'KOL',placement:'anggwells_IG/TT',product:'Deep Damage Repair Hydrating Hair Mask'},
-  {start:'2026-03-14',end:'2026-03-14',type:'KOL',placement:'amy_IG/TT',product:'Standard Kits'},
-  {start:'2026-03-18',end:'2026-03-18',type:'KOL',placement:'Tatyana_IG/TT',product:'Standard Kits'},
-  {start:'2026-04-06',end:'2026-04-06',type:'KOL',placement:'natalie_IG/TT',product:'Shampoo+Conditioner'},
+  {start:'2026-01-16',end:'2026-01-16',type:'ETC',placement:'Julia torle_TT',product:'Deep Damage Repair Hydrating Hair Mask'},
+  {start:'2026-02-02',end:'2026-02-02',type:'ETC',placement:'Andrea_IG/TT',product:'Deep Damage Repair Hydrating Hair Mask'},
+  {start:'2026-02-04',end:'2026-02-04',type:'ETC',placement:'talia_IG',product:'Deep Damage Repair Hydrating Hair Mask'},
+  {start:'2026-02-05',end:'2026-02-05',type:'ETC',placement:'talia_TT',product:'Deep Damage Repair Hydrating Hair Mask'},
+  {start:'2026-02-05',end:'2026-02-05',type:'ETC',placement:'alysialoo_IG/TT',product:'Deep Damage Repair Hydrating Hair Mask'},
+  {start:'2026-02-11',end:'2026-02-11',type:'ETC',placement:'Talia_IG/TT',product:'Frizz Calming LIC'},
+  {start:'2026-02-12',end:'2026-02-12',type:'ETC',placement:'Talia_IG',product:'Detangle Heat Protectant'},
+  {start:'2026-02-13',end:'2026-02-13',type:'ETC',placement:'Talia_TT',product:'Detangle Heat Protectant'},
+  {start:'2026-03-01',end:'2026-03-01',type:'ETC',placement:'stxph.h_IG/TT',product:'Deep Damage Repair Hydrating Hair Mask'},
+  {start:'2026-03-06',end:'2026-03-06',type:'ETC',placement:'anggwells_IG/TT',product:'Deep Damage Repair Hydrating Hair Mask'},
+  {start:'2026-03-14',end:'2026-03-14',type:'ETC',placement:'amy_IG/TT',product:'Standard Kits'},
+  {start:'2026-03-18',end:'2026-03-18',type:'ETC',placement:'Tatyana_IG/TT',product:'Standard Kits'},
+  {start:'2026-04-06',end:'2026-04-06',type:'ETC',placement:'natalie_IG/TT',product:'Shampoo+Conditioner'},
 ];
 
 // ─── EVENT PERSISTENCE (localStorage) ───────────────────────────────────────
@@ -1157,7 +1159,7 @@ let mainPeriod   = 'daily';
 window.toggleMarkers = function(btn) {
   showMarkers = !showMarkers;
   btn.classList.toggle('active', showMarkers);
-  btn.textContent = showMarkers ? '마커 ON' : '마커 OFF';
+  btn.textContent = showMarkers ? '이벤트 마커 ON' : '이벤트 마커 OFF';
   const zone = document.getElementById('markerZone');
   if (zone) zone.classList.toggle('hidden', !showMarkers);
   if (showMarkers) positionMarkers();
@@ -1568,13 +1570,7 @@ function buildAnnotations(labels) {
 
   // Deduplicate: one entry per (type, start)
   const dedupMap = {};
-  // KOL_RAW에서 유가 날짜 집합 구성
-  const kolYugaDates = new Set(
-    KOL_RAW.filter(r => (r.type || '').indexOf('유가') !== -1).map(r => r.date)
-  );
   EVENTS.forEach(ev => {
-    // KOL 타입은 KOL_RAW 유가 날짜에 해당하는 경우만 차트에 표시
-    if (ev.type === 'KOL' && !kolYugaDates.has(ev.start)) return;
     const key = `${ev.type}|||${ev.start}`;
     if (!dedupMap[key]) dedupMap[key] = { ...ev };
     else if (ev.end > dedupMap[key].end) dedupMap[key].end = ev.end;
@@ -1924,13 +1920,21 @@ function positionMarkers() {
   // Draw single-day labels
   const tip = document.getElementById('mTooltip');
   function bindTip(el, ev) {
-    const dateStr = ev.start === ev.end ? ev.start.slice(5) : `${ev.start.slice(5)} ~ ${ev.end.slice(5)}`;
-    el.addEventListener('mouseenter', function(e) {
-      tip.style.borderColor = TYPES[ev.type] || '#888';
-      tip.innerHTML = `<b style="font-size:10px;">${ev.type}</b>\n📅 ${dateStr}\n📌 ${ev.placement||'-'}\n📦 ${ev.product||'-'}`;
+    el.addEventListener('mouseenter', function() {
+      const col = TYPES[ev.type] || '#888';
+      const ds = ev.start === ev.end
+        ? ev.start.slice(5).replace('-','/')
+        : ev.start.slice(5).replace('-','/') + ' – ' + ev.end.slice(5).replace('-','/');
+      const place = ev.placement || '';
+      const short = place.length > 26 ? place.slice(0, 24) + '…' : place;
+      tip.style.borderLeftColor = col;
+      tip.innerHTML =
+        '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:' + col + ';margin-bottom:4px;">' + ev.type + '</div>' +
+        '<div style="font-size:10px;color:#444;font-weight:600;">' + ds + '</div>' +
+        (short ? '<div style="font-size:10px;color:#888;margin-top:2px;">' + short + '</div>' : '');
       tip.style.display = 'block';
     });
-    el.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+    el.addEventListener('mouseleave', function() { tip.style.display = 'none'; });
   }
 
   Object.entries(byIdx).forEach(([sIdxStr, evList]) => {
@@ -2093,13 +2097,7 @@ function statRowHtml(lbl, cur, prev, fmtFn) {
 
 // ─── EVENT LIST ───────────────────────────────────────────────────────────────
 function renderEventList() {
-  // KOL section: evtype 필터에 KOL이 명시적으로 선택된 경우만 표시
-  var kolSec = document.getElementById('kolSection');
-  if (kolSec) {
-    var showKol = selEvType.size > 0 && selEvType.has('KOL');
-    kolSec.style.display = showKol ? '' : 'none';
-    if (showKol) { try { renderKolTable(); } catch(e){} }
-  }
+
   const el = document.getElementById('evList');
   document.getElementById('evCount').textContent = `(${EVENTS.length})`;
   let list = [...EVENTS].sort((a,b) => b.start.localeCompare(a.start));
@@ -2551,7 +2549,7 @@ function switchTab(tab) {
     const el = document.getElementById(id);
     if (el) el.style.display = k === tab ? '' : 'none';
   });
-  const titles = {main:'Commerce Overview',channel:'Channel Analysis',ads:'Performance Ads',events:'이벤트 관리',settings:'Settings'};
+  const titles = {main:'통합 대시보드',channel:'유입 채널별',ads:'퍼포먼스 광고',events:'이벤트 관리',settings:'Settings'};
   const pt = document.getElementById('pageTitle');
   if (pt) pt.textContent = titles[tab] || '';
   if (tab === 'channel') { try { refreshChannel(); } catch(e){} }
