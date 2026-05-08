@@ -387,9 +387,6 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     <div class="sb-item" data-tab="ads" onclick="switchTab('ads')">
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><polyline points="1,11.5 4.5,7.5 7.5,9.5 13,3.5"/><polyline points="9.5,3.5 13,3.5 13,7"/></svg></span><span class="sb-text">Perf. Ads</span>
     </div>
-    <div class="sb-item" data-tab="kol" onclick="switchTab('kol')">
-      <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><polygon points="7,1.5 8.8,5.2 13,5.7 10,8.6 10.8,12.8 7,10.8 3.2,12.8 4,8.6 1,5.7 5.2,5.2"/></svg></span><span class="sb-text">KOL</span>
-    </div>
     <div class="sb-section-lbl">System</div>
     <div class="sb-item" data-tab="events" onclick="switchTab('events')">
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><rect x="1" y="2.5" width="12" height="10" rx="1.5"/><line x1="1" y1="6" x2="13" y2="6"/><line x1="4" y1="1" x2="4" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><circle cx="4.5" cy="9" r="0.8" fill="currentColor" stroke="none"/><circle cx="7" cy="9" r="0.8" fill="currentColor" stroke="none"/><circle cx="9.5" cy="9" r="0.8" fill="currentColor" stroke="none"/></svg></span><span class="sb-text">이벤트 관리</span>
@@ -503,6 +500,44 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   </div>
 </div>
 
+
+
+<div id="kolSection" style="display:none;padding:0 28px 24px;">
+  <div class="ev-card" style="padding:16px 18px;">
+    <div class="ev-list-hdr" style="margin-bottom:12px;">
+      <div class="ttl">KOL 마케팅</div>
+      <span id="kolCount" class="kol-hdr-cnt"></span>
+    </div>
+    <div class="kol-filter-row">
+      <select class="kol-fsel" id="kolFMedia" onchange="renderKolTable()"><option value="">매체 · 전체</option></select>
+      <select class="kol-fsel" id="kolFType" onchange="renderKolTable()">
+        <option value="">유가/무가 · 전체</option>
+        <option value="유가">유가</option>
+        <option value="무가">무가</option>
+      </select>
+      <input class="kol-finput" type="month" id="kolFMonth" onchange="renderKolTable()" title="년-월 선택">
+      <button class="btn-cancel" style="padding:5px 12px;height:28px;" onclick="resetKolFilters()">날짜 초기화</button>
+    </div>
+    <div class="kol-tbl-wrap" style="margin-top:10px;">
+      <table class="kol-tbl">
+        <thead><tr>
+          <th class="left" onclick="sortKol('date')">날짜<span class="kol-sort" id="ks-date"></span></th>
+          <th class="left" onclick="sortKol('media')">매체<span class="kol-sort" id="ks-media"></span></th>
+          <th class="left" onclick="sortKol('account')">계정 / 콘텐츠<span class="kol-sort" id="ks-account"></span></th>
+          <th class="left" onclick="sortKol('type')">유가/무가<span class="kol-sort" id="ks-type"></span></th>
+          <th onclick="sortKol('views')">조회수<span class="kol-sort" id="ks-views"></span></th>
+          <th onclick="sortKol('cpv')">CPV<span class="kol-sort" id="ks-cpv"></span></th>
+          <th onclick="sortKol('erTotal')">ER (전체)%<span class="kol-sort" id="ks-erTotal"></span></th>
+          <th onclick="sortKol('erLike')">ER (좋아요)%<span class="kol-sort" id="ks-erLike"></span></th>
+          <th onclick="sortKol('erComment')">ER (댓글)%<span class="kol-sort" id="ks-erComment"></span></th>
+          <th onclick="sortKol('erShare')">ER (공유)%<span class="kol-sort" id="ks-erShare"></span></th>
+          <th onclick="sortKol('erSave')">ER (저장)%<span class="kol-sort" id="ks-erSave"></span></th>
+        </tr></thead>
+        <tbody id="kolTbody"><tr><td colspan="11" class="kol-empty">—</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
 </div><!-- /tabMain -->
 
@@ -754,41 +789,6 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 </div><!-- /tabAds -->
 
 <!-- ═══════════ SETTINGS TAB ═══════════ -->
-<div id="tabKol" style="display:none;">
-<div class="kol-wrap">
-  <div class="kol-hdr">
-    <span id="kolCount" class="kol-hdr-cnt">데이터 로딩 중...</span>
-  </div>
-  <div class="kol-filter-row">
-    <select class="kol-fsel" id="kolFMedia" onchange="renderKolTable()"><option value="">매체 · 전체</option></select>
-    <select class="kol-fsel" id="kolFType" onchange="renderKolTable()">
-      <option value="">유가/무가 · 전체</option>
-      <option value="유가">유가</option>
-      <option value="무가">무가</option>
-    </select>
-    <input class="kol-finput" type="month" id="kolFMonth" onchange="renderKolTable()" title="년-월 선택">
-    <button class="btn-cancel" style="padding:5px 12px;height:28px;" onclick="resetKolFilters()">날짜 초기화</button>
-  </div>
-  <div class="kol-tbl-wrap">
-    <table class="kol-tbl">
-      <thead><tr>
-        <th class="left" onclick="sortKol('date')">날짜<span class="kol-sort" id="ks-date"></span></th>
-        <th class="left" onclick="sortKol('media')">매체<span class="kol-sort" id="ks-media"></span></th>
-        <th class="left" onclick="sortKol('account')">계정 / 콘텐츠<span class="kol-sort" id="ks-account"></span></th>
-        <th class="left" onclick="sortKol('type')">유가/무가<span class="kol-sort" id="ks-type"></span></th>
-        <th onclick="sortKol('views')">조회수<span class="kol-sort" id="ks-views"></span></th>
-        <th onclick="sortKol('cpv')">CPV<span class="kol-sort" id="ks-cpv"></span></th>
-        <th onclick="sortKol('erTotal')">ER (전체)%<span class="kol-sort" id="ks-erTotal"></span></th>
-        <th onclick="sortKol('erLike')">ER (좋아요)%<span class="kol-sort" id="ks-erLike"></span></th>
-        <th onclick="sortKol('erComment')">ER (댓글)%<span class="kol-sort" id="ks-erComment"></span></th>
-        <th onclick="sortKol('erShare')">ER (공유)%<span class="kol-sort" id="ks-erShare"></span></th>
-        <th onclick="sortKol('erSave')">ER (저장)%<span class="kol-sort" id="ks-erSave"></span></th>
-      </tr></thead>
-      <tbody id="kolTbody"><tr><td colspan="11" class="kol-empty">—</td></tr></tbody>
-    </table>
-  </div>
-</div>
-</div><!-- /tabKol -->
 
 <div id="tabSettings" style="display:none;">
 <div class="tab-content">
@@ -1568,10 +1568,16 @@ function buildAnnotations(labels) {
 
   // Deduplicate: one entry per (type, start)
   const dedupMap = {};
+  // KOL_RAW에서 유가 날짜 집합 구성
+  const kolYugaDates = new Set(
+    KOL_RAW.filter(r => (r.type || '').indexOf('유가') !== -1).map(r => r.date)
+  );
   EVENTS.forEach(ev => {
+    // KOL 타입은 KOL_RAW 유가 날짜에 해당하는 경우만 차트에 표시
+    if (ev.type === 'KOL' && !kolYugaDates.has(ev.start)) return;
     const key = `${ev.type}|||${ev.start}`;
     if (!dedupMap[key]) dedupMap[key] = { ...ev };
-    else if (ev.end > dedupMap[key].end) dedupMap[key].end = ev.end; // use latest end
+    else if (ev.end > dedupMap[key].end) dedupMap[key].end = ev.end;
   });
   const unique = Object.values(dedupMap);
 
@@ -2087,6 +2093,13 @@ function statRowHtml(lbl, cur, prev, fmtFn) {
 
 // ─── EVENT LIST ───────────────────────────────────────────────────────────────
 function renderEventList() {
+  // KOL section: evtype 필터에 KOL이 명시적으로 선택된 경우만 표시
+  var kolSec = document.getElementById('kolSection');
+  if (kolSec) {
+    var showKol = selEvType.size > 0 && selEvType.has('KOL');
+    kolSec.style.display = showKol ? '' : 'none';
+    if (showKol) { try { renderKolTable(); } catch(e){} }
+  }
   const el = document.getElementById('evList');
   document.getElementById('evCount').textContent = `(${EVENTS.length})`;
   let list = [...EVENTS].sort((a,b) => b.start.localeCompare(a.start));
@@ -2533,18 +2546,17 @@ let chVisitsChart, chSalesChart, chCvrChart;
 
 function switchTab(tab) {
   document.querySelectorAll('.sb-item').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  const tabs = {main:'tabMain',channel:'tabChannel',ads:'tabAds',kol:'tabKol',settings:'tabSettings',events:'tabEvents'};
+  const tabs = {main:'tabMain',channel:'tabChannel',ads:'tabAds',settings:'tabSettings',events:'tabEvents'};
   Object.entries(tabs).forEach(([k,id]) => {
     const el = document.getElementById(id);
     if (el) el.style.display = k === tab ? '' : 'none';
   });
-  const titles = {main:'Commerce Overview',channel:'Channel Analysis',ads:'Performance Ads',kol:'KOL 마케팅',events:'이벤트 관리',settings:'Settings'};
+  const titles = {main:'Commerce Overview',channel:'Channel Analysis',ads:'Performance Ads',events:'이벤트 관리',settings:'Settings'};
   const pt = document.getElementById('pageTitle');
   if (pt) pt.textContent = titles[tab] || '';
   if (tab === 'channel') { try { refreshChannel(); } catch(e){} }
   if (tab === 'ads')     { try { refreshAds();     } catch(e){} }
   if (tab === 'events')  { try { renderTypeLegend(); renderEventListFull(); } catch(e){} }
-  if (tab === 'kol')     { try { renderKolTable(); } catch(e){} }
 }
 
 // ── KOL Table ─────────────────────────────────────────────────────────────────
@@ -2556,7 +2568,10 @@ function buildKolMediaOpts() {
   if (!sel) return;
   var cur = sel.value;
   var medias = [];
-  KOL_RAW.forEach(function(r) { if (r.media && medias.indexOf(r.media) === -1) medias.push(r.media); });
+  KOL_RAW.forEach(function(r) {
+    var m = (r.media || '').trim().toLowerCase();
+    if (m && medias.indexOf(m) === -1) medias.push(m);
+  });
   medias.sort();
   sel.innerHTML = '<option value="">매체 · 전체</option>';
   medias.forEach(function(m) {
@@ -2592,7 +2607,7 @@ function renderKolTable() {
   var rows = KOL_RAW.map(function(r) {
     return {
       date:      r.date      || '',
-      media:     r.media     || '',
+      media:     (r.media || '').trim().toLowerCase(),
       account:   r.account   || '',
       url:       r.url       || '',
       type:      r.type      || '',
@@ -2641,8 +2656,8 @@ function renderKolTable() {
 
   tbody.innerHTML = rows.map(function(r) {
     var acct = r.url
-      ? '<a class="kol-lnk" href="' + r.url + '" target="_blank" rel="noopener">' + (r.account || '—') + ' ↗</a>'
-      : (r.account || '—');
+      ? '<a class="kol-lnk" href="' + r.url + '" target="_blank" rel="noopener" title="콘텐츠 보기">' + (r.account || '—') + ' ↗</a>'
+      : '<span style="color:var(--color-text-primary,#333);">' + (r.account || '—') + '</span>';
     var badge = r.type.indexOf('유가') !== -1
       ? '<span class="kol-badge paid">유가</span>'
       : r.type.indexOf('무가') !== -1
