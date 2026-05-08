@@ -453,7 +453,6 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <button class="ads-p-btn" data-main-period="monthly" onclick="setMainPeriod(this,'monthly')">월</button>
       <button class="ads-p-btn" data-main-period="weekly" onclick="setMainPeriod(this,'weekly')">주</button>
       <button class="ads-p-btn active" data-main-period="daily" onclick="setMainPeriod(this,'daily')">일</button>
-      <button class="mkr-btn" id="btnMarkerToggle" onclick="toggleMarkers(this)" style="min-width:96px;margin-left:4px;">이벤트 마커 OFF</button>
     </div>
     <div class="leg-row" style="align-items:center;flex-wrap:wrap;gap:6px;">
       <div class="leg"><div class="leg-dot" style="background:#d97070;"></div><span id="salesLegLabel">Sales (.COM)</span></div>
@@ -468,6 +467,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
         <span style="font-size:12px;font-weight:700;line-height:1;color:#4bc8a0;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4bc8a0;"></span>ROAS(닷컴)
       </button>
       <div style="display:flex;gap:4px;align-items:center;margin-left:auto;">
+        <button class="mkr-btn" id="btnMarkerToggle" onclick="toggleMarkers(this)" style="min-width:96px;margin-right:4px;font-size:9px;">이벤트 마커 표시</button>
         <div class="sales-toggle" style="margin-left:0;">
           <button class="stgl active" data-type="com" onclick="setSalesType(this)">COM</button>
           <button class="stgl" data-type="total" onclick="setSalesType(this)">TTL</button>
@@ -877,6 +877,7 @@ const TYPES = {
   'PR':                 '#c06090',
   '오프라인':            '#4a90d9',
   'ETC':                '#333333',
+  'KOL':                '#1a7a4a',
 };
 
 // ─── PRESET EVENTS (full list) ────────────────────────────────────────────────
@@ -1159,7 +1160,7 @@ let mainPeriod   = 'daily';
 window.toggleMarkers = function(btn) {
   showMarkers = !showMarkers;
   btn.classList.toggle('active', showMarkers);
-  btn.textContent = showMarkers ? '이벤트 마커 ON' : '이벤트 마커 OFF';
+  btn.textContent = showMarkers ? '이벤트 마커 숨기기' : '이벤트 마커 표시';
   const zone = document.getElementById('markerZone');
   if (zone) zone.classList.toggle('hidden', !showMarkers);
   if (showMarkers) positionMarkers();
@@ -2149,6 +2150,14 @@ function renderEventList() {
       </div>
     </div>`;
   }).join('');
+
+  // KOL 섹션: evtype 필터에서 KOL 선택 시 표시
+  var kolSec = document.getElementById('kolSection');
+  if (kolSec) {
+    var showKol = selEvType.size > 0 && selEvType.has('KOL');
+    kolSec.style.display = showKol ? '' : 'none';
+    if (showKol) { try { renderKolTable(); } catch(e){} }
+  }
 }
 
 function removeEvent(idx) {
