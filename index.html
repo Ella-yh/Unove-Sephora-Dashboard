@@ -328,6 +328,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 </style>
 </head>
 <body>
+<div id="mTooltip"></div>
 
 <!-- ═══════════ LOGIN OVERLAY ═══════════ -->
 <div id="loginOverlay">
@@ -447,7 +448,10 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 </div>
 
 <div class="chart-sec">
-  <div class="sec-hdr">일자별 Sales · CVR</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <div class="sec-hdr" style="margin-bottom:0;flex:1;">일자별 Sales · CVR</div>
+    <button class="mkr-btn" id="btnMarkerToggle" onclick="toggleMarkers(this)" style="min-width:96px;font-size:9px;flex-shrink:0;margin-left:10px;">이벤트 마커 표시</button>
+  </div>
   <div class="chart-card" style="position:relative;">
     <div style="position:absolute;top:10px;right:14px;display:flex;gap:3px;z-index:2;align-items:center;">
       <button class="ads-p-btn" data-main-period="monthly" onclick="setMainPeriod(this,'monthly')">월</button>
@@ -467,7 +471,6 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
         <span style="font-size:12px;font-weight:700;line-height:1;color:#4bc8a0;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4bc8a0;"></span>ROAS(닷컴)
       </button>
       <div style="display:flex;gap:4px;align-items:center;margin-left:auto;">
-        <button class="mkr-btn" id="btnMarkerToggle" onclick="toggleMarkers(this)" style="min-width:96px;margin-right:4px;font-size:9px;">이벤트 마커 표시</button>
         <div class="sales-toggle" style="margin-left:0;">
           <button class="stgl active" data-type="com" onclick="setSalesType(this)">COM</button>
           <button class="stgl" data-type="total" onclick="setSalesType(this)">TTL</button>
@@ -1149,7 +1152,7 @@ window.setTtChartType = function(btn, type) {
   ttChartType = type;
   refreshAdsChart(3);
 };
-let selSalesType = 'com'; // 'com' | 'total' | 'bam'
+let selSalesTypes = new Set(['com']); // multi-select set
 let showMarkers = false;
 let showVisits   = false;
 let showAdSpend  = false;
@@ -1195,12 +1198,17 @@ window.setMainPeriod = function(btn, period) {
 };
 
 window.setSalesType = function(btn) {
-  selSalesType = btn.dataset.type;
-  document.querySelectorAll('.stgl').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const labels = {com:'Sales (.COM)', total:'Sales (TTL)', bam:'Sales (B&M)'};
+  const t = btn.dataset.type;
+  if (selSalesTypes.has(t) && selSalesTypes.size > 1) {
+    selSalesTypes.delete(t);
+    btn.classList.remove('active');
+  } else {
+    selSalesTypes.add(t);
+    btn.classList.add('active');
+  }
+  const labelMap = {com:'.COM', total:'TTL', bam:'B&M'};
   const el = document.getElementById('salesLegLabel');
-  if (el) el.textContent = labels[selSalesType] || 'Sales';
+  if (el) el.textContent = 'Sales (' + [...selSalesTypes].map(x=>labelMap[x]||x).join('+') + ')';
   renderChart();
 };
 let chart = null;
@@ -1710,16 +1718,24 @@ function renderChart() {
           yAxisID: 'yV', order: 3,
           tension: 0.25,
         });
-        // Sales → 항상 표시
-        ds.push({
-          label: selSalesType === 'com' ? 'Sales (.COM)' : selSalesType === 'bam' ? 'Sales (B&M)' : 'Sales (TTL)',
-          data: data.map(d => selSalesType === 'com' ? (d.sales_com||0) : selSalesType === 'bam' ? (d.sales_bam||0) : (d.sales||0)),
-          type: 'bar',
-          backgroundColor: makeGrad('mainChart','#d97070',0.85,0.45),
-          hoverBackgroundColor: makeGrad('mainChart','#d97070',0.95,0.6),
-          yAxisID: 'yS', order: 2,
-          barPercentage: 0.5,
-          categoryPercentage: 0.85,
+        // Sales → 선택된 타입만 표시 (multi-select)
+        const _salesCfg = [
+          {type:'com',  label:'Sales .COM', color:'#d97070', key:'sales_com'},
+          {type:'bam',  label:'Sales B&M',  color:'#6aadd5', key:'sales_bam'},
+          {type:'total',label:'Sales TTL',  color:'#c49ae0', key:'sales'},
+        ];
+        const _bpct = selSalesTypes.size > 1 ? 0.35 : 0.5;
+        _salesCfg.filter(c => selSalesTypes.has(c.type)).forEach(c => {
+          ds.push({
+            label: c.label,
+            data: data.map(d => d[c.key]||0),
+            type: 'bar',
+            backgroundColor: makeGrad('mainChart',c.color,0.85,0.45),
+            hoverBackgroundColor: makeGrad('mainChart',c.color,0.95,0.6),
+            yAxisID: 'yS', order: 2,
+            barPercentage: _bpct,
+            categoryPercentage: 0.85,
+          });
         });
         // CVR → 토글
         if (showCvr) ds.push({
