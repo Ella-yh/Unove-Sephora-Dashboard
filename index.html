@@ -3660,6 +3660,7 @@ function buildSephoraByPeriod(period) {
   const visitsByDate = {};
   RAW_SKU.forEach(r => { visitsByDate[r.date] = (visitsByDate[r.date]||0) + r.visits; });
   Object.entries(visitsByDate).forEach(([date, v]) => {
+    if (adsSelectedRange !== null && getPeriodKey(date, adsGlobalPeriod2) !== adsSelectedRange) return;
     const k = getPeriodKey(date, period);
     if (!byP[k]) byP[k] = {sales_com:0, sales_bam:0, sales_total:0, visits:0};
     byP[k].visits += v;
