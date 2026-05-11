@@ -1585,6 +1585,21 @@ function buildAnnotations(labels) {
     if (!dedupMap[key]) dedupMap[key] = { ...ev };
     else if (ev.end > dedupMap[key].end) dedupMap[key].end = ev.end;
   });
+  // KOL_RAW 유가 → 가상 이벤트로 추가
+  KOL_RAW.filter(k => (k.type||'').indexOf('유가') !== -1).forEach(k => {
+    if (!k.date) return;
+    var d = k.date.slice(0,10); // YYYY-MM-DD
+    var rawAcc = k.account || '';
+    var disp = rawAcc;
+    if (/^https?:\/\//i.test(rawAcc)) {
+      var ttm = rawAcc.match(/tiktok\.com\/@([^\/\?#&]+)/i);
+      if (ttm) disp = '@' + ttm[1];
+      else disp = (k.media || 'KOL') + ' 콘텐츠';
+    }
+    var key = 'KOL|||' + d;
+    if (!dedupMap[key]) dedupMap[key] = { type:'KOL', start:d, end:d, placement:disp, product:'' };
+    else dedupMap[key].placement = (dedupMap[key].placement ? dedupMap[key].placement + ', ' : '') + disp;
+  });
   const unique = Object.values(dedupMap);
 
   // Group by startIndex so we can stagger overlapping labels
@@ -1905,6 +1920,21 @@ function positionMarkers() {
     const key = `${ev.type}|||${ev.start}`;
     if (!dedupMap[key]) dedupMap[key] = { ...ev };
     else if (ev.end > dedupMap[key].end) dedupMap[key].end = ev.end;
+  });
+  // KOL_RAW 유가 → 가상 이벤트로 추가
+  KOL_RAW.filter(k => (k.type||'').indexOf('유가') !== -1).forEach(k => {
+    if (!k.date) return;
+    var d = k.date.slice(0,10);
+    var rawAcc = k.account || '';
+    var disp = rawAcc;
+    if (/^https?:\/\//i.test(rawAcc)) {
+      var ttm = rawAcc.match(/tiktok\.com\/@([^\/\?#&]+)/i);
+      if (ttm) disp = '@' + ttm[1];
+      else disp = (k.media || 'KOL') + ' 콘텐츠';
+    }
+    var key = 'KOL|||' + d;
+    if (!dedupMap[key]) dedupMap[key] = { type:'KOL', start:d, end:d, placement:disp, product:'' };
+    else dedupMap[key].placement = (dedupMap[key].placement ? dedupMap[key].placement + ', ' : '') + disp;
   });
   const unique = Object.values(dedupMap);
 
