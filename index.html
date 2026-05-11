@@ -969,7 +969,7 @@ let selAdsMetric = 'spend';  // spend | impressions | clicks
 let selAdsMedia  = new Set(['meta','tiktok','gsa']);
 const adsChartPeriod = {1:'weekly', 2:'weekly', 3:'weekly'};
 let adsGlobalPeriod2 = 'weekly'; // 글로벌 기간 (드롭다운 연동)
-let adsSelectedRange = null;     // null = 전체, 'YYYY-MM' / 'YYYY-MM-DD' / weekKey
+let adsSelectedRange = new Set(); // empty = 전체, Set of period keys (multi-select)
 // 차트별 독립 매출/유입 토글
 const adsShowSales  = {1: true, 2: true, 3: true};
 const adsShowVisits = {1: true, 2: true, 3: true};
@@ -1048,7 +1048,7 @@ window.setAdsDDTab = function(period) {
   refreshAds();
 };
 window.clearAdsPeriodDD = function() {
-  adsSelectedRange = null;
+  adsSelectedRange = new Set();
   var allChk = document.getElementById('chk-adsPeriod-all');
   if (allChk) allChk.checked = true;
   document.querySelectorAll('#ddPanel-adsPeriod-opts .dd-opt input').forEach(function(c){ c.checked = false; });
@@ -1057,17 +1057,15 @@ window.clearAdsPeriodDD = function() {
 };
 window.setAdsPeriodRange = function(chk, rangeKey) {
   if (chk.checked) {
-    adsSelectedRange = rangeKey;
-    // 다른 체크 해제 (single select)
-    document.querySelectorAll('#ddPanel-adsPeriod-opts .dd-opt input').forEach(function(c){
-      if (c.value !== rangeKey) c.checked = false;
-    });
+    adsSelectedRange.add(rangeKey);
     var allChk = document.getElementById('chk-adsPeriod-all');
     if (allChk) allChk.checked = false;
   } else {
-    adsSelectedRange = null;
-    var allChk = document.getElementById('chk-adsPeriod-all');
-    if (allChk) allChk.checked = true;
+    adsSelectedRange.delete(rangeKey);
+    if (adsSelectedRange.size === 0) {
+      var allChk = document.getElementById('chk-adsPeriod-all');
+      if (allChk) allChk.checked = true;
+    }
   }
   updateAdsDDLabel();
   refreshAds();
@@ -1090,7 +1088,7 @@ function populateAdsPeriodOpts(period) {
       var d = new Date(k + 'T00:00:00');
       label = (d.getMonth()+1) + '/' + d.getDate() + ' (' + ['일','월','화','수','목','금','토'][d.getDay()] + ')';
     }
-    var checked = adsSelectedRange === k ? ' checked' : '';
+    var checked = adsSelectedRange.has(k) ? ' checked' : '';
     return '<label class="dd-opt"><input type="checkbox" value="' + k + '"' + checked + ' onchange="setAdsPeriodRange(this,\'' + k + '\')"> ' + label + '</label>';
   }).join('');
 }
@@ -1099,16 +1097,22 @@ function updateAdsDDLabel() {
   if (!lbl) return;
   var pMap = { monthly:'월', weekly:'주', daily:'일' };
   var pLabel = pMap[adsGlobalPeriod2] || '주';
-  if (!adsSelectedRange) { lbl.textContent = pLabel + ' · ALL'; return; }
+  if (adsSelectedRange.size === 0) { lbl.textContent = pLabel + ' · ALL'; return; }
   var detail = '';
-  if (adsGlobalPeriod2 === 'monthly') {
-    var parts = adsSelectedRange.split('-');
-    detail = parseInt(parts[1]) + '월';
-  } else if (adsGlobalPeriod2 === 'weekly') {
-    detail = fmtPeriodLabel(adsSelectedRange, 'weekly');
+  var keys = Array.from(adsSelectedRange).sort();
+  if (adsSelectedRange.size > 2) {
+    detail = keys.length + '개 선택';
   } else {
-    var d = new Date(adsSelectedRange + 'T00:00:00');
-    detail = (d.getMonth()+1) + '/' + d.getDate();
+    detail = keys.map(function(k) {
+      if (adsGlobalPeriod2 === 'monthly') {
+        var parts = k.split('-'); return parseInt(parts[1]) + '월';
+      } else if (adsGlobalPeriod2 === 'weekly') {
+        return fmtPeriodLabel(k, 'weekly');
+      } else {
+        var d = new Date(k + 'T00:00:00');
+        return (d.getMonth()+1) + '/' + d.getDate();
+      }
+    }).join(', ');
   }
   lbl.textContent = pLabel + ' · ' + detail;
 }
@@ -3633,7 +3637,7 @@ function buildAdsByPeriod(mediaFilter, period) {
   const byP = {};
   ADS_RAW.forEach(r => {
     if (mediaFilter && !mediaFilter.has(r.media)) return;
-    if (adsSelectedRange !== null && getPeriodKey(r.date, adsGlobalPeriod2) !== adsSelectedRange) return;
+    if (adsSelectedRange.size > 0 && !adsSelectedRange.has(getPeriodKey(r.date, adsGlobalPeriod2))) return;
     const k = getPeriodKey(r.date, period);
     if (!byP[k]) byP[k] = { spend:0, impressions:0, clicks:0, byObj:{} };
     byP[k].spend       += r.spend;
@@ -3650,7 +3654,7 @@ function buildAdsByPeriod(mediaFilter, period) {
 function buildSephoraByPeriod(period) {
   const byP = {};
   Object.entries(SALES_BY_DATE).forEach(([date, s]) => {
-    if (adsSelectedRange !== null && getPeriodKey(date, adsGlobalPeriod2) !== adsSelectedRange) return;
+    if (adsSelectedRange.size > 0 && !adsSelectedRange.has(getPeriodKey(date, adsGlobalPeriod2))) return;
     const k = getPeriodKey(date, period);
     if (!byP[k]) byP[k] = {sales_com:0, sales_bam:0, sales_total:0, visits:0};
     byP[k].sales_com   += s.com   || 0;
@@ -3660,7 +3664,7 @@ function buildSephoraByPeriod(period) {
   const visitsByDate = {};
   RAW_SKU.forEach(r => { visitsByDate[r.date] = (visitsByDate[r.date]||0) + r.visits; });
   Object.entries(visitsByDate).forEach(([date, v]) => {
-    if (adsSelectedRange !== null && getPeriodKey(date, adsGlobalPeriod2) !== adsSelectedRange) return;
+    if (adsSelectedRange.size > 0 && !adsSelectedRange.has(getPeriodKey(date, adsGlobalPeriod2))) return;
     const k = getPeriodKey(date, period);
     if (!byP[k]) byP[k] = {sales_com:0, sales_bam:0, sales_total:0, visits:0};
     byP[k].visits += v;
