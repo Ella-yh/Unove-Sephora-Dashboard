@@ -1289,7 +1289,7 @@ function buildMonthOptions() {
 
   // Collect unique months from SALES_BY_DATE keys (format: MM-DD)
   const months = [...new Set(
-    Object.keys(SALES_BY_DATE).map(k => k.slice(0,2))
+    Object.keys(SALES_BY_DATE).map(k => k.slice(5,7))
   )].sort();
 
   months.forEach(mm => {
