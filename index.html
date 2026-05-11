@@ -428,10 +428,6 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <div class="dd-btn" id="ddBtn-month" onclick="toggleDD('month')"><span id="ddLabel-month">ALL</span><span class="arr">▾</span></div>
       <div class="dd-panel" id="ddPanel-month">
         <div class="dd-all" onclick="clearFilter('month')"><input type="checkbox" id="chk-month-all" checked readonly> ALL</div>
-        <label class="dd-opt"><input type="checkbox" data-group="month" value="01"> JAN</label>
-        <label class="dd-opt"><input type="checkbox" data-group="month" value="02"> FEB</label>
-        <label class="dd-opt"><input type="checkbox" data-group="month" value="03"> MAR</label>
-        <label class="dd-opt"><input type="checkbox" data-group="month" value="04"> APR</label>
       </div>
     </div>
   </div>
@@ -1278,7 +1274,38 @@ function updateLabel(name) {
   else { el.textContent = set.size === 1 ? [...set][0] : set.size + '개'; }
 }
 
-// Bind month checkboxes
+// Build month options dynamically from SALES_BY_DATE
+const MONTH_NAMES = {
+  '01':'JAN','02':'FEB','03':'MAR','04':'APR','05':'MAY','06':'JUN',
+  '07':'JUL','08':'AUG','09':'SEP','10':'OCT','11':'NOV','12':'DEC'
+};
+function buildMonthOptions() {
+  const panel = document.getElementById('ddPanel-month');
+  if (!panel) return;
+  // Remove existing dynamic options (keep ALL row)
+  while (panel.children.length > 1) panel.removeChild(panel.lastChild);
+  selMonths.clear();
+  updateLabel('month');
+
+  // Collect unique months from SALES_BY_DATE keys (format: MM-DD)
+  const months = [...new Set(
+    Object.keys(SALES_BY_DATE).map(k => k.slice(0,2))
+  )].sort();
+
+  months.forEach(mm => {
+    const lbl = document.createElement('label');
+    lbl.className = 'dd-opt';
+    lbl.innerHTML = '<input type="checkbox" data-group="month" value="' + mm + '"> ' + (MONTH_NAMES[mm] || mm);
+    panel.appendChild(lbl);
+    lbl.querySelector('input').addEventListener('change', function() {
+      if (this.checked) selMonths.add(this.value); else selMonths.delete(this.value);
+      document.getElementById('chk-month-all').checked = selMonths.size === 0;
+      updateLabel('month'); refresh();
+    });
+  });
+}
+
+// Bind month checkboxes (fallback for static ones)
 document.querySelectorAll('[data-group="month"]').forEach(cb => {
   cb.addEventListener('change', () => {
     if (cb.checked) selMonths.add(cb.value); else selMonths.delete(cb.value);
@@ -3890,7 +3917,7 @@ function initDashboard() {
     selWeeks.clear(); updateLabel('week');
     buildWeekOptions();
   } catch(e) {}
-  try { renderKPI(); renderChart(); renderEventList(); } catch(e) { console.warn('render error', e); }
+  try { buildMonthOptions(); renderKPI(); renderChart(); renderEventList(); } catch(e) { console.warn('render error', e); }
   try { refreshChannel(); } catch(e) {}
 }
 
