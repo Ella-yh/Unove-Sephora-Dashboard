@@ -3411,7 +3411,7 @@ function onAuthSuccess(user) {
           RAW_SALES.length = 0; c.sales.forEach(r => RAW_SALES.push(r));
           CH_RAW.length = 0;    c.channel.forEach(r => CH_RAW.push(r));
           ADS_RAW.length = 0;   (c.ads || []).forEach(r => ADS_RAW.push(r));
-          KOL_RAW.length = 0;   (c.kol || []).forEach(r => KOL_RAW.push(r));
+          KOL_RAW.length = 0;   (c.kol || []).filter(r => r.date && r.date.startsWith('2026')).forEach(r => KOL_RAW.push(r));
           Object.keys(SALES_BY_DATE).forEach(k => delete SALES_BY_DATE[k]);
           RAW_SALES.forEach(r => { SALES_BY_DATE[r.date] = { total: r.total||0, com: r.com||0, bam: r.bam||0 }; });
           rebuildDerivedData();
@@ -3517,7 +3517,7 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     ADS_RAW.length = 0;
     if (Array.isArray(data.ads)) data.ads.forEach(r => ADS_RAW.push(r));
     KOL_RAW.length = 0;
-    if (Array.isArray(data.kol)) data.kol.forEach(r => KOL_RAW.push(r));
+    if (Array.isArray(data.kol)) data.kol.filter(r => r.date && r.date.startsWith('2026')).forEach(r => KOL_RAW.push(r));
 
     rebuildDerivedData();
     const ts = data.updatedAt ? new Date(data.updatedAt).toLocaleString('ko-KR') : '—';
