@@ -3622,13 +3622,13 @@ function buildAdsWeekly(mediaFilter) {
     if (mediaFilter && !mediaFilter.has(r.media)) return;
     const wk = getWeekKey(r.date);
     if (!byWeek[wk]) byWeek[wk] = { spend:0, impressions:0, clicks:0, byObj:{} };
-    byWeek[wk].spend       += r.spend;
-    byWeek[wk].impressions += r.impressions;
-    byWeek[wk].clicks      += r.clicks;
+    byWeek[wk].spend       += (r.spend       || 0);
+    byWeek[wk].impressions += (r.impressions || 0);
+    byWeek[wk].clicks      += (r.clicks      || 0);
     if (!byWeek[wk].byObj[r.objective]) byWeek[wk].byObj[r.objective] = {spend:0,impressions:0,clicks:0};
-    byWeek[wk].byObj[r.objective].spend       += r.spend;
-    byWeek[wk].byObj[r.objective].impressions += r.impressions;
-    byWeek[wk].byObj[r.objective].clicks      += r.clicks;
+    byWeek[wk].byObj[r.objective].spend       += (r.spend       || 0);
+    byWeek[wk].byObj[r.objective].impressions += (r.impressions || 0);
+    byWeek[wk].byObj[r.objective].clicks      += (r.clicks      || 0);
   });
   return byWeek;
 }
@@ -3640,13 +3640,13 @@ function buildAdsByPeriod(mediaFilter, period) {
     if (adsSelectedRange.size > 0 && !adsSelectedRange.has(getPeriodKey(r.date, adsGlobalPeriod2))) return;
     const k = getPeriodKey(r.date, period);
     if (!byP[k]) byP[k] = { spend:0, impressions:0, clicks:0, byObj:{} };
-    byP[k].spend       += r.spend;
-    byP[k].impressions += r.impressions;
-    byP[k].clicks      += r.clicks;
+    byP[k].spend       += (r.spend       || 0);
+    byP[k].impressions += (r.impressions || 0);
+    byP[k].clicks      += (r.clicks      || 0);
     if (!byP[k].byObj[r.objective]) byP[k].byObj[r.objective] = {spend:0,impressions:0,clicks:0};
-    byP[k].byObj[r.objective].spend       += r.spend;
-    byP[k].byObj[r.objective].impressions += r.impressions;
-    byP[k].byObj[r.objective].clicks      += r.clicks;
+    byP[k].byObj[r.objective].spend       += (r.spend       || 0);
+    byP[k].byObj[r.objective].impressions += (r.impressions || 0);
+    byP[k].byObj[r.objective].clicks      += (r.clicks      || 0);
   });
   return byP;
 }
@@ -3791,7 +3791,18 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
               if (ctx.dataset.yAxisID === 'yS') return '  ' + ctx.dataset.label + ': ₩' + Math.round(v).toLocaleString('ko-KR');
               if (ctx.dataset.yAxisID === 'yV') return '  세포라 유입: ' + Math.round(v).toLocaleString();
               return '  ' + ctx.dataset.label + ': ' + fmtNum(v);
-            }
+            },
+            footer: stacked ? function(ctxArr) {
+              var wk = weeks[ctxArr[0].dataIndex];
+              var mediaTotal = (adsWeekly[wk] ? (adsWeekly[wk][metricKey] || 0) : 0);
+              var selTotal = ctxArr.reduce(function(s,c){ return c.dataset.yAxisID==='yA' ? s+(c.raw||0) : s; }, 0);
+              var lines = ['  ─────────────────'];
+              lines.push('  선택 목표 합계: ' + fmtNum(selTotal));
+              if (Math.round(mediaTotal) !== Math.round(selTotal)) {
+                lines.push('  매체 총 광고비: ' + fmtNum(mediaTotal) + '  ← 일부 목표 미선택');
+              }
+              return lines;
+            } : undefined
           }
         }
       },
