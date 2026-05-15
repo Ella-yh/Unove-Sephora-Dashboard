@@ -477,8 +477,8 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   <div class="chart-card" style="position:relative;">
     <div class="leg-row" style="align-items:center;flex-wrap:wrap;gap:6px;">
       <div class="leg"><div class="leg-dot" style="background:#d97070;"></div><span id="salesLegLabel">Sales (.COM)</span></div>
-      <button class="mkr-btn active" id="btnCvrToggle" onclick="toggleCvr(this)" style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#8878d0;"></span>CVR</button>
-      <button class="mkr-btn" id="btnVisitsToggle" onclick="toggleVisits(this)" style="display:flex;align-items:center;gap:4px;">
+      <button class="mkr-btn" id="btnCvrToggle" onclick="toggleCvr(this)" style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#8878d0;"></span>CVR</button>
+      <button class="mkr-btn active" id="btnVisitsToggle" onclick="toggleVisits(this)" style="display:flex;align-items:center;gap:4px;">
         <span style="font-size:12px;font-weight:700;line-height:1;color:#6aadd5;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#6aadd5;"></span>Visits
       </button>
       <button class="mkr-btn" id="btnAdSpendToggle" onclick="toggleAdSpend(this)" style="display:flex;align-items:center;gap:4px;">
@@ -1111,7 +1111,7 @@ function saveEventsToStorage() {
 // ─── STATE ────────────────────────────────────────────────────────────────────
 const USD_TO_KRW = 1500; // 환율 기준: 1 USD = 1,500 KRW (수동 업데이트)
 
-let selMonths = new Set(), selWeeks = new Set(), selCats = new Set(), selSkus = new Set(), selEvType = new Set();
+let selMonths = new Set(), selWeeks = new Set(), selCats = new Set(), selSkus = new Set(), selEvType = new Set(['KOL']);
 
 // ─── ADS STATE ────────────────────────────────────────────────────────────────
 const ADS_RAW = [];
@@ -1450,10 +1450,10 @@ window.setTtChartType = function(btn, type) {
 };
 let selSalesTypes = new Set(['com']); // multi-select set
 let showMarkers = false;
-let showVisits   = false;
+let showVisits   = true;
 let showAdSpend  = false;
 let showRoas     = false;
-let showCvr      = true;
+let showCvr      = false;
 let mainPeriod   = 'daily';
 
 window.toggleMarkers = function(btn) {
@@ -3599,6 +3599,14 @@ buildWeekOptions();
 buildCatOptions();
 rebuildSkuOptions();
 buildEvTypeOptions();
+// KOL 기본 선택
+(function(){
+  var kolCb = document.querySelector('#ddPanel-evtype input[value="KOL"]');
+  if (kolCb) { kolCb.checked = true; }
+  document.getElementById('chk-evtype-all').checked = false;
+  if (typeof updateLabel === 'function') updateLabel('evtype');
+  if (typeof renderEventList === 'function') renderEventList();
+})();
 renderTypeLegend();
 renderEventList();
 refresh();
