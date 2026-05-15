@@ -36,23 +36,6 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 
 /* Filters */
 .filter-row{padding:12px 28px 0;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;}
-/* 채널 용어 정의 툴팁 */
-.ch-def-wrap{position:relative;margin-left:auto;align-self:flex-end;padding-bottom:2px;}
-.ch-def-btn{display:flex;align-items:center;gap:5px;padding:4px 10px;background:#fff;border:0.5px solid #D8D8DC;border-radius:6px;cursor:default;font-size:11px;color:#555;white-space:nowrap;user-select:none;}
-.ch-def-btn:hover{border-color:#aaa;color:#333;}
-.ch-def-btn .ch-def-icon{width:14px;height:14px;border-radius:50%;background:#888;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.ch-def-panel{display:none;position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:0.5px solid #D8D8DC;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.13);z-index:900;width:680px;max-height:480px;overflow-y:auto;}
-.ch-def-wrap:hover .ch-def-panel{display:block;}
-.ch-def-tbl{width:100%;border-collapse:collapse;font-size:11px;}
-.ch-def-tbl thead tr{background:#F5F5F8;}
-.ch-def-tbl th{padding:8px 12px;text-align:left;font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#888;border-bottom:1px solid #EBEBEF;white-space:nowrap;}
-.ch-def-tbl td{padding:7px 12px;border-bottom:0.5px solid #F0F0F4;color:#444;line-height:1.5;vertical-align:top;}
-.ch-def-tbl td:first-child{font-weight:600;color:#1D2847;white-space:nowrap;width:130px;}
-.ch-def-tbl td:nth-child(2){color:#555;}
-.ch-def-tbl td:nth-child(3){color:#888;font-size:10px;}
-.ch-def-tbl tr:last-child td{border-bottom:none;}
-.ch-def-tbl tr:hover td{background:#F8F8FB;}
-.ch-def-ref{color:#e05b5b;font-weight:700;}
 .filter-block{display:flex;flex-direction:column;gap:4px;}
 .filter-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;}
 .dd-wrap{position:relative;user-select:none;}
@@ -646,32 +629,6 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <div class="dd-panel" id="ddPanel-chChan" style="min-width:220px;">
         <div class="dd-all" onclick="clearChFilter('chChan')"><input type="checkbox" id="chk-chChan-all" checked readonly> ALL</div>
       </div>
-    </div>
-  <div class="ch-def-wrap">
-    <div class="ch-def-btn">
-      <span class="ch-def-icon">i</span>채널별 용어 정의
-    </div>
-    <div class="ch-def-panel">
-      <table class="ch-def-tbl">
-        <thead><tr><th>채널</th><th>정의 (한글 번역)</th><th>실제 마케팅 유입 예시</th></tr></thead>
-        <tbody>
-          <tr><td>Direct</td><td>사용자가 직접 "Sephora"를 검색창에 입력하거나, 즐겨찾기 클릭, 또는 앱을 직접 열어서 유입된 경우</td><td>고객이 세포라 앱을 켜서 검색창에 우리 브랜드명을 검색해 유입</td></tr>
-          <tr><td>Organic Search</td><td>Google, Bing 등 검색엔진의 자연 검색 결과(광고 제외)를 통해 유입</td><td>구글에서 '비건 립스틱' 검색 후 광고가 아닌 세포라 내 상품 링크 클릭</td></tr>
-          <tr><td>Internal Referrer</td><td>30분 이상 비활성 후 세포라 사이트 내부에서 새 세션이 시작된 경우 (내부 트래픽)</td><td>상품 페이지를 탐색하던 중 로그아웃했다가 다시 새로고침하여 활성화함</td></tr>
-          <tr><td>Affiliate</td><td>Rakuten 등 제휴 파트너 사이트에 노출된 세포라 브랜드 배너/링크 클릭</td><td>제휴 캐시백 사이트나 제휴 블로그의 세포라 배너를 통해 유입</td></tr>
-          <tr><td>Organic Social</td><td>TikTok, Instagram 등 소셜 채널에서 세포라 또는 브랜드 계정이 운영한 링크를 클릭한 경우 (브랜드 광고 포함)</td><td>우리 브랜드 공식 인스타/틱톡 광고나 프로필 링크를 통한 유입</td></tr>
-          <tr><td class="ch-def-ref">Referrer</td><td><b>외부 사이트(예: brand.com)</b>에서 세포라 링크 클릭 또는 SMN을 통하지 않은 브랜드 주도 유료 광고 클릭</td><td>브랜드 자사몰 내 '세포라에서 구매하기' 버튼이나 브랜드가 낸 기사·광고를 통한 유입</td></tr>
-          <tr><td>Paid Search</td><td>검색 결과 페이지에서 Sephora 브랜드의 유료 광고 클릭</td><td>세포라가 구글에 비용을 지불한 '수분크림' 키워드로 세포라 신제품 노출</td></tr>
-          <tr><td>Paid Social</td><td>세포라가 예산을 집행한 상시(Evergreen) 소셜 광고 클릭</td><td>세포라 공식 계정이 예산을 써서 우리 제품을 소셜 광고로 돌린 경우</td></tr>
-          <tr><td>Display</td><td>세포라가 운영하는 리타겟팅/프로스펙팅 디스플레이 광고 클릭</td><td>고객이 본 우리 상품이 다른 웹사이트 배너 광고로 따라다녀 클릭 유입</td></tr>
-          <tr><td>Brand Media</td><td>세포라가 예산을 집행한 상단 퍼블 광고(TOFU), 멀티 브랜드 캠페인(MBC), 외부 매체 광고 클릭</td><td>세포라 메인 홈 최상단 배너나 세포라 주도의 대규모 외부 매체 캠페인</td></tr>
-          <tr><td>Push</td><td>세포라가 발송한 앱 푸시 알림 내 링크 클릭을 통해 유입</td><td>세포라 앱에서 "딘독 특가" 알림을 보내 우리 상품 상세 페이지로 연결</td></tr>
-          <tr><td>Web Push</td><td>데스크톱 브라우저에 뜨는 세포라 웹 푸시 알림 클릭을 통해 유입</td><td>PC 사용 중 우측 하단에 뜬 세포라 알림 클릭 유입</td></tr>
-          <tr><td>SMS</td><td>세포라가 발송한 문자메시지 내 링크 클릭을 통해 유입</td><td>세포라가 회원들에게 보낸 세일 정보 문자의 링크 클릭</td></tr>
-          <tr><td>Email</td><td>세포라가 발송한 이메일 내 링크 클릭을 통해 유입</td><td>세포라 뉴스레터 '이달의 추천템'에 우리 제품이 실려 유입</td></tr>
-          <tr><td>Other Campaigns</td><td>다른 어떤 채널에도 명확히 속하지 않는 기타 트래픽</td><td>추적 코드가 누락되거나 시스템상 분류되지 않은 기타 유입</td></tr>
-        </tbody>
-      </table>
     </div>
   </div>
 </div>
