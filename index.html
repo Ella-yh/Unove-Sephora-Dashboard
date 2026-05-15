@@ -1591,6 +1591,9 @@ function buildMonthOptions() {
     Object.keys(SALES_BY_DATE).map(k => k.slice(5,7))
   )].sort();
 
+  // 현재 월 (2자리 문자열, ex: '05')
+  const curMM = String(new Date().getMonth() + 1).padStart(2, '0');
+
   months.forEach(mm => {
     const lbl = document.createElement('label');
     lbl.className = 'dd-opt';
@@ -1602,6 +1605,15 @@ function buildMonthOptions() {
       updateLabel('month'); refresh();
     });
   });
+
+  // 현재 월이 데이터에 있으면 자동 선택
+  if (months.includes(curMM)) {
+    selMonths.add(curMM);
+    const curCb = panel.querySelector('input[value="' + curMM + '"]');
+    if (curCb) curCb.checked = true;
+    document.getElementById('chk-month-all').checked = false;
+    updateLabel('month');
+  }
 }
 
 // Bind month checkboxes (fallback for static ones)
@@ -3819,6 +3831,23 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     RAW_SALES.forEach(r => { SALES_BY_DATE[r.date] = { total: r.total || 0, com: r.com || 0, bam: r.bam || 0 }; });
     ADS_RAW.length = 0;
     if (Array.isArray(data.ads)) data.ads.forEach(r => ADS_RAW.push(r));
+
+    // ── ADS_RAW objective 분포 디버그 (콘솔 확인용) ──
+    (function() {
+      var dist = {};
+      ADS_RAW.forEach(function(r) {
+        var key = (r.media || '?') + ' | ' + (r.objective || '?');
+        dist[key] = (dist[key] || 0) + 1;
+      });
+      console.group('%c[ADS_RAW] 매체별 objective 분포', 'color:#e8c84a;font-weight:bold');
+      Object.keys(dist).sort().forEach(function(k) {
+        var spend = ADS_RAW.filter(function(r){ return (r.media+'|'+r.objective) === k.replace(' | ','|'); })
+                           .reduce(function(s,r){ return s + (r.spend||0); }, 0);
+        console.log(k, '→ 행수:', dist[k], '/ 총광고비:', Math.round(spend).toLocaleString()+'원');
+      });
+      console.groupEnd();
+    })();
+
     KOL_RAW.length = 0;
     if (Array.isArray(data.kol)) data.kol.filter(r => r.date && r.date.startsWith('2026')).forEach(r => KOL_RAW.push(r));
 
