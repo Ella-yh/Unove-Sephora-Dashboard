@@ -80,6 +80,26 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .ads-p-btn{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border:0.5px solid #D8D8DC;background:#fff;color:#9ca3af;cursor:pointer;border-radius:3px;transition:all .15s;}
 .ads-p-btn:hover{border-color:#1D2847;color:#1D2847;}
 .ads-p-btn.active{background:#1D2847;border-color:#1D2847;color:#fff;}
+/* Chart-level filter dropdown */
+.chart-filter-strip{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px;}
+.cfd{display:flex;flex-direction:column;gap:4px;}
+.cfd-lbl{font-size:10px;font-weight:500;color:#aaa;letter-spacing:0;}
+.cfd-wrap{position:relative;user-select:none;}
+.cfd-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 10px;background:#fff;border:0.5px solid #E0E0E4;border-radius:6px;cursor:pointer;font-size:11px;color:#555;white-space:nowrap;min-width:72px;}
+.cfd-btn:hover{border-color:#aaa;color:#333;}
+.cfd-btn.cfd-open .cfd-arr{transform:rotate(180deg);}
+.cfd-arr{font-size:9px;color:#aaa;transition:transform .15s;}
+.cfd-panel{display:none;position:absolute;top:calc(100% + 3px);left:0;background:#fff;border:0.5px solid #E0E0E4;border-radius:8px;z-index:400;min-width:130px;box-shadow:0 4px 16px rgba(0,0,0,.08);max-height:220px;overflow-y:auto;}
+.cfd-panel.show{display:block;}
+.cfd-all{padding:7px 12px;font-size:11px;font-weight:500;cursor:pointer;color:#555;border-bottom:1px solid #EBEBEF;display:flex;align-items:center;gap:8px;}
+.cfd-all:hover{background:#F5F5F8;}
+.cfd-opt{padding:5px 12px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:8px;color:#555;white-space:nowrap;}
+.cfd-opt:hover{background:#F5F5F8;}
+.cfd-opt input[type=checkbox]{accent-color:#1D2847;width:12px;height:12px;cursor:pointer;flex-shrink:0;}
+.cfd-sep{width:0.5px;height:24px;background:#EBEBEF;margin:0 2px;align-self:flex-end;margin-bottom:6px;}
+/* Chart section title */
+.chart-sec-title{font-size:12px;font-weight:500;color:#444;margin-bottom:1px;}
+.chart-sec-sub{font-size:10px;color:#aaa;margin-bottom:12px;}
 
 /* Event section */
 .ev-sec{padding:0 28px 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -683,8 +703,6 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 
 <!-- 필터 바 -->
 <div class="filter-row" style="padding:14px 28px 0;gap:16px;flex-wrap:wrap;align-items:center;">
-
-  <!-- 매출 타입 -->
   <div class="filter-block">
     <div class="filter-lbl">매출 타입</div>
     <div style="display:flex;gap:4px;">
@@ -693,8 +711,6 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <button class="stgl"        data-ads-sales="bam"   onclick="setAdsSales(this)">B&M</button>
     </div>
   </div>
-
-  <!-- 퍼포먼스 지표 -->
   <div class="filter-block">
     <div class="filter-lbl">퍼포먼스 지표</div>
     <div style="display:flex;gap:4px;">
@@ -703,66 +719,137 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <button class="stgl"        data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭수</button>
     </div>
   </div>
-
-  <!-- 광고 매체 -->
-  <div class="filter-block">
-    <div class="filter-lbl">광고 매체</div>
-    <div style="display:flex;gap:4px;" id="adsMediaBtns">
-      <button class="stgl active" data-ads-media="meta"   onclick="toggleAdsMedia(this)">Meta</button>
-      <button class="stgl active" data-ads-media="tiktok" onclick="toggleAdsMedia(this)">TikTok</button>
-      <button class="stgl active" data-ads-media="gsa"    onclick="toggleAdsMedia(this)">GSA</button>
-    </div>
-  </div>
-
-  <!-- 기간 드롭다운 -->
-  <div class="filter-block">
-    <div class="filter-lbl">기간</div>
-    <div class="dd-wrap" id="ddWrap-adsPeriod">
-      <div class="dd-btn" id="ddBtn-adsPeriod" onclick="toggleAdsDD()"><span id="ddLabel-adsPeriod">주 · ALL</span><span class="arr">▾</span></div>
-      <div class="dd-panel" id="ddPanel-adsPeriod" style="min-width:180px;">
-        <div style="display:flex;border-bottom:1px solid #eee;padding:4px 8px;gap:4px;">
-          <button id="adsDD-tab-monthly" class="ads-p-btn" onclick="setAdsDDTab('monthly')">월</button>
-          <button id="adsDD-tab-weekly"  class="ads-p-btn active" onclick="setAdsDDTab('weekly')">주</button>
-          <button id="adsDD-tab-daily"   class="ads-p-btn" onclick="setAdsDDTab('daily')">일</button>
-        </div>
-        <div class="dd-all" onclick="clearAdsPeriodDD()"><input type="checkbox" id="chk-adsPeriod-all" checked readonly> ALL</div>
-        <div id="ddPanel-adsPeriod-opts"></div>
-      </div>
-    </div>
-  </div>
-
 </div>
 
 <!-- Chart 1: 전체 퍼포먼스 -->
 <div class="chart-sec">
-  <div class="sec-hdr">퍼포먼스 / 세포라 매출 / 세포라 유입</div>
-  <div class="chart-card" style="position:relative;">
-    <div style="position:absolute;top:10px;right:14px;display:flex;gap:3px;z-index:2;"><button class="ads-p-btn" data-chart="1" data-period="monthly" onclick="setChartPeriod(1,this,'monthly')">월</button><button class="ads-p-btn active" data-chart="1" data-period="weekly" onclick="setChartPeriod(1,this,'weekly')">주</button><button class="ads-p-btn" data-chart="1" data-period="daily" onclick="setChartPeriod(1,this,'daily')">일</button></div>
-    <div style="position:absolute;top:10px;left:14px;display:flex;gap:3px;z-index:2;"><button class="mkr-btn active" id="btnSales1" onclick="toggleChartSales(1,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:2px 6px;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#d97070;"></span>매출</button><button class="mkr-btn active" id="btnVisits1" onclick="toggleChartVisits(1,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:2px 6px;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#5dcaa5;"></span>유입</button></div>
-    <div class="leg-row" id="adsChart1Leg" style="flex-wrap:wrap;gap:8px;margin-bottom:8px;padding-left:110px;padding-right:90px;"></div>
+  <div class="chart-sec-title">퍼포먼스 통합</div>
+  <div class="chart-sec-sub">광고비 · 세포라 매출 · 세포라 유입</div>
+  <div class="chart-filter-strip">
+  <div class="cfd">
+    <span class="cfd-lbl">매체</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-media" onclick="toggleCFD('media')"><span id="cfdLabel-media">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-media">
+        <div class="cfd-all" onclick="clearCFDMedia()"><input type="checkbox" id="chk-media-all" checked> ALL</div>
+        <label class="cfd-opt"><input type="checkbox" value="meta" checked onchange="onCFDMedia(this,'meta')"> Meta</label>
+        <label class="cfd-opt"><input type="checkbox" value="tiktok" checked onchange="onCFDMedia(this,'tiktok')"> TikTok</label>
+        <label class="cfd-opt"><input type="checkbox" value="gsa" checked onchange="onCFDMedia(this,'gsa')"> GSA</label>
+      </div>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">월</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-month1" onclick="toggleCFD('month1')"><span id="cfdLabel-month1">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-month1">
+        <div class="cfd-all" onclick="clearCFDMonth()"><input type="checkbox" id="chk-month1-all" checked> ALL</div>
+        <div id="cfdPanel-month1-opts"></div>
+      </div>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">주차</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-week1" onclick="toggleCFD('week1')"><span id="cfdLabel-week1">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-week1">
+        <div class="cfd-all" onclick="clearCFDWeek()"><input type="checkbox" id="chk-week1-all" checked> ALL</div>
+        <div id="cfdPanel-week1-opts"></div>
+      </div>
+    </div>
+  </div>
+  <div class="cfd-sep"></div>
+  <div class="cfd">
+    <span class="cfd-lbl">주기</span>
+    <div style="display:flex;gap:3px;">
+      <button class="ads-p-btn" data-chart="1" data-period="monthly" onclick="setChartPeriod(1,this,'monthly')">월</button>
+      <button class="ads-p-btn active" data-chart="1" data-period="weekly" onclick="setChartPeriod(1,this,'weekly')">주</button>
+      <button class="ads-p-btn" data-chart="1" data-period="daily" onclick="setChartPeriod(1,this,'daily')">일</button>
+    </div>
+  </div>
+  <div class="cfd-sep"></div>
+  <div class="cfd">
+    <span class="cfd-lbl">표시</span>
+    <div style="display:flex;gap:3px;">
+      <button class="mkr-btn active" id="btnSales1" onclick="toggleChartSales(1,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:3px 7px;"><span style="width:6px;height:6px;border-radius:50%;background:#d97070;display:inline-block;"></span>매출</button>
+      <button class="mkr-btn active" id="btnVisits1" onclick="toggleChartVisits(1,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:3px 7px;"><span style="width:6px;height:6px;border-radius:50%;background:#5dcaa5;display:inline-block;"></span>유입</button>
+    </div>
+  </div>
+  </div>
+  <div class="chart-card">
+    <div class="leg-row" id="adsChart1Leg" style="flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
     <div class="chart-wrap" style="height:300px;"><canvas id="adsChart1"></canvas></div>
-    <div class="chart-note">* 좌축: 퍼포먼스 지표, 우축(빨강): 세포라 매출(₩), 우축(파랑): 세포라 유입</div>
+    <div class="chart-note">좌축: 광고비  /  우축: 매출(₩) · 유입</div>
   </div>
 </div>
 
 <!-- Chart 2: Meta 캠페인 목표별 -->
 <div class="chart-sec">
-  <div class="sec-hdr">Meta — 캠페인 목표별 퍼포먼스 / 세포라 매출 / 세포라 유입</div>
-  <div class="chart-card" style="position:relative;">
-    <div style="position:absolute;top:10px;right:14px;display:flex;gap:3px;z-index:2;"><button class="ads-p-btn" data-chart="2" data-period="monthly" onclick="setChartPeriod(2,this,'monthly')">월</button><button class="ads-p-btn active" data-chart="2" data-period="weekly" onclick="setChartPeriod(2,this,'weekly')">주</button><button class="ads-p-btn" data-chart="2" data-period="daily" onclick="setChartPeriod(2,this,'daily')">일</button></div>
-    <div style="position:absolute;top:10px;left:14px;display:flex;gap:3px;z-index:2;"><button class="mkr-btn active" id="btnSales2" onclick="toggleChartSales(2,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:2px 6px;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#d97070;"></span>매출</button><button class="mkr-btn active" id="btnVisits2" onclick="toggleChartVisits(2,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:2px 6px;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#5dcaa5;"></span>유입</button></div>
-    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:8px;padding-right:90px;padding-left:110px;">
-      <span style="font-size:9px;font-weight:700;color:#999;letter-spacing:1px;text-transform:uppercase;min-width:36px;">캠페인</span>
-      <button class="ads-p-btn active" data-meta-obj="전환(구매)" onclick="toggleMetaCamp(this)">전환(구매)</button>
-      <button class="ads-p-btn active" data-meta-obj="전환(장바구니)" onclick="toggleMetaCamp(this)">전환(장바구니)</button>
-      <button class="ads-p-btn active" data-meta-obj="트래픽(lpv)" onclick="toggleMetaCamp(this)">트래픽(lpv)</button>
-      <button class="ads-p-btn active" data-meta-obj="트래픽(click)" onclick="toggleMetaCamp(this)">트래픽(click)</button>
-      <button class="ads-p-btn active" data-meta-obj="조회" onclick="toggleMetaCamp(this)">조회</button>
-      <div style="display:flex;gap:3px;margin-left:8px;">
-        <button class="ads-p-btn active" data-meta-type="bar" onclick="setMetaChartType(this,'bar')">Bar</button>
-        <button class="ads-p-btn" data-meta-type="line" onclick="setMetaChartType(this,'line')">Line</button>
+  <div class="chart-sec-title">Meta</div>
+  <div class="chart-sec-sub">캠페인 목표별 퍼포먼스 · 세포라 매출 · 유입</div>
+  <div class="chart-filter-strip">
+  <div class="cfd">
+    <span class="cfd-lbl">월</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-month2" onclick="toggleCFD('month2')"><span id="cfdLabel-month2">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-month2">
+        <div class="cfd-all" onclick="clearCFDMonth()"><input type="checkbox" id="chk-month2-all" checked> ALL</div>
+        <div id="cfdPanel-month2-opts"></div>
       </div>
     </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">주차</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-week2" onclick="toggleCFD('week2')"><span id="cfdLabel-week2">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-week2">
+        <div class="cfd-all" onclick="clearCFDWeek()"><input type="checkbox" id="chk-week2-all" checked> ALL</div>
+        <div id="cfdPanel-week2-opts"></div>
+      </div>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">캠페인 목표</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-metaCamp" onclick="toggleCFD('metaCamp')"><span id="cfdLabel-metaCamp">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-metaCamp">
+        <div class="cfd-all" onclick="clearCFDMetaCamp()"><input type="checkbox" id="chk-metaCamp-all" checked> ALL</div>
+        <div id="cfdPanel-metaCamp-opts">
+          <label class="cfd-opt"><input type="checkbox" value="전환(구매)" checked onchange="onCFDMetaCamp(this,'전환(구매)')"> 전환(구매)</label>
+          <label class="cfd-opt"><input type="checkbox" value="전환(장바구니)" checked onchange="onCFDMetaCamp(this,'전환(장바구니)')"> 전환(장바구니)</label>
+          <label class="cfd-opt"><input type="checkbox" value="트래픽(lpv)" checked onchange="onCFDMetaCamp(this,'트래픽(lpv)')"> 트래픽(lpv)</label>
+          <label class="cfd-opt"><input type="checkbox" value="트래픽(click)" checked onchange="onCFDMetaCamp(this,'트래픽(click)')"> 트래픽(click)</label>
+          <label class="cfd-opt"><input type="checkbox" value="조회" checked onchange="onCFDMetaCamp(this,'조회')"> 조회</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">차트 형식</span>
+    <div style="display:flex;gap:3px;">
+      <button class="ads-p-btn active" data-meta-type="bar" onclick="setMetaChartType(this,'bar')">Bar</button>
+      <button class="ads-p-btn" data-meta-type="line" onclick="setMetaChartType(this,'line')">Line</button>
+    </div>
+  </div>
+  <div class="cfd-sep"></div>
+  <div class="cfd">
+    <span class="cfd-lbl">주기</span>
+    <div style="display:flex;gap:3px;">
+      <button class="ads-p-btn" data-chart="2" data-period="monthly" onclick="setChartPeriod(2,this,'monthly')">월</button>
+      <button class="ads-p-btn active" data-chart="2" data-period="weekly" onclick="setChartPeriod(2,this,'weekly')">주</button>
+      <button class="ads-p-btn" data-chart="2" data-period="daily" onclick="setChartPeriod(2,this,'daily')">일</button>
+    </div>
+  </div>
+  <div class="cfd-sep"></div>
+  <div class="cfd">
+    <span class="cfd-lbl">표시</span>
+    <div style="display:flex;gap:3px;">
+      <button class="mkr-btn active" id="btnSales2" onclick="toggleChartSales(2,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:3px 7px;"><span style="width:6px;height:6px;border-radius:50%;background:#d97070;display:inline-block;"></span>매출</button>
+      <button class="mkr-btn active" id="btnVisits2" onclick="toggleChartVisits(2,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:3px 7px;"><span style="width:6px;height:6px;border-radius:50%;background:#5dcaa5;display:inline-block;"></span>유입</button>
+    </div>
+  </div>
+  </div>
+  <div class="chart-card">
     <div class="leg-row" id="adsChart2Leg" style="flex-wrap:wrap;gap:10px;margin-bottom:10px;"></div>
     <div class="chart-wrap" style="height:300px;"><canvas id="adsChart2"></canvas></div>
   </div>
@@ -770,19 +857,68 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 
 <!-- Chart 3: TikTok 캠페인 목표별 -->
 <div class="chart-sec" style="padding-bottom:28px;">
-  <div class="sec-hdr">TikTok — 캠페인 목표별 퍼포먼스 / 세포라 매출 / 세포라 유입</div>
-  <div class="chart-card" style="position:relative;">
-    <div style="position:absolute;top:10px;right:14px;display:flex;gap:3px;z-index:2;"><button class="ads-p-btn" data-chart="3" data-period="monthly" onclick="setChartPeriod(3,this,'monthly')">월</button><button class="ads-p-btn active" data-chart="3" data-period="weekly" onclick="setChartPeriod(3,this,'weekly')">주</button><button class="ads-p-btn" data-chart="3" data-period="daily" onclick="setChartPeriod(3,this,'daily')">일</button></div>
-    <div style="position:absolute;top:10px;left:14px;display:flex;gap:3px;z-index:2;"><button class="mkr-btn active" id="btnSales3" onclick="toggleChartSales(3,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:2px 6px;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#d97070;"></span>매출</button><button class="mkr-btn active" id="btnVisits3" onclick="toggleChartVisits(3,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:2px 6px;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#5dcaa5;"></span>유입</button></div>
-    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:8px;padding-right:90px;padding-left:110px;">
-      <span style="font-size:9px;font-weight:700;color:#999;letter-spacing:1px;text-transform:uppercase;min-width:36px;">캠페인</span>
-      <button class="ads-p-btn active" data-tt-obj="검색" onclick="toggleTtCamp(this)">검색</button>
-      <button class="ads-p-btn active" data-tt-obj="조회" onclick="toggleTtCamp(this)">조회</button>
-      <div style="display:flex;gap:3px;margin-left:8px;">
-        <button class="ads-p-btn active" data-tt-type="bar" onclick="setTtChartType(this,'bar')">Bar</button>
-        <button class="ads-p-btn" data-tt-type="line" onclick="setTtChartType(this,'line')">Line</button>
+  <div class="chart-sec-title">TikTok</div>
+  <div class="chart-sec-sub">캠페인 목표별 퍼포먼스 · 세포라 매출 · 유입</div>
+  <div class="chart-filter-strip">
+  <div class="cfd">
+    <span class="cfd-lbl">월</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-month3" onclick="toggleCFD('month3')"><span id="cfdLabel-month3">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-month3">
+        <div class="cfd-all" onclick="clearCFDMonth()"><input type="checkbox" id="chk-month3-all" checked> ALL</div>
+        <div id="cfdPanel-month3-opts"></div>
       </div>
     </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">주차</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-week3" onclick="toggleCFD('week3')"><span id="cfdLabel-week3">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-week3">
+        <div class="cfd-all" onclick="clearCFDWeek()"><input type="checkbox" id="chk-week3-all" checked> ALL</div>
+        <div id="cfdPanel-week3-opts"></div>
+      </div>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">캠페인 목표</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-ttCamp" onclick="toggleCFD('ttCamp')"><span id="cfdLabel-ttCamp">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-ttCamp">
+        <div class="cfd-all" onclick="clearCFDTtCamp()"><input type="checkbox" id="chk-ttCamp-all" checked> ALL</div>
+        <div id="cfdPanel-ttCamp-opts">
+          <label class="cfd-opt"><input type="checkbox" value="검색" checked onchange="onCFDTtCamp(this,'검색')"> 검색</label>
+          <label class="cfd-opt"><input type="checkbox" value="조회" checked onchange="onCFDTtCamp(this,'조회')"> 조회</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">차트 형식</span>
+    <div style="display:flex;gap:3px;">
+      <button class="ads-p-btn active" data-tt-type="bar" onclick="setTtChartType(this,'bar')">Bar</button>
+      <button class="ads-p-btn" data-tt-type="line" onclick="setTtChartType(this,'line')">Line</button>
+    </div>
+  </div>
+  <div class="cfd-sep"></div>
+  <div class="cfd">
+    <span class="cfd-lbl">주기</span>
+    <div style="display:flex;gap:3px;">
+      <button class="ads-p-btn" data-chart="3" data-period="monthly" onclick="setChartPeriod(3,this,'monthly')">월</button>
+      <button class="ads-p-btn active" data-chart="3" data-period="weekly" onclick="setChartPeriod(3,this,'weekly')">주</button>
+      <button class="ads-p-btn" data-chart="3" data-period="daily" onclick="setChartPeriod(3,this,'daily')">일</button>
+    </div>
+  </div>
+  <div class="cfd-sep"></div>
+  <div class="cfd">
+    <span class="cfd-lbl">표시</span>
+    <div style="display:flex;gap:3px;">
+      <button class="mkr-btn active" id="btnSales3" onclick="toggleChartSales(3,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:3px 7px;"><span style="width:6px;height:6px;border-radius:50%;background:#d97070;display:inline-block;"></span>매출</button>
+      <button class="mkr-btn active" id="btnVisits3" onclick="toggleChartVisits(3,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:3px 7px;"><span style="width:6px;height:6px;border-radius:50%;background:#5dcaa5;display:inline-block;"></span>유입</button>
+    </div>
+  </div>
+  </div>
+  <div class="chart-card">
     <div class="leg-row" id="adsChart3Leg" style="flex-wrap:wrap;gap:10px;margin-bottom:10px;"></div>
     <div class="chart-wrap" style="height:300px;"><canvas id="adsChart3"></canvas></div>
   </div>
@@ -1145,6 +1281,149 @@ window.toggleTtCamp = function(btn) {
   var obj = btn.getAttribute('data-tt-obj');
   if (ttActiveCampaigns.has(obj)) { ttActiveCampaigns.delete(obj); btn.classList.remove('active'); }
   else { ttActiveCampaigns.add(obj); btn.classList.add('active'); }
+  refreshAdsChart(3);
+};
+// ── Chart Filter Dropdown (CFD) ────────────────────────────────
+window.toggleCFD = function(id) {
+  var panel = document.getElementById('cfdPanel-' + id);
+  var btn   = document.getElementById('cfdBtn-'   + id);
+  if (!panel || !btn) return;
+  var isOpen = panel.classList.contains('show');
+  document.querySelectorAll('.cfd-panel.show').forEach(function(p){ p.classList.remove('show'); });
+  document.querySelectorAll('.cfd-btn.cfd-open').forEach(function(b){ b.classList.remove('cfd-open'); });
+  document.querySelectorAll('.dd-panel.show').forEach(function(p){ p.classList.remove('show'); });
+  document.querySelectorAll('.dd-btn.open').forEach(function(b){ b.classList.remove('open'); });
+  if (!isOpen) {
+    panel.classList.add('show'); btn.classList.add('cfd-open');
+    if (id.indexOf('month') === 0) buildCFDMonthOpts(id.slice(-1));
+    else if (id.indexOf('week')  === 0) buildCFDWeekOpts(id.slice(-1));
+  }
+};
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.cfd-wrap') && !e.target.closest('.dd-wrap')) {
+    document.querySelectorAll('.cfd-panel.show').forEach(function(p){ p.classList.remove('show'); });
+    document.querySelectorAll('.cfd-btn.cfd-open').forEach(function(b){ b.classList.remove('cfd-open'); });
+  }
+});
+function buildCFDMonthOpts(n) {
+  var container = document.getElementById('cfdPanel-month' + n + '-opts');
+  if (!container) return;
+  var keys = new Set();
+  ADS_RAW.forEach(function(r){ keys.add(getPeriodKey(r.date,'monthly')); });
+  Object.keys(SALES_BY_DATE).forEach(function(d){ keys.add(getPeriodKey(d,'monthly')); });
+  var sorted = Array.from(keys).sort();
+  var isM = (adsGlobalPeriod2 === 'monthly');
+  container.innerHTML = sorted.map(function(k){
+    var label = parseInt(k.split('-')[1]) + '월';
+    var chk = (isM && adsSelectedRange.size > 0 && adsSelectedRange.has(k)) ? ' checked' : '';
+    return '<label class="cfd-opt"><input type="checkbox" value="' + k + '"' + chk + ' onchange="onCFDMonth(this,\'' + k + '\')"> ' + label + '</label>';
+  }).join('');
+}
+function buildCFDWeekOpts(n) {
+  var container = document.getElementById('cfdPanel-week' + n + '-opts');
+  if (!container) return;
+  var keys = new Set();
+  ADS_RAW.forEach(function(r){ keys.add(getPeriodKey(r.date,'weekly')); });
+  Object.keys(SALES_BY_DATE).forEach(function(d){ keys.add(getPeriodKey(d,'weekly')); });
+  var sorted = Array.from(keys).sort();
+  var isW = (adsGlobalPeriod2 === 'weekly');
+  container.innerHTML = sorted.map(function(k){
+    var label = fmtPeriodLabel(k,'weekly');
+    var chk = (isW && adsSelectedRange.size > 0 && adsSelectedRange.has(k)) ? ' checked' : '';
+    return '<label class="cfd-opt"><input type="checkbox" value="' + k + '"' + chk + ' onchange="onCFDWeek(this,\'' + k + '\')"> ' + label + '</label>';
+  }).join('');
+}
+window.onCFDMonth = function(chk, k) {
+  if (adsGlobalPeriod2 !== 'monthly') { adsGlobalPeriod2 = 'monthly'; adsSelectedRange = new Set(); }
+  if (chk.checked) adsSelectedRange.add(k); else adsSelectedRange.delete(k);
+  if (adsSelectedRange.size === 0) { [1,2,3].forEach(function(n){ var a=document.getElementById('chk-month'+n+'-all'); if(a)a.checked=true; }); }
+  else { [1,2,3].forEach(function(n){ var a=document.getElementById('chk-month'+n+'-all'); if(a)a.checked=false; }); }
+  syncCFDLabels(); refreshAds();
+};
+window.onCFDWeek = function(chk, k) {
+  if (adsGlobalPeriod2 !== 'weekly') { adsGlobalPeriod2 = 'weekly'; adsSelectedRange = new Set(); }
+  if (chk.checked) adsSelectedRange.add(k); else adsSelectedRange.delete(k);
+  if (adsSelectedRange.size === 0) { [1,2,3].forEach(function(n){ var a=document.getElementById('chk-week'+n+'-all'); if(a)a.checked=true; }); }
+  else { [1,2,3].forEach(function(n){ var a=document.getElementById('chk-week'+n+'-all'); if(a)a.checked=false; }); }
+  syncCFDLabels(); refreshAds();
+};
+window.clearCFDMonth = function() {
+  adsSelectedRange = new Set();
+  [1,2,3].forEach(function(n){
+    var c = document.getElementById('cfdPanel-month'+n+'-opts'); if(c) c.querySelectorAll('input').forEach(function(i){i.checked=false;});
+    var a = document.getElementById('chk-month'+n+'-all'); if(a) a.checked=true;
+  });
+  syncCFDLabels(); refreshAds();
+};
+window.clearCFDWeek = function() {
+  adsSelectedRange = new Set();
+  [1,2,3].forEach(function(n){
+    var c = document.getElementById('cfdPanel-week'+n+'-opts'); if(c) c.querySelectorAll('input').forEach(function(i){i.checked=false;});
+    var a = document.getElementById('chk-week'+n+'-all'); if(a) a.checked=true;
+  });
+  syncCFDLabels(); refreshAds();
+};
+function syncCFDLabels() {
+  [1,2,3].forEach(function(n) {
+    var mL = document.getElementById('cfdLabel-month'+n);
+    if (mL) {
+      if (adsGlobalPeriod2 !== 'monthly' || adsSelectedRange.size === 0) { mL.textContent = '전체'; }
+      else { var ks=[...adsSelectedRange].sort(); mL.textContent = ks.length>2 ? ks.length+'개' : ks.map(function(k){return parseInt(k.split('-')[1])+'월';}).join(', '); }
+    }
+    var wL = document.getElementById('cfdLabel-week'+n);
+    if (wL) {
+      if (adsGlobalPeriod2 !== 'weekly' || adsSelectedRange.size === 0) { wL.textContent = '전체'; }
+      else { var ks=[...adsSelectedRange].sort(); wL.textContent = ks.length>2 ? ks.length+'개' : ks.map(function(k){return fmtPeriodLabel(k,'weekly');}).join(', '); }
+    }
+  });
+}
+window.onCFDMedia = function(chk, media) {
+  if (chk.checked) selAdsMedia.add(media);
+  else if (selAdsMedia.size > 1) selAdsMedia.delete(media);
+  else { chk.checked = true; return; }
+  var allChk = document.getElementById('chk-media-all');
+  if (allChk) allChk.checked = (selAdsMedia.size === 3);
+  var lbl = document.getElementById('cfdLabel-media');
+  if (lbl) lbl.textContent = selAdsMedia.size === 3 ? '전체' : ['meta','tiktok','gsa'].filter(function(m){return selAdsMedia.has(m);}).map(function(m){return m==='meta'?'Meta':m==='tiktok'?'TikTok':'GSA';}).join(', ');
+  refreshAds();
+};
+window.clearCFDMedia = function() {
+  ['meta','tiktok','gsa'].forEach(function(m){selAdsMedia.add(m);});
+  document.querySelectorAll('#cfdPanel-media label input').forEach(function(c){c.checked=true;});
+  var a=document.getElementById('chk-media-all'); if(a)a.checked=true;
+  var lbl=document.getElementById('cfdLabel-media'); if(lbl)lbl.textContent='전체';
+  refreshAds();
+};
+window.onCFDMetaCamp = function(chk, obj) {
+  if (chk.checked) metaActiveCampaigns.add(obj);
+  else if (metaActiveCampaigns.size > 1) metaActiveCampaigns.delete(obj);
+  else { chk.checked = true; return; }
+  var lbl=document.getElementById('cfdLabel-metaCamp');
+  if (lbl) lbl.textContent = metaActiveCampaigns.size===5 ? '전체' : metaActiveCampaigns.size+'개 선택';
+  var aChk=document.getElementById('chk-metaCamp-all'); if(aChk)aChk.checked=(metaActiveCampaigns.size===5);
+  refreshAdsChart(2);
+};
+window.clearCFDMetaCamp = function() {
+  ['전환(구매)','전환(장바구니)','트래픽(lpv)','트래픽(click)','조회'].forEach(function(o){metaActiveCampaigns.add(o);});
+  document.querySelectorAll('#cfdPanel-metaCamp-opts input').forEach(function(c){c.checked=true;});
+  var a=document.getElementById('chk-metaCamp-all'); if(a)a.checked=true;
+  var lbl=document.getElementById('cfdLabel-metaCamp'); if(lbl)lbl.textContent='전체';
+  refreshAdsChart(2);
+};
+window.onCFDTtCamp = function(chk, obj) {
+  if (chk.checked) ttActiveCampaigns.add(obj);
+  else if (ttActiveCampaigns.size > 1) ttActiveCampaigns.delete(obj);
+  else { chk.checked = true; return; }
+  var lbl=document.getElementById('cfdLabel-ttCamp');
+  if (lbl) lbl.textContent = ttActiveCampaigns.size===2 ? '전체' : ttActiveCampaigns.size+'개 선택';
+  var aChk=document.getElementById('chk-ttCamp-all'); if(aChk)aChk.checked=(ttActiveCampaigns.size===2);
+  refreshAdsChart(3);
+};
+window.clearCFDTtCamp = function() {
+  ['검색','조회'].forEach(function(o){ttActiveCampaigns.add(o);});
+  document.querySelectorAll('#cfdPanel-ttCamp-opts input').forEach(function(c){c.checked=true;});
+  var a=document.getElementById('chk-ttCamp-all'); if(a)a.checked=true;
+  var lbl=document.getElementById('cfdLabel-ttCamp'); if(lbl)lbl.textContent='전체';
   refreshAdsChart(3);
 };
 window.setTtChartType = function(btn, type) {
