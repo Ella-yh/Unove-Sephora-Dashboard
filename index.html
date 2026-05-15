@@ -711,14 +711,6 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <button class="stgl"        data-ads-sales="bam"   onclick="setAdsSales(this)">B&M</button>
     </div>
   </div>
-  <div class="filter-block">
-    <div class="filter-lbl">퍼포먼스 지표</div>
-    <div style="display:flex;gap:4px;">
-      <button class="stgl active" data-ads-metric="spend"       onclick="setAdsMetric(this)">광고비(net)</button>
-      <button class="stgl"        data-ads-metric="impressions" onclick="setAdsMetric(this)">노출수</button>
-      <button class="stgl"        data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭수</button>
-    </div>
-  </div>
 </div>
 
 <!-- Chart 1: 전체 퍼포먼스 -->
@@ -736,6 +728,14 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
         <label class="cfd-opt"><input type="checkbox" value="tiktok" checked onchange="onCFDMedia(this,'tiktok')"> TikTok</label>
         <label class="cfd-opt"><input type="checkbox" value="gsa" checked onchange="onCFDMedia(this,'gsa')"> GSA</label>
       </div>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">지표</span>
+    <div style="display:flex;gap:3px;">
+      <button class="stgl active" data-ads-metric="spend"       onclick="setAdsMetric(this)">광고비</button>
+      <button class="stgl"        data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
+      <button class="stgl"        data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
     </div>
   </div>
   <div class="cfd">
@@ -809,6 +809,14 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     </div>
   </div>
   <div class="cfd">
+    <span class="cfd-lbl">지표</span>
+    <div style="display:flex;gap:3px;">
+      <button class="stgl active" data-ads-metric="spend"       onclick="setAdsMetric(this)">광고비</button>
+      <button class="stgl"        data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
+      <button class="stgl"        data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
+    </div>
+  </div>
+  <div class="cfd">
     <span class="cfd-lbl">캠페인 목표</span>
     <div class="cfd-wrap">
       <div class="cfd-btn" id="cfdBtn-metaCamp" onclick="toggleCFD('metaCamp')"><span id="cfdLabel-metaCamp">전체</span><span class="cfd-arr">▾</span></div>
@@ -878,6 +886,14 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
         <div class="cfd-all" onclick="clearCFDWeek()"><input type="checkbox" id="chk-week3-all" checked> ALL</div>
         <div id="cfdPanel-week3-opts"></div>
       </div>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">지표</span>
+    <div style="display:flex;gap:3px;">
+      <button class="stgl active" data-ads-metric="spend"       onclick="setAdsMetric(this)">광고비</button>
+      <button class="stgl"        data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
+      <button class="stgl"        data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
     </div>
   </div>
   <div class="cfd">
@@ -1122,7 +1138,7 @@ window.setAdsSales = function(btn) {
 };
 window.setAdsMetric = function(btn) {
   selAdsMetric = btn.dataset.adsMetric;
-  document.querySelectorAll('[data-ads-metric]').forEach(b => b.classList.toggle('active', b===btn));
+  document.querySelectorAll('[data-ads-metric]').forEach(b => b.classList.toggle('active', b.dataset.adsMetric === selAdsMetric));
   refreshAds();
 };
 window.toggleAdsMedia = function(btn) {
@@ -4024,7 +4040,7 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
       borderColor: '#e8c84a',
       backgroundColor: 'rgba(232,200,74,0.10)',
       borderWidth: 2.5,
-      pointRadius: 3, pointHoverRadius: 5,
+      pointRadius: 2, pointHoverRadius: 3,
       pointBackgroundColor: '#e8c84a',
       fill: false,
       yAxisID: 'yA', order: 3,
@@ -4037,7 +4053,7 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
     label: getSalesLabel(),
     data: weeks.map(wk => (sepWeekly[wk]?.[salesKey] || 0)),
     type: 'line', borderColor: '#d97070', backgroundColor: 'rgba(217,112,112,0.12)',
-    borderWidth: 2, pointRadius: 3, pointHoverRadius: 5,
+    borderWidth: 2, pointRadius: 2, pointHoverRadius: 3,
     pointBackgroundColor: '#d97070', fill: true,
     yAxisID: 'yS', order: 1, tension: 0.3,
   });
@@ -4047,7 +4063,7 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
     label: '세포라 유입',
     data: weeks.map(wk => (sepWeekly[wk]?.visits || 0)),
     type: 'line', borderColor: '#5dcaa5', backgroundColor: 'rgba(93,202,165,0.12)',
-    borderWidth: 2, pointRadius: 3, pointHoverRadius: 5,
+    borderWidth: 2, pointRadius: 2, pointHoverRadius: 3,
     pointBackgroundColor: '#5dcaa5', fill: true,
     yAxisID: 'yV', order: 2, tension: 0.3,
   });
@@ -4090,16 +4106,12 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
         yA: {
           type:'linear', position:'left', stacked: stacked,
           grid:{color:'rgba(0,0,0,0.05)'},
-          ticks:{ font:{size:9}, color:'#aaa',
-            callback: v => selAdsMetric==='spend' ? (v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v) : (v>=1000?(v/1000).toFixed(0)+'K':v)
-          },
+          ticks:{ display:false },
           title:{ display:false }
         },
         yS: {
           type:'linear', position:'right', display: _showSales, grid:{drawOnChartArea:false},
-          ticks:{ font:{size:9}, color:'#aaa',
-            callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v
-          },
+          ticks:{ display:false },
           title:{ display:false }
         },
         yV: {
@@ -4143,7 +4155,7 @@ function refreshAdsChart(chartNum) {
       cfg2.data.datasets = cfg2.data.datasets.map(function(ds) {
         if (ds.yAxisID !== 'yA') return ds;
         var col = OBJ_COLORS[ds.label] || '#999';
-        return Object.assign({}, ds, {type:'line', borderColor:col, backgroundColor:'transparent', fill:false, borderWidth:2, pointRadius:2.5, pointHoverRadius:4, tension:0.3, stack:undefined});
+        return Object.assign({}, ds, {type:'line', borderColor:col, backgroundColor:'transparent', fill:false, borderWidth:2, pointRadius:1.5, pointHoverRadius:3, tension:0.3, stack:undefined});
       });
       cfg2.options.scales.x.stacked = false;
       cfg2.options.scales.yA.stacked = false;
@@ -4161,7 +4173,7 @@ function refreshAdsChart(chartNum) {
       cfg3.data.datasets = cfg3.data.datasets.map(function(ds) {
         if (ds.yAxisID !== 'yA') return ds;
         var col = OBJ_COLORS[ds.label] || '#999';
-        return Object.assign({}, ds, {type:'line', borderColor:col, backgroundColor:'transparent', fill:false, borderWidth:2, pointRadius:2.5, pointHoverRadius:4, tension:0.3, stack:undefined});
+        return Object.assign({}, ds, {type:'line', borderColor:col, backgroundColor:'transparent', fill:false, borderWidth:2, pointRadius:1.5, pointHoverRadius:3, tension:0.3, stack:undefined});
       });
       cfg3.options.scales.x.stacked = false;
       cfg3.options.scales.yA.stacked = false;
