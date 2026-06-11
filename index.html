@@ -1723,16 +1723,31 @@ const KPI_NOTES = {
   roas_total: '전체 매출 / 전체 광고비(net)',
   roas_com:   '닷컴 매출 / 전체 광고비(net)'
 };
+function fmtWeekRangeLabel(w1, w2) {
+  // 주 번호를 실제 일~토 날짜 구간으로 변환 (_refTime = W1 일요일 기준)
+  if (!_refTime) return 'W' + w1 + (w2 > w1 ? '-W' + w2 : '');
+  const s = new Date(_refTime + (w1 - 1) * 7 * 86400000);
+  const e = new Date(_refTime + (w2 - 1) * 7 * 86400000 + 6 * 86400000);
+  const f = x => (x.getMonth() + 1) + '/' + x.getDate();
+  return f(s) + '-' + f(e);
+}
 function renderKPI() {
   const data = getFiltered();
   const cur  = sumData(data);
   let prev = null, cmpLbl = '', prevDates = null;
-  // WOW: 주 1개 선택 시
-  if (selWeeks.size === 1 && selMonths.size === 0) {
-    const w = [...selWeeks][0];
-    if (w > 1) {
-      const pd = getFilteredForPeriod(new Set(), new Set([w-1]));
-      if (pd.length) { prev = sumData(pd); prevDates = new Set(pd.map(d => d.date)); cmpLbl = 'WOW vs W' + (w-1); }
+  // WOW: 주 선택 시 (월 필터와 무관하게 주 비교 우선)
+  // 복수 주 선택 시 동일 길이의 직전 주 구간과 비교 (예: W22-23 → W20-21)
+  if (selWeeks.size >= 1) {
+    const ws = [...selWeeks].sort((a, b) => a - b);
+    const n = ws.length, minW = ws[0];
+    if (minW - n >= 1) {
+      const prevWs = new Set();
+      for (let i = minW - n; i < minW; i++) prevWs.add(i);
+      const pd = getFilteredForPeriod(new Set(), prevWs);
+      if (pd.length) {
+        prev = sumData(pd); prevDates = new Set(pd.map(d => d.date));
+        cmpLbl = 'WOW vs ' + fmtWeekRangeLabel(minW - n, minW - 1);
+      }
     }
   }
   // MOM: 월 1개 선택 시
