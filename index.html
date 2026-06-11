@@ -3381,6 +3381,8 @@ refresh();
 const GOOGLE_CLIENT_ID = '209428467221-2e8e38d23fo4uaorjo5l5s3epkjbla3u.apps.googleusercontent.com';
 const ALLOWED_DOMAIN   = 'wyattcorp.com';
 const REDIRECT_URI     = 'https://ella-yh.github.io/Unove-Sephora-Dashboard/';
+const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxdVtqIozPiUEO25dmTjb_9BD-KikjEtfChYI2FGXDt6OkeOZRT65Tliq7bsmyLYw06Mg/exec';
+let _prefetchPromise = null; // 로그인 검증과 병렬로 시작되는 데이터 프리페치
 let currentUser = null;
 let autoRefreshTimer = null;
 const AUTO_REFRESH_MS = 30 * 60 * 1000; // 30분
@@ -3422,6 +3424,13 @@ window.startGoogleLogin = function() {
 };
 async function verifyGoogleToken(token) {
   document.getElementById('loginErr').textContent = '인증 확인 중...';
+  // ── 워터폴 제거: userinfo 검증과 동시에 데이터 페치 시작 ──
+  try {
+    const pfUrl = localStorage.getItem('sephora_apps_script_url') || DEFAULT_APPS_SCRIPT_URL;
+    _prefetchPromise = fetch(pfUrl + '?token=' + encodeURIComponent(token), { cache: 'no-store' })
+      .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .catch(function(e) { return { __prefetchError: e.message }; });
+  } catch(e) { _prefetchPromise = null; }
   try {
     const res  = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: { Authorization: 'Bearer ' + token }
@@ -3457,17 +3466,17 @@ function onAuthSuccess(user) {
   }
   const btnRef = document.getElementById('btnRefresh');
   if (btnRef) btnRef.style.display = '';
-  const appsScriptUrl = localStorage.getItem('sephora_apps_script_url') || 'https://script.google.com/macros/s/AKfycbxdVtqIozPiUEO25dmTjb_9BD-KikjEtfChYI2FGXDt6OkeOZRT65Tliq7bsmyLYw06Mg/exec';
+  const appsScriptUrl = localStorage.getItem('sephora_apps_script_url') || DEFAULT_APPS_SCRIPT_URL;
   const urlInput = document.getElementById('appsScriptUrl');
   if (urlInput) urlInput.value = appsScriptUrl;
   if (appsScriptUrl) {
-    // 캐시 데이터 있으면 즉시 표시 (1시간 이내)
+    // 캐시 데이터 있으면 나이와 무관하게 즉시 표시 후 백그라운드 갱신 (stale-while-revalidate)
     try {
       const cached = localStorage.getItem('sephora_data_cache');
       if (cached) {
         const c = JSON.parse(cached);
         const age = (Date.now() - c.ts) / 60000; // minutes
-        if (age < 60 && c.commerce && c.sales && c.channel) {
+        if (c.commerce && c.sales && c.channel) {
           RAW_SKU.length = 0;   c.commerce.forEach(r => RAW_SKU.push(r));
           RAW_SALES.length = 0; c.sales.forEach(r => RAW_SALES.push(r));
           CH_RAW.length = 0;    c.channel.forEach(r => CH_RAW.push(r));
@@ -3477,7 +3486,7 @@ function onAuthSuccess(user) {
           RAW_SALES.forEach(r => { SALES_BY_DATE[r.date] = { total: r.total||0, com: r.com||0, bam: r.bam||0 }; });
           rebuildDerivedData();
           const lbl = document.getElementById('lastUpdatedLabel');
-          if (lbl) lbl.textContent = '캐시: ' + Math.round(age) + '분 전';
+          if (lbl) lbl.textContent = '캐시: ' + (age >= 60 ? Math.round(age/60) + '시간 전' : Math.round(age) + '분 전');
           initDashboard();
           // 백그라운드 갱신
           setTimeout(() => loadFromAppsScript(appsScriptUrl, true), 500);
@@ -3508,7 +3517,7 @@ window.saveAndLoad = function() {
   loadFromAppsScript(trimmed);
 };
 window.manualRefresh = function() {
-  const url = localStorage.getItem('sephora_apps_script_url') || 'https://script.google.com/macros/s/AKfycbxdVtqIozPiUEO25dmTjb_9BD-KikjEtfChYI2FGXDt6OkeOZRT65Tliq7bsmyLYw06Mg/exec';
+  const url = localStorage.getItem('sephora_apps_script_url') || DEFAULT_APPS_SCRIPT_URL;
   if (!url) { switchTab('settings'); return; }
   const btn = document.getElementById('btnRefresh');
   if (btn) { btn.disabled = true; btn.textContent = '↻ 업데이트 중...'; }
@@ -3521,7 +3530,7 @@ function ldRetry() {
   const ldError   = document.getElementById('ldStateError');
   if (ldLoading) ldLoading.style.display = '';
   if (ldError)   ldError.style.display = 'none';
-  const url = localStorage.getItem('sephora_apps_script_url') || 'https://script.google.com/macros/s/AKfycbxdVtqIozPiUEO25dmTjb_9BD-KikjEtfChYI2FGXDt6OkeOZRT65Tliq7bsmyLYw06Mg/exec';
+  const url = localStorage.getItem('sephora_apps_script_url') || DEFAULT_APPS_SCRIPT_URL;
   if (url) loadFromAppsScript(url);
 }
 async function loadFromAppsScript(appsScriptUrl, isSilent) {
@@ -3539,9 +3548,17 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     if (lo) lo.style.display = 'flex';
   }
   try {
-    const res  = await fetch(appsScriptUrl + '?token=' + encodeURIComponent(token), { cache: 'no-store' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
+    let data = null;
+    if (_prefetchPromise) { // 프리페치가 진행 중이면 재요청 없이 결과 사용
+      const pf = _prefetchPromise; _prefetchPromise = null;
+      data = await pf;
+      if (data && data.__prefetchError) data = null; // 프리페치 실패 → 일반 페치 폴백
+    }
+    if (!data) {
+      const res  = await fetch(appsScriptUrl + '?token=' + encodeURIComponent(token), { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      data = await res.json();
+    }
     if (data.error) {
       if (data.error === 'INVALID_TOKEN' || data.error === 'NO_TOKEN') {
         // Token expired: clear cache and return to login
@@ -3600,7 +3617,7 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
         commerce: newSku, sales: newSales, channel: newCh,
         ads: Array.from(ADS_RAW), kol: Array.from(KOL_RAW), updatedAt: data.updatedAt
       }));
-    } catch(e) { /* localStorage 용량 초과 시 무시 */ }
+    } catch(e) { console.warn('[cache] localStorage 저장 실패 — 다음 로딩은 풀 페치:', e.message); }
     showStgStatus('✅ 로드 완료 — SKU ' + RAW_SKU.length + '행 / 매출 ' + RAW_SALES.length + '행 / Channel ' + CH_RAW.length + '행 / Ads ' + ADS_RAW.length + '행', 'ok');
     const _lo = document.getElementById('loadingOverlay');
     if (_lo) _lo.style.display = 'none';
