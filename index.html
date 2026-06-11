@@ -685,6 +685,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <button class="stgl active" data-ads-metric="spend"       onclick="setAdsMetric(this)">광고비</button>
       <button class="stgl"        data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
       <button class="stgl"        data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
+      <button class="stgl"        data-ads-metric="ctr"         onclick="setAdsMetric(this)">CTR</button>
     </div>
   </div>
   <div class="cfd">
@@ -762,6 +763,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <button class="stgl active" data-ads-metric="spend"       onclick="setAdsMetric(this)">광고비</button>
       <button class="stgl"        data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
       <button class="stgl"        data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
+      <button class="stgl"        data-ads-metric="ctr"         onclick="setAdsMetric(this)">CTR</button>
     </div>
   </div>
   <div class="cfd">
@@ -841,6 +843,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <button class="stgl active" data-ads-metric="spend"       onclick="setAdsMetric(this)">광고비</button>
       <button class="stgl"        data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
       <button class="stgl"        data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
+      <button class="stgl"        data-ads-metric="ctr"         onclick="setAdsMetric(this)">CTR</button>
     </div>
   </div>
   <div class="cfd">
@@ -1045,7 +1048,7 @@ let selMonths = new Set(), selWeeks = new Set(), selCats = new Set(), selSkus = 
 const ADS_RAW = [];
 const KOL_RAW = [];
 let selAdsSales  = 'com';    // com | total | bam
-let selAdsMetric = 'spend';  // spend | impressions | clicks
+let selAdsMetric = 'spend';  // spend | impressions | clicks | ctr
 let selAdsMedia  = new Set(['meta','tiktok','gsa']);
 const adsChartPeriod = {1:'weekly', 2:'weekly', 3:'weekly'};
 let adsGlobalPeriod2 = 'weekly'; // 글로벌 기간 (드롭다운 연동)
@@ -3773,7 +3776,7 @@ function getSalesKey() {
   return selAdsSales === 'com' ? 'sales_com' : selAdsSales === 'bam' ? 'sales_bam' : 'sales_total';
 }
 function getMetricLabel() {
-  return selAdsMetric === 'spend' ? '광고비(₩)' : selAdsMetric === 'impressions' ? '노출수' : '클릭수';
+  return selAdsMetric === 'spend' ? '광고비(₩)' : selAdsMetric === 'impressions' ? '노출수' : selAdsMetric === 'clicks' ? '클릭수' : 'CTR(%)';
 }
 function getSalesLabel() {
   return selAdsSales === 'com' ? '매출(.COM,₩)' : selAdsSales === 'bam' ? '매출(B&M,₩)' : '매출(TTL,₩)';
@@ -3787,6 +3790,12 @@ const OBJ_COLORS = {
   '검색':         '#1abc9c',
   '검색광고':     '#34495e',
 };
+// 비율 지표는 합산 버킷에서 도출 (기간별 sum(클릭)/sum(노출) — 비율 평균 아님)
+function calcMetricVal(bucket) {
+  if (!bucket) return 0;
+  if (selAdsMetric === 'ctr') return (bucket.impressions > 0) ? (bucket.clicks / bucket.impressions) * 100 : 0;
+  return bucket[selAdsMetric] || 0;
+}
 function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, mediaLabel, period, chartNum) {
   var _showSales  = chartNum ? adsShowSales[chartNum]  : true;
   var _showVisits = chartNum ? adsShowVisits[chartNum] : true;
@@ -3795,16 +3804,18 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
   const salesKey  = getSalesKey();
   const fmtNum = v => selAdsMetric === 'spend'
     ? '₩' + Math.round(v).toLocaleString('ko-KR')
+    : selAdsMetric === 'ctr'
+    ? (Math.round(v * 100) / 100).toFixed(2) + '%'
     : Math.round(v).toLocaleString();
   const datasets = [];
   if (stacked && objectives.length > 0) {
     objectives.forEach(obj => {
       datasets.push({
         label: obj,
-        data: weeks.map(wk => (adsWeekly[wk]?.byObj?.[obj]?.[metricKey] || 0)),
+        data: weeks.map(wk => calcMetricVal(adsWeekly[wk] && adsWeekly[wk].byObj ? adsWeekly[wk].byObj[obj] : null)),
         type: 'bar',
         backgroundColor: OBJ_COLORS[obj] || '#999',
-        stack: 'ads',
+        stack: selAdsMetric === 'ctr' ? undefined : 'ads',
         yAxisID: 'yA', order: 3,
         barPercentage: 0.6, categoryPercentage: 0.8,
       });
@@ -3812,7 +3823,7 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
   } else {
     datasets.push({
       label: mediaLabel || getMetricLabel(),
-      data: weeks.map(wk => (adsWeekly[wk]?.[metricKey] || 0)),
+      data: weeks.map(wk => calcMetricVal(adsWeekly[wk])),
       type: 'line',
       borderColor: '#e8c84a',
       backgroundColor: 'rgba(232,200,74,0.10)',
@@ -3863,6 +3874,15 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
             },
             footer: stacked ? function(ctxArr) {
               var wk = weeks[ctxArr[0].dataIndex];
+              if (selAdsMetric === 'ctr') {
+                var ck = 0, im = 0;
+                ctxArr.forEach(function(c) {
+                  if (c.dataset.yAxisID !== 'yA') return;
+                  var b = adsWeekly[wk] && adsWeekly[wk].byObj ? adsWeekly[wk].byObj[c.dataset.label] : null;
+                  if (b) { ck += b.clicks || 0; im += b.impressions || 0; }
+                });
+                return ['  ─────────────────', '  선택 목표 통합 CTR: ' + (im > 0 ? (ck / im * 100).toFixed(2) : '0.00') + '%'];
+              }
               var mediaTotal = (adsWeekly[wk] ? (adsWeekly[wk][metricKey] || 0) : 0);
               var selTotal = ctxArr.reduce(function(s,c){ return c.dataset.yAxisID==='yA' ? s+(c.raw||0) : s; }, 0);
               var lines = ['  ─────────────────'];
@@ -3876,9 +3896,9 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
         }
       },
       scales: {
-        x: { stacked: stacked, grid:{color:'rgba(0,0,0,0.04)'}, ticks:{font:{size:9},color:'#aaa',maxRotation:45} },
+        x: { stacked: stacked && selAdsMetric !== 'ctr', grid:{color:'rgba(0,0,0,0.04)'}, ticks:{font:{size:9},color:'#aaa',maxRotation:45} },
         yA: {
-          type:'linear', position:'left', stacked: stacked,
+          type:'linear', position:'left', stacked: stacked && selAdsMetric !== 'ctr',
           grid:{color:'rgba(0,0,0,0.05)'},
           ticks:{ display:false },
           title:{ display:false }
