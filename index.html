@@ -686,6 +686,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <button class="stgl"        data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
       <button class="stgl"        data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
       <button class="stgl"        data-ads-metric="ctr"         onclick="setAdsMetric(this)">CTR</button>
+      <button class="stgl"        data-ads-metric="er"          onclick="setAdsMetric(this)" style="display:none">ER</button>
     </div>
   </div>
   <div class="cfd">
@@ -764,6 +765,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <button class="stgl"        data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
       <button class="stgl"        data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
       <button class="stgl"        data-ads-metric="ctr"         onclick="setAdsMetric(this)">CTR</button>
+      <button class="stgl"        data-ads-metric="er"          onclick="setAdsMetric(this)" style="display:none">ER</button>
     </div>
   </div>
   <div class="cfd">
@@ -844,6 +846,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <button class="stgl"        data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
       <button class="stgl"        data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
       <button class="stgl"        data-ads-metric="ctr"         onclick="setAdsMetric(this)">CTR</button>
+      <button class="stgl"        data-ads-metric="er"          onclick="setAdsMetric(this)" style="display:none">ER</button>
     </div>
   </div>
   <div class="cfd">
@@ -1048,7 +1051,7 @@ let selMonths = new Set(), selWeeks = new Set(), selCats = new Set(), selSkus = 
 const ADS_RAW = [];
 const KOL_RAW = [];
 let selAdsSales  = 'com';    // com | total | bam
-let selAdsMetric = 'spend';  // spend | impressions | clicks | ctr
+let selAdsMetric = 'spend';  // spend | impressions | clicks | ctr | er
 let selAdsMedia  = new Set(['meta','tiktok','gsa']);
 const adsChartPeriod = {1:'weekly', 2:'weekly', 3:'weekly'};
 let adsGlobalPeriod2 = 'weekly'; // 글로벌 기간 (드롭다운 연동)
@@ -3704,14 +3707,17 @@ function buildAdsWeekly(mediaFilter) {
   ADS_RAW.forEach(r => {
     if (mediaFilter && !mediaFilter.has(r.media)) return;
     const wk = getWeekKey(r.date);
-    if (!byWeek[wk]) byWeek[wk] = { spend:0, impressions:0, clicks:0, byObj:{} };
+    const _eng = (r.likes||0) + (r.comments||0) + (r.shares||0) + (r.saves||0);
+    if (!byWeek[wk]) byWeek[wk] = { spend:0, impressions:0, clicks:0, eng:0, byObj:{} };
     byWeek[wk].spend       += (r.spend       || 0);
     byWeek[wk].impressions += (r.impressions || 0);
     byWeek[wk].clicks      += (r.clicks      || 0);
-    if (!byWeek[wk].byObj[r.objective]) byWeek[wk].byObj[r.objective] = {spend:0,impressions:0,clicks:0};
+    byWeek[wk].eng         += _eng;
+    if (!byWeek[wk].byObj[r.objective]) byWeek[wk].byObj[r.objective] = {spend:0,impressions:0,clicks:0,eng:0};
     byWeek[wk].byObj[r.objective].spend       += (r.spend       || 0);
     byWeek[wk].byObj[r.objective].impressions += (r.impressions || 0);
     byWeek[wk].byObj[r.objective].clicks      += (r.clicks      || 0);
+    byWeek[wk].byObj[r.objective].eng         += _eng;
   });
   return byWeek;
 }
@@ -3721,14 +3727,17 @@ function buildAdsByPeriod(mediaFilter, period) {
     if (mediaFilter && !mediaFilter.has(r.media)) return;
     if (adsSelectedRange.size > 0 && !adsSelectedRange.has(getPeriodKey(r.date, adsGlobalPeriod2))) return;
     const k = getPeriodKey(r.date, period);
-    if (!byP[k]) byP[k] = { spend:0, impressions:0, clicks:0, byObj:{} };
+    const _eng = (r.likes||0) + (r.comments||0) + (r.shares||0) + (r.saves||0);
+    if (!byP[k]) byP[k] = { spend:0, impressions:0, clicks:0, eng:0, byObj:{} };
     byP[k].spend       += (r.spend       || 0);
     byP[k].impressions += (r.impressions || 0);
     byP[k].clicks      += (r.clicks      || 0);
-    if (!byP[k].byObj[r.objective]) byP[k].byObj[r.objective] = {spend:0,impressions:0,clicks:0};
+    byP[k].eng         += _eng;
+    if (!byP[k].byObj[r.objective]) byP[k].byObj[r.objective] = {spend:0,impressions:0,clicks:0,eng:0};
     byP[k].byObj[r.objective].spend       += (r.spend       || 0);
     byP[k].byObj[r.objective].impressions += (r.impressions || 0);
     byP[k].byObj[r.objective].clicks      += (r.clicks      || 0);
+    byP[k].byObj[r.objective].eng         += _eng;
   });
   return byP;
 }
@@ -3776,7 +3785,7 @@ function getSalesKey() {
   return selAdsSales === 'com' ? 'sales_com' : selAdsSales === 'bam' ? 'sales_bam' : 'sales_total';
 }
 function getMetricLabel() {
-  return selAdsMetric === 'spend' ? '광고비(₩)' : selAdsMetric === 'impressions' ? '노출수' : selAdsMetric === 'clicks' ? '클릭수' : 'CTR(%)';
+  return selAdsMetric === 'spend' ? '광고비(₩)' : selAdsMetric === 'impressions' ? '노출수' : selAdsMetric === 'clicks' ? '클릭수' : selAdsMetric === 'ctr' ? 'CTR(%)' : 'ER(%)';
 }
 function getSalesLabel() {
   return selAdsSales === 'com' ? '매출(.COM,₩)' : selAdsSales === 'bam' ? '매출(B&M,₩)' : '매출(TTL,₩)';
@@ -3790,10 +3799,12 @@ const OBJ_COLORS = {
   '검색':         '#1abc9c',
   '검색광고':     '#34495e',
 };
-// 비율 지표는 합산 버킷에서 도출 (기간별 sum(클릭)/sum(노출) — 비율 평균 아님)
+// 비율 지표는 합산 버킷에서 도출 (기간별 sum/sum — 비율 평균 아님)
+function isRatioMetric() { return selAdsMetric === 'ctr' || selAdsMetric === 'er'; }
 function calcMetricVal(bucket) {
   if (!bucket) return 0;
   if (selAdsMetric === 'ctr') return (bucket.impressions > 0) ? (bucket.clicks / bucket.impressions) * 100 : 0;
+  if (selAdsMetric === 'er')  return (bucket.impressions > 0) ? ((bucket.eng || 0) / bucket.impressions) * 100 : 0;
   return bucket[selAdsMetric] || 0;
 }
 function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, mediaLabel, period, chartNum) {
@@ -3804,7 +3815,7 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
   const salesKey  = getSalesKey();
   const fmtNum = v => selAdsMetric === 'spend'
     ? '₩' + Math.round(v).toLocaleString('ko-KR')
-    : selAdsMetric === 'ctr'
+    : isRatioMetric()
     ? (Math.round(v * 100) / 100).toFixed(2) + '%'
     : Math.round(v).toLocaleString();
   const datasets = [];
@@ -3815,7 +3826,7 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
         data: weeks.map(wk => calcMetricVal(adsWeekly[wk] && adsWeekly[wk].byObj ? adsWeekly[wk].byObj[obj] : null)),
         type: 'bar',
         backgroundColor: OBJ_COLORS[obj] || '#999',
-        stack: selAdsMetric === 'ctr' ? undefined : 'ads',
+        stack: isRatioMetric() ? undefined : 'ads',
         yAxisID: 'yA', order: 3,
         barPercentage: 0.6, categoryPercentage: 0.8,
       });
@@ -3874,14 +3885,14 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
             },
             footer: stacked ? function(ctxArr) {
               var wk = weeks[ctxArr[0].dataIndex];
-              if (selAdsMetric === 'ctr') {
-                var ck = 0, im = 0;
+              if (isRatioMetric()) {
+                var nm = 0, im = 0;
                 ctxArr.forEach(function(c) {
                   if (c.dataset.yAxisID !== 'yA') return;
                   var b = adsWeekly[wk] && adsWeekly[wk].byObj ? adsWeekly[wk].byObj[c.dataset.label] : null;
-                  if (b) { ck += b.clicks || 0; im += b.impressions || 0; }
+                  if (b) { nm += (selAdsMetric === 'ctr' ? (b.clicks || 0) : (b.eng || 0)); im += b.impressions || 0; }
                 });
-                return ['  ─────────────────', '  선택 목표 통합 CTR: ' + (im > 0 ? (ck / im * 100).toFixed(2) : '0.00') + '%'];
+                return ['  ─────────────────', '  선택 목표 통합 ' + (selAdsMetric === 'ctr' ? 'CTR' : 'ER') + ': ' + (im > 0 ? (nm / im * 100).toFixed(2) : '0.00') + '%'];
               }
               var mediaTotal = (adsWeekly[wk] ? (adsWeekly[wk][metricKey] || 0) : 0);
               var selTotal = ctxArr.reduce(function(s,c){ return c.dataset.yAxisID==='yA' ? s+(c.raw||0) : s; }, 0);
@@ -3896,9 +3907,9 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
         }
       },
       scales: {
-        x: { stacked: stacked && selAdsMetric !== 'ctr', grid:{color:'rgba(0,0,0,0.04)'}, ticks:{font:{size:9},color:'#aaa',maxRotation:45} },
+        x: { stacked: stacked && !isRatioMetric(), grid:{color:'rgba(0,0,0,0.04)'}, ticks:{font:{size:9},color:'#aaa',maxRotation:45} },
         yA: {
-          type:'linear', position:'left', stacked: stacked && selAdsMetric !== 'ctr',
+          type:'linear', position:'left', stacked: stacked && !isRatioMetric(),
           grid:{color:'rgba(0,0,0,0.05)'},
           ticks:{ display:false },
           title:{ display:false }
@@ -3977,6 +3988,13 @@ function refreshAdsChart(chartNum) {
 }
 function refreshAds() {
   if (ADS_RAW.length === 0) return;
+  // ER 버튼은 engagement 데이터가 실제 존재할 때만 노출 (Apps Script 미반영 시 허수 0% 차트 방지)
+  var hasEng = ADS_RAW.some(function(r) { return ((r.likes||0) + (r.comments||0) + (r.shares||0) + (r.saves||0)) > 0; });
+  document.querySelectorAll('[data-ads-metric="er"]').forEach(function(b) { b.style.display = hasEng ? '' : 'none'; });
+  if (!hasEng && selAdsMetric === 'er') {
+    selAdsMetric = 'spend';
+    document.querySelectorAll('[data-ads-metric]').forEach(function(b) { b.classList.toggle('active', b.dataset.adsMetric === 'spend'); });
+  }
   refreshAdsChart(1);
   refreshAdsChart(2);
   refreshAdsChart(3);
