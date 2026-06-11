@@ -64,6 +64,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   padding:3px 9px;border:0.5px solid #D8D8DC;background:#fff;color:#777;cursor:pointer;border-radius:3px;transition:all .15s;}
 .mkr-btn:hover{border-color:#999;color:#444;}
 .mkr-btn.active{background:#444;border-color:#444;color:#fff;}
+.mkr-btn:disabled{opacity:.35;cursor:not-allowed;}
 .marker-zone.hidden{height:0!important;min-height:0!important;margin:0!important;overflow:hidden;}
 /* Sales type toggle */
 .sales-toggle{display:flex;gap:4px;}
@@ -436,7 +437,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 </div>
 <div class="chart-sec">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-    <div class="sec-hdr" style="margin-bottom:0;flex:1;">일자별 Sales · CVR</div>
+    <div class="sec-hdr" style="margin-bottom:0;flex:1;">통합 성과 그래프</div>
     <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
       <button class="mkr-btn" id="btnMarkerToggle" onclick="toggleMarkers(this)" style="min-width:96px;font-size:9px;">이벤트 마커 표시</button>
       <div style="width:1px;height:13px;background:#E0E0E4;margin:0 2px;"></div>
@@ -457,6 +458,12 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       </button>
       <button class="mkr-btn" id="btnRoasToggle" onclick="toggleRoas(this)" style="display:flex;align-items:center;gap:4px;">
         <span style="font-size:12px;font-weight:700;line-height:1;color:#4bc8a0;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4bc8a0;"></span>ROAS(닷컴)
+      </button>
+      <button class="mkr-btn" id="btnBrandCostToggle" onclick="toggleBrandCost(this)" style="display:flex;align-items:center;gap:4px;">
+        <span style="font-size:12px;font-weight:700;line-height:1;color:#e07b39;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e07b39;"></span>브랜딩 비용
+      </button>
+      <button class="mkr-btn" id="btnKolCostToggle" onclick="toggleKolCost(this)" style="display:flex;align-items:center;gap:4px;">
+        <span style="font-size:12px;font-weight:700;line-height:1;color:#1a7a4a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#1a7a4a;"></span>KOL 비용
       </button>
       <div style="display:flex;gap:4px;align-items:center;margin-left:auto;">
         <div class="sales-toggle" style="margin-left:0;">
@@ -1390,6 +1397,8 @@ let selSalesTypes = new Set(['com']); // multi-select set
 let showMarkers = false;
 let showVisits   = true;
 let showAdSpend  = false;
+let showBrandCost = false, showKolCost = false; // DM 비용 토글 (월/주 단위 전용)
+const DM_COST = { monthly: {}, weekly: {} };    // SUMMARY(월/주차)_DM 비용 데이터
 let showRoas     = false;
 let showCvr      = false;
 let mainPeriod   = 'daily';
@@ -1412,6 +1421,23 @@ function toggleAdSpend(btn) {
   btn.classList.toggle('active', showAdSpend);
   renderChart();
 };
+function toggleBrandCost(btn) {
+  if (mainPeriod === 'daily') return;
+  showBrandCost = !showBrandCost;
+  btn.classList.toggle('active', showBrandCost);
+  renderChart();
+}
+function toggleKolCost(btn) {
+  if (mainPeriod === 'daily') return;
+  showKolCost = !showKolCost;
+  btn.classList.toggle('active', showKolCost);
+  renderChart();
+}
+function dmCostVal(periodKey, field) {
+  const src = mainPeriod === 'monthly' ? DM_COST.monthly : DM_COST.weekly;
+  const v = src[periodKey] ? src[periodKey][field] : null;
+  return (v || v === 0) ? v : null;
+}
 function toggleCvr(btn) {
   showCvr = !showCvr;
   btn.classList.toggle('active', showCvr);
@@ -1930,6 +1956,11 @@ function getMainChartData() {
 // ─── CHART ────────────────────────────────────────────────────────────────────
 function renderChart() {
   const data = getMainChartData();
+  // DM 비용 버튼은 월/주 단위에서만 활성 (일 단위 데이터 없음)
+  ['btnBrandCostToggle','btnKolCostToggle'].forEach(function(id) {
+    var b = document.getElementById(id);
+    if (b) { b.disabled = (mainPeriod === 'daily'); b.title = b.disabled ? '월/주 단위에서만 표시됩니다' : ''; }
+  });
   const labels = data.map(d => d.label || d.date.slice(5));
   const annotations = buildAnnotations(labels);
   // Sales(.COM) KPI 기준선 — 390만원 고정
@@ -2031,6 +2062,23 @@ function renderChart() {
           yAxisID: 'yA', order: 0,
           tension: 0.25,
         });
+        // 브랜딩/KOL 비용 (DM 시트, 월/주 단위 전용) → 토글 ON일 때만
+        if (showBrandCost && mainPeriod !== 'daily') ds.push({
+          label: '브랜딩 비용',
+          data: data.map(d => dmCostVal(d.date, 'branding')),
+          type: 'line', borderColor: '#e07b39', backgroundColor: 'rgba(224,123,57,0.08)',
+          borderWidth: 1.8, pointRadius: 2, pointHoverRadius: 4,
+          pointBackgroundColor: '#e07b39', spanGaps: false, fill: false,
+          yAxisID: 'yA', order: 0, tension: 0.25,
+        });
+        if (showKolCost && mainPeriod !== 'daily') ds.push({
+          label: 'KOL 비용',
+          data: data.map(d => dmCostVal(d.date, 'kol')),
+          type: 'line', borderColor: '#1a7a4a', backgroundColor: 'rgba(26,122,74,0.08)',
+          borderWidth: 1.8, pointRadius: 2, pointHoverRadius: 4,
+          pointBackgroundColor: '#1a7a4a', spanGaps: false, fill: false,
+          yAxisID: 'yA', order: 0, tension: 0.25,
+        });
         // ROAS(닷컴) → 토글 ON일 때만
         if (showRoas) ds.push({
           label: 'ROAS(닷컴)',
@@ -2072,6 +2120,7 @@ function renderChart() {
               if (ctx.dataset.label.startsWith('Sales')) return '  ' + ctx.dataset.label + ': ₩' + Math.round(Math.abs(v)).toLocaleString('ko-KR');
               if (ctx.dataset.label === 'CVR') return `  CVR: ${v.toFixed(2)}%`;
               if (ctx.dataset.label === '광고비(net)') return v != null ? `  광고비: ₩${Math.round(v).toLocaleString('ko-KR')}` : null;
+              if (ctx.dataset.label === '브랜딩 비용' || ctx.dataset.label === 'KOL 비용') return v != null ? '  ' + ctx.dataset.label + ': ₩' + Math.round(v).toLocaleString('ko-KR') : null;
               if (ctx.dataset.label === 'ROAS(닷컴)') return v != null ? `  ROAS(닷컴): ${v}%` : null;
               return ctx.dataset.label + ': ' + v;
             }
@@ -2112,10 +2161,10 @@ function renderChart() {
           title: { display:true, text:'CVR(%)', font:{size:9}, color:'#8878d0' }
         },
         yA: {
-          type: 'linear', position: 'right', display: showAdSpend,
+          type: 'linear', position: 'right', display: showAdSpend || ((showBrandCost || showKolCost) && mainPeriod !== 'daily'),
           grid: { drawOnChartArea: false },
           ticks: { font:{size:9}, color:'#e8c84a', callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v },
-          title: { display:true, text:'광고비(₩)', font:{size:9}, color:'#e8c84a' }
+          title: { display:true, text: showAdSpend ? '광고비(₩)' : '비용(₩)', font:{size:9}, color:'#e8c84a' }
         },
         yR: {
           type: 'linear', position: 'left', display: showRoas,
@@ -3508,6 +3557,8 @@ function onAuthSuccess(user) {
           CH_RAW.length = 0;    c.channel.forEach(r => CH_RAW.push(r));
           ADS_RAW.length = 0;   (c.ads || []).forEach(r => ADS_RAW.push(r));
           KOL_RAW.length = 0;   (c.kol || []).filter(r => r.date && r.date.startsWith('2026')).forEach(r => KOL_RAW.push(r));
+          DM_COST.monthly = (c.dmCost && c.dmCost.monthly) || {};
+          DM_COST.weekly  = (c.dmCost && c.dmCost.weekly)  || {};
           Object.keys(SALES_BY_DATE).forEach(k => delete SALES_BY_DATE[k]);
           RAW_SALES.forEach(r => { SALES_BY_DATE[r.date] = { total: r.total||0, com: r.com||0, bam: r.bam||0 }; });
           rebuildDerivedData();
@@ -3632,6 +3683,8 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     })();
     KOL_RAW.length = 0;
     if (Array.isArray(data.kol)) data.kol.filter(r => r.date && r.date.startsWith('2026')).forEach(r => KOL_RAW.push(r));
+    DM_COST.monthly = (data.dmCost && data.dmCost.monthly) || {};
+    DM_COST.weekly  = (data.dmCost && data.dmCost.weekly)  || {};
     rebuildDerivedData();
     const ts = data.updatedAt ? new Date(data.updatedAt).toLocaleString('ko-KR') : '—';
     const label = document.getElementById('lastUpdatedLabel');
@@ -3641,7 +3694,8 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
       localStorage.setItem('sephora_data_cache', JSON.stringify({
         ts: Date.now(),
         commerce: newSku, sales: newSales, channel: newCh,
-        ads: Array.from(ADS_RAW), kol: Array.from(KOL_RAW), updatedAt: data.updatedAt
+        ads: Array.from(ADS_RAW), kol: Array.from(KOL_RAW),
+        dmCost: { monthly: DM_COST.monthly, weekly: DM_COST.weekly }, updatedAt: data.updatedAt
       }));
     } catch(e) { console.warn('[cache] localStorage 저장 실패 — 다음 로딩은 풀 페치:', e.message); }
     showStgStatus('✅ 로드 완료 — SKU ' + RAW_SKU.length + '행 / 매출 ' + RAW_SALES.length + '행 / Channel ' + CH_RAW.length + '행 / Ads ' + ADS_RAW.length + '행', 'ok');
@@ -4076,7 +4130,7 @@ setTimeout(function() {
   var fns = {addEvent:addEvent, clearChFilter:clearChFilter, clearFilter:clearFilter,
              editEvent:editEvent, removeEvent:removeEvent, removeEventFull:removeEventFull,
              renderEventList:renderEventList, saveEvent:saveEvent, switchTab:switchTab,
-             toggleAdSpend:toggleAdSpend, toggleChDD:toggleChDD, toggleDD:toggleDD,
+             toggleAdSpend:toggleAdSpend, toggleBrandCost:toggleBrandCost, toggleKolCost:toggleKolCost, toggleChDD:toggleChDD, toggleDD:toggleDD,
              toggleSidebar:toggleSidebar, toggleVisits:toggleVisits};
   Object.assign(window, fns);
 }, 0);
