@@ -1498,7 +1498,7 @@ function updateLabel(name) {
   else if (name === 'sku') set = selSkus;
   else set = selEvType;
   if (set.size === 0) { el.textContent = 'ALL'; return; }
-  if (name === 'month') { const mn = {'01':'JAN','02':'FEB','03':'MAR','04':'APR'}; el.textContent = set.size === 1 ? mn[[...set][0]] : set.size + '개'; }
+  if (name === 'month') { el.textContent = set.size === 1 ? (MONTH_NAMES[[...set][0]] || [...set][0]) : set.size + '개'; }
   else if (name === 'week') { el.textContent = set.size === 1 ? 'W' + [...set][0] : set.size + '개'; }
   else if (name === 'sku') { el.textContent = set.size === 1 ? ('SKU '+[...set][0]) : set.size + '개'; }
   else { el.textContent = set.size === 1 ? [...set][0] : set.size + '개'; }
