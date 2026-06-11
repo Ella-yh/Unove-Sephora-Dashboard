@@ -682,11 +682,11 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   <div class="cfd">
     <span class="cfd-lbl">지표</span>
     <div style="display:flex;gap:3px;">
-      <button class="stgl active" data-ads-metric="spend"       onclick="setAdsMetric(this)">광고비</button>
-      <button class="stgl"        data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
-      <button class="stgl"        data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
-      <button class="stgl"        data-ads-metric="ctr"         onclick="setAdsMetric(this)">CTR</button>
-      <button class="stgl"        data-ads-metric="er"          onclick="setAdsMetric(this)" style="display:none">ER</button>
+      <button class="stgl active" data-metric-chart="1" data-ads-metric="spend"       onclick="setAdsMetric(this)">광고비</button>
+      <button class="stgl"        data-metric-chart="1" data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
+      <button class="stgl"        data-metric-chart="1" data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
+      <button class="stgl"        data-metric-chart="1" data-ads-metric="ctr"         onclick="setAdsMetric(this)">CTR</button>
+      <button class="stgl"        data-metric-chart="1" data-ads-metric="er"          onclick="setAdsMetric(this)" style="display:none">ER</button>
     </div>
   </div>
   <div class="cfd">
@@ -761,11 +761,11 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   <div class="cfd">
     <span class="cfd-lbl">지표</span>
     <div style="display:flex;gap:3px;">
-      <button class="stgl active" data-ads-metric="spend"       onclick="setAdsMetric(this)">광고비</button>
-      <button class="stgl"        data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
-      <button class="stgl"        data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
-      <button class="stgl"        data-ads-metric="ctr"         onclick="setAdsMetric(this)">CTR</button>
-      <button class="stgl"        data-ads-metric="er"          onclick="setAdsMetric(this)" style="display:none">ER</button>
+      <button class="stgl active" data-metric-chart="2" data-ads-metric="spend"       onclick="setAdsMetric(this)">광고비</button>
+      <button class="stgl"        data-metric-chart="2" data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
+      <button class="stgl"        data-metric-chart="2" data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
+      <button class="stgl"        data-metric-chart="2" data-ads-metric="ctr"         onclick="setAdsMetric(this)">CTR</button>
+      <button class="stgl"        data-metric-chart="2" data-ads-metric="er"          onclick="setAdsMetric(this)" style="display:none">ER</button>
     </div>
   </div>
   <div class="cfd">
@@ -842,11 +842,11 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   <div class="cfd">
     <span class="cfd-lbl">지표</span>
     <div style="display:flex;gap:3px;">
-      <button class="stgl active" data-ads-metric="spend"       onclick="setAdsMetric(this)">광고비</button>
-      <button class="stgl"        data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
-      <button class="stgl"        data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
-      <button class="stgl"        data-ads-metric="ctr"         onclick="setAdsMetric(this)">CTR</button>
-      <button class="stgl"        data-ads-metric="er"          onclick="setAdsMetric(this)" style="display:none">ER</button>
+      <button class="stgl active" data-metric-chart="3" data-ads-metric="spend"       onclick="setAdsMetric(this)">광고비</button>
+      <button class="stgl"        data-metric-chart="3" data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
+      <button class="stgl"        data-metric-chart="3" data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
+      <button class="stgl"        data-metric-chart="3" data-ads-metric="ctr"         onclick="setAdsMetric(this)">CTR</button>
+      <button class="stgl"        data-metric-chart="3" data-ads-metric="er"          onclick="setAdsMetric(this)" style="display:none">ER</button>
     </div>
   </div>
   <div class="cfd">
@@ -1051,7 +1051,8 @@ let selMonths = new Set(), selWeeks = new Set(), selCats = new Set(), selSkus = 
 const ADS_RAW = [];
 const KOL_RAW = [];
 let selAdsSales  = 'com';    // com | total | bam
-let selAdsMetric = 'spend';  // spend | impressions | clicks | ctr | er
+const adsChartMetric = {1:'spend', 2:'spend', 3:'spend'}; // 차트별 독립 지표 (spend|impressions|clicks|ctr|er)
+let _curMetric = 'spend'; // 현재 렌더링 중인 차트의 지표 (내부 계산용)
 let selAdsMedia  = new Set(['meta','tiktok','gsa']);
 const adsChartPeriod = {1:'weekly', 2:'weekly', 3:'weekly'};
 let adsGlobalPeriod2 = 'weekly'; // 글로벌 기간 (드롭다운 연동)
@@ -1070,9 +1071,13 @@ window.setAdsSales = function(btn) {
   refreshAds();
 };
 window.setAdsMetric = function(btn) {
-  selAdsMetric = btn.dataset.adsMetric;
-  document.querySelectorAll('[data-ads-metric]').forEach(b => b.classList.toggle('active', b.dataset.adsMetric === selAdsMetric));
-  refreshAds();
+  var cn = parseInt(btn.dataset.metricChart || '0', 10);
+  if (!cn) return;
+  adsChartMetric[cn] = btn.dataset.adsMetric;
+  document.querySelectorAll('[data-metric-chart="' + cn + '"]').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.adsMetric === adsChartMetric[cn]);
+  });
+  refreshAdsChart(cn);
 };
 window.toggleAdsMedia = function(btn) {
   const m = btn.dataset.adsMedia;
@@ -3785,7 +3790,7 @@ function getSalesKey() {
   return selAdsSales === 'com' ? 'sales_com' : selAdsSales === 'bam' ? 'sales_bam' : 'sales_total';
 }
 function getMetricLabel() {
-  return selAdsMetric === 'spend' ? '광고비(₩)' : selAdsMetric === 'impressions' ? '노출수' : selAdsMetric === 'clicks' ? '클릭수' : selAdsMetric === 'ctr' ? 'CTR(%)' : 'ER(%)';
+  return _curMetric === 'spend' ? '광고비(₩)' : _curMetric === 'impressions' ? '노출수' : _curMetric === 'clicks' ? '클릭수' : _curMetric === 'ctr' ? 'CTR(%)' : 'ER(%)';
 }
 function getSalesLabel() {
   return selAdsSales === 'com' ? '매출(.COM,₩)' : selAdsSales === 'bam' ? '매출(B&M,₩)' : '매출(TTL,₩)';
@@ -3800,20 +3805,20 @@ const OBJ_COLORS = {
   '검색광고':     '#34495e',
 };
 // 비율 지표는 합산 버킷에서 도출 (기간별 sum/sum — 비율 평균 아님)
-function isRatioMetric() { return selAdsMetric === 'ctr' || selAdsMetric === 'er'; }
+function isRatioMetric() { return _curMetric === 'ctr' || _curMetric === 'er'; }
 function calcMetricVal(bucket) {
   if (!bucket) return 0;
-  if (selAdsMetric === 'ctr') return (bucket.impressions > 0) ? (bucket.clicks / bucket.impressions) * 100 : 0;
-  if (selAdsMetric === 'er')  return (bucket.impressions > 0) ? ((bucket.eng || 0) / bucket.impressions) * 100 : 0;
-  return bucket[selAdsMetric] || 0;
+  if (_curMetric === 'ctr') return (bucket.impressions > 0) ? (bucket.clicks / bucket.impressions) * 100 : 0;
+  if (_curMetric === 'er')  return (bucket.impressions > 0) ? ((bucket.eng || 0) / bucket.impressions) * 100 : 0;
+  return bucket[_curMetric] || 0;
 }
 function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, mediaLabel, period, chartNum) {
   var _showSales  = chartNum ? adsShowSales[chartNum]  : true;
   var _showVisits = chartNum ? adsShowVisits[chartNum] : true;
   const labels = weeks.map(k => fmtPeriodLabel(k, period || 'weekly'));
-  const metricKey = selAdsMetric;
+  const metricKey = _curMetric;
   const salesKey  = getSalesKey();
-  const fmtNum = v => selAdsMetric === 'spend'
+  const fmtNum = v => _curMetric === 'spend'
     ? '₩' + Math.round(v).toLocaleString('ko-KR')
     : isRatioMetric()
     ? (Math.round(v * 100) / 100).toFixed(2) + '%'
@@ -3890,9 +3895,9 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
                 ctxArr.forEach(function(c) {
                   if (c.dataset.yAxisID !== 'yA') return;
                   var b = adsWeekly[wk] && adsWeekly[wk].byObj ? adsWeekly[wk].byObj[c.dataset.label] : null;
-                  if (b) { nm += (selAdsMetric === 'ctr' ? (b.clicks || 0) : (b.eng || 0)); im += b.impressions || 0; }
+                  if (b) { nm += (_curMetric === 'ctr' ? (b.clicks || 0) : (b.eng || 0)); im += b.impressions || 0; }
                 });
-                return ['  ─────────────────', '  선택 목표 통합 ' + (selAdsMetric === 'ctr' ? 'CTR' : 'ER') + ': ' + (im > 0 ? (nm / im * 100).toFixed(2) : '0.00') + '%'];
+                return ['  ─────────────────', '  선택 목표 통합 ' + (_curMetric === 'ctr' ? 'CTR' : 'ER') + ': ' + (im > 0 ? (nm / im * 100).toFixed(2) : '0.00') + '%'];
               }
               var mediaTotal = (adsWeekly[wk] ? (adsWeekly[wk][metricKey] || 0) : 0);
               var selTotal = ctxArr.reduce(function(s,c){ return c.dataset.yAxisID==='yA' ? s+(c.raw||0) : s; }, 0);
@@ -3926,10 +3931,13 @@ function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, media
     }
   };
 }
-function renderLegend(containerId, datasets) {
+function renderLegend(containerId, datasets, metricLabel) {
   const c = document.getElementById(containerId);
   if (!c) return;
-  c.innerHTML = datasets.map(ds => {
+  const chip = metricLabel
+    ? '<div class="leg" style="font-weight:700;color:#1D2847;background:#EEF0F6;padding:2px 9px;border-radius:3px;">' + metricLabel + '</div>'
+    : '';
+  c.innerHTML = chip + datasets.map(ds => {
     const col = ds.type === 'line' ? ds.borderColor : (Array.isArray(ds.backgroundColor) ? ds.backgroundColor[0] : ds.backgroundColor);
     const dotStyle = ds.type === 'line'
       ? 'border-radius:50%;border:2px solid ' + col + ';background:transparent;'
@@ -3939,6 +3947,7 @@ function renderLegend(containerId, datasets) {
 }
 function refreshAdsChart(chartNum) {
   if (ADS_RAW.length === 0) return;
+  _curMetric = adsChartMetric[chartNum] || 'spend';
   const p = adsChartPeriod[chartNum] || 'weekly';
   const sep = buildSephoraByPeriod(p);
   if (chartNum === 1) {
@@ -3963,7 +3972,7 @@ function refreshAdsChart(chartNum) {
       cfg2.options.scales.x.stacked = false;
       cfg2.options.scales.yA.stacked = false;
     }
-    renderLegend('adsChart2Leg', cfg2.data.datasets);
+    renderLegend('adsChart2Leg', cfg2.data.datasets, getMetricLabel());
     const ctx2 = document.getElementById('adsChart2');
     if (ctx2) { if (adsChart2) adsChart2.destroy(); adsChart2 = new Chart(ctx2.getContext('2d'), cfg2); }
   } else if (chartNum === 3) {
@@ -3981,7 +3990,7 @@ function refreshAdsChart(chartNum) {
       cfg3.options.scales.x.stacked = false;
       cfg3.options.scales.yA.stacked = false;
     }
-    renderLegend('adsChart3Leg', cfg3.data.datasets);
+    renderLegend('adsChart3Leg', cfg3.data.datasets, getMetricLabel());
     const ctx3 = document.getElementById('adsChart3');
     if (ctx3) { if (adsChart3) adsChart3.destroy(); adsChart3 = new Chart(ctx3.getContext('2d'), cfg3); }
   }
@@ -3991,9 +4000,13 @@ function refreshAds() {
   // ER 버튼은 engagement 데이터가 실제 존재할 때만 노출 (Apps Script 미반영 시 허수 0% 차트 방지)
   var hasEng = ADS_RAW.some(function(r) { return ((r.likes||0) + (r.comments||0) + (r.shares||0) + (r.saves||0)) > 0; });
   document.querySelectorAll('[data-ads-metric="er"]').forEach(function(b) { b.style.display = hasEng ? '' : 'none'; });
-  if (!hasEng && selAdsMetric === 'er') {
-    selAdsMetric = 'spend';
-    document.querySelectorAll('[data-ads-metric]').forEach(function(b) { b.classList.toggle('active', b.dataset.adsMetric === 'spend'); });
+  if (!hasEng) {
+    [1,2,3].forEach(function(cn) {
+      if (adsChartMetric[cn] === 'er') {
+        adsChartMetric[cn] = 'spend';
+        document.querySelectorAll('[data-metric-chart="' + cn + '"]').forEach(function(b) { b.classList.toggle('active', b.dataset.adsMetric === 'spend'); });
+      }
+    });
   }
   refreshAdsChart(1);
   refreshAdsChart(2);
