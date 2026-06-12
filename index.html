@@ -582,7 +582,15 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 <div class="ch-kpi-row" id="chKpiRow"></div>
 <div class="filter-row">
   <div class="filter-block">
-    <div class="filter-lbl">Week (Multi)</div>
+    <div class="filter-lbl">기간 단위</div>
+    <div style="display:flex;gap:3px;padding-top:1px;">
+      <button class="stgl" data-ch-period="monthly" onclick="setChPeriod(this,'monthly')">월</button>
+      <button class="stgl active" data-ch-period="weekly" onclick="setChPeriod(this,'weekly')">주</button>
+      <button class="stgl" data-ch-period="daily" onclick="setChPeriod(this,'daily')">일</button>
+    </div>
+  </div>
+  <div class="filter-block">
+    <div class="filter-lbl">기간 (Multi)</div>
     <div class="dd-wrap" id="ddWrap-chWeek">
       <div class="dd-btn" id="ddBtn-chWeek" onclick="toggleChDD('chWeek')"><span id="ddLabel-chWeek">ALL</span><span class="arr">▾</span></div>
       <div class="dd-panel" id="ddPanel-chWeek">
@@ -601,7 +609,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   </div>
 </div>
 <div class="chart-sec">
-  <div class="sec-hdr">Total Visits · Sales · CVR — Weekly Overview</div>
+  <div class="sec-hdr">Total Visits · Sales · CVR — Overview</div>
   <div class="chart-card">
     <div class="leg-row">
       <div class="leg"><div class="leg-dot" style="background:rgba(47,84,150,0.25);border:1.5px solid rgba(47,84,150,0.6);"></div>Visits (Area)</div>
@@ -2814,11 +2822,40 @@ document.addEventListener('mousemove', function(e) {
   }
 });
 // ─── CHANNEL ANALYSIS TAB ────────────────────────────────────────────────────
-let CH_RAW = [];
-const CH_WEEKS = [...new Set(CH_RAW.map(r=>r.week))].sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));
-const CH_CHANNELS = [...new Set(CH_RAW.map(r=>r.channel))];
-const CH_WEEK_RANGES = {};
-CH_RAW.forEach(r => { CH_WEEK_RANGES[r.week] = r.range; });
+let CH_RAW = []; // 일 단위 raw: {date, channel, visits, sales, cvr}
+const CH_WEEKS = [];        // 현재 기간 단위의 정렬된 기간 키 목록
+const CH_CHANNELS = [];
+const CH_WEEK_RANGES = {};  // 기간 키 → 표시 라벨
+let chPeriod = 'weekly';    // daily | weekly | monthly
+function chPeriodKey(date) {
+  if (chPeriod === 'daily') return date;
+  if (chPeriod === 'monthly') return date.slice(0, 7);
+  return getWeekKey(date); // 주: 일요일 시작 날짜
+}
+function chPeriodLabel(key) {
+  if (chPeriod === 'daily') return key.slice(5).replace('-', '/');
+  if (chPeriod === 'monthly') return key;
+  return fmtWkLabel(key);
+}
+function chCmpName() { return chPeriod === 'daily' ? 'DoD' : chPeriod === 'monthly' ? 'MoM' : 'WoW'; }
+function rebuildChannelAgg() {
+  CH_RAW.forEach(r => { if (r.date) r.week = chPeriodKey(r.date); });
+  CH_WEEKS.length = 0;
+  [...new Set(CH_RAW.map(r => r.week))].filter(Boolean).sort().forEach(w => CH_WEEKS.push(w));
+  CH_CHANNELS.length = 0;
+  [...new Set(CH_RAW.map(r => r.channel))].filter(Boolean).forEach(c => CH_CHANNELS.push(c));
+  Object.keys(CH_WEEK_RANGES).forEach(k => delete CH_WEEK_RANGES[k]);
+  CH_WEEKS.forEach(w => { CH_WEEK_RANGES[w] = chPeriodLabel(w); });
+}
+window.setChPeriod = function(btn, pd) {
+  if (chPeriod === pd) return;
+  chPeriod = pd;
+  document.querySelectorAll('[data-ch-period]').forEach(b => b.classList.toggle('active', b.dataset.chPeriod === pd));
+  rebuildChannelAgg();
+  selChWeeks.clear();
+  buildChWeekOptions();
+  refreshChannel();
+};
 const CH_COLORS = {
   'Direct':'#2F5496','Push':'#E06666','Email':'#F4B942','Organic Social':'#6AA84F',
   'Paid Search':'#9673A6','Organic Search':'#3D85C6','Affiliate':'#E69138',
@@ -2982,7 +3019,7 @@ function buildChWeekOptions() {
   CH_WEEKS.forEach(w => {
     const lbl = document.createElement('label');
     lbl.className = 'dd-opt';
-    lbl.innerHTML = `<input type="checkbox" data-group="chWeek" value="${w}"> ${w} (${CH_WEEK_RANGES[w]})`;
+    lbl.innerHTML = `<input type="checkbox" data-group="chWeek" value="${w}"> ${CH_WEEK_RANGES[w] || w}`;
     lbl.querySelector('input').addEventListener('change', function() {
       if (this.checked) selChWeeks.add(this.value); else selChWeeks.delete(this.value);
       syncChCBs('chWeek', selChWeeks);
@@ -3043,7 +3080,7 @@ function getFilteredChData() {
   if (selChChans.size > 0) data = data.filter(r => selChChans.has(r.channel));
   return data;
 }
-function getActiveWeeks() { return selChWeeks.size > 0 ? [...selChWeeks].sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1))) : [...CH_WEEKS]; }
+function getActiveWeeks() { return selChWeeks.size > 0 ? [...selChWeeks].sort() : [...CH_WEEKS]; }
 function getActiveChans() { return selChChans.size > 0 ? [...selChChans] : [...CH_CHANNELS]; }
 function refreshChannel() {
   const activeWeeks = getActiveWeeks();
@@ -3051,8 +3088,18 @@ function refreshChannel() {
   const data = getFilteredChData();
   // Build pivot
   const pivot = {};
-  activeChans.forEach(ch => { pivot[ch] = {}; activeWeeks.forEach(w => { pivot[ch][w] = {v:0,s:0,c:0}; }); });
-  data.forEach(r => { if (pivot[r.channel] && pivot[r.channel][r.week]) { pivot[r.channel][r.week] = {v:r.visits, s:r.sales, c:r.cvr}; }});
+  activeChans.forEach(ch => { pivot[ch] = {}; activeWeeks.forEach(w => { pivot[ch][w] = {v:0,s:0,c:0,cw:0}; }); });
+  data.forEach(r => {
+    const cell = pivot[r.channel] && pivot[r.channel][r.week];
+    if (!cell) return;
+    cell.v  += (r.visits || 0);
+    cell.s  += (r.sales  || 0);
+    cell.cw += (r.cvr || 0) * (r.visits || 0); // 방문 가중 CVR 분자
+  });
+  activeChans.forEach(ch => activeWeeks.forEach(w => {
+    const cell = pivot[ch][w];
+    cell.c = cell.v > 0 ? cell.cw / cell.v : 0;
+  }));
   // KPI: selected weeks total vs comparison period
   const selW = activeWeeks;
   const nSel = selW.length;
@@ -3066,16 +3113,17 @@ function refreshChannel() {
   CH_RAW.forEach(r => {
     const chMatch = selChChans.size===0 || selChChans.has(r.channel);
     if (!chMatch) return;
-    if (selW.includes(r.week)) { totV+=r.visits; totS+=r.sales; cntCvr++; sumCvr+=r.cvr; }
-    if (compWeeks.includes(r.week)) { totVc+=r.visits; totSc+=r.sales; cntCvrC++; sumCvrC+=r.cvr; }
+    if (selW.includes(r.week)) { totV+=r.visits; totS+=r.sales; cntCvr+=r.visits; sumCvr+=r.cvr*r.visits; }
+    if (compWeeks.includes(r.week)) { totVc+=r.visits; totSc+=r.sales; cntCvrC+=r.visits; sumCvrC+=r.cvr*r.visits; }
   });
   const avgCvr = cntCvr>0 ? sumCvr/cntCvr*100 : 0;
   const avgCvrC = cntCvrC>0 ? sumCvrC/cntCvrC*100 : 0;
   const wowV = totVc>0 ? (totV-totVc)/totVc*100 : null;
   const wowS = totSc>0 ? (totS-totSc)/totSc*100 : null;
   const wowC = avgCvrC>0 ? (avgCvr-avgCvrC)/avgCvrC*100 : null;
-  const compLabel = compWeeks.length>0 ? `vs ${compWeeks[0]}${compWeeks.length>1?'~'+compWeeks[compWeeks.length-1]:''}` : '';
-  const selLabel = nSel<=3 ? selW.join(', ') : selW[0]+'~'+selW[selW.length-1];
+  const _lb = w => CH_WEEK_RANGES[w] || w;
+  const compLabel = compWeeks.length>0 ? `vs ${_lb(compWeeks[0])}${compWeeks.length>1?'~'+_lb(compWeeks[compWeeks.length-1]):''}` : '';
+  const selLabel = nSel<=3 ? selW.map(_lb).join(', ') : _lb(selW[0])+'~'+_lb(selW[selW.length-1]);
   document.getElementById('chKpiRow').innerHTML = [
     kpiCard('Total Visits', selLabel, totV.toLocaleString(), wowV, compLabel, totVc.toLocaleString()),
     kpiCard('Total Sales', selLabel, '$'+totS.toLocaleString(undefined,{maximumFractionDigits:0}), wowS, compLabel, '$'+totSc.toLocaleString(undefined,{maximumFractionDigits:0})),
@@ -3097,10 +3145,10 @@ function renderChannelBestWorst() {
   var allData = CH_RAW;
   if (!allData.length) return;
   var activeWeeks = getActiveWeeks();
-  var selW = selChWeeks.size > 0 ? Array.from(selChWeeks).sort(function(a,b){return parseInt(a.slice(1))-parseInt(b.slice(1));}) : [];
+  var selW = selChWeeks.size > 0 ? Array.from(selChWeeks).sort() : [];
   var periodTxt = '전체';
-  if (selW.length === 1) periodTxt = selW[0];
-  else if (selW.length > 1) periodTxt = selW[0] + '~' + selW[selW.length-1];
+  if (selW.length === 1) periodTxt = CH_WEEK_RANGES[selW[0]] || selW[0];
+  else if (selW.length > 1) periodTxt = (CH_WEEK_RANGES[selW[0]] || selW[0]) + '~' + (CH_WEEK_RANGES[selW[selW.length-1]] || selW[selW.length-1]);
   var tag = document.getElementById('bwPeriodTag');
   if (tag) tag.textContent = periodTxt;
   var prevWeek = null;
@@ -3119,14 +3167,14 @@ function renderChannelBestWorst() {
     if (activeWeeks.indexOf(r.week) >= 0) {
       cur[r.channel].v += r.visits;
       cur[r.channel].s += r.sales;
-      cur[r.channel].cvrSum += r.cvr;
-      cur[r.channel].cvrCnt++;
+      cur[r.channel].cvrSum += r.cvr * r.visits; // 방문 가중
+      cur[r.channel].cvrCnt += r.visits;
     }
     if (prevWeek && r.week === prevWeek) {
       prv[r.channel].v += r.visits;
       prv[r.channel].s += r.sales;
-      prv[r.channel].cvrSum += r.cvr;
-      prv[r.channel].cvrCnt++;
+      prv[r.channel].cvrSum += r.cvr * r.visits;
+      prv[r.channel].cvrCnt += r.visits;
     }
   });
   var curArr = chans.map(function(ch) {
@@ -3197,7 +3245,7 @@ function kpiCard(title, period, value, wow, compLabel, compVal) {
   return `<div class="ch-kpi">
     <div class="ch-kpi-label">${title} (${period})</div>
     <div class="ch-kpi-val">${value}</div>
-    <div class="ch-kpi-wow ${cls}">${arrow} WoW ${wowStr}</div>
+    <div class="ch-kpi-wow ${cls}">${arrow} ${chCmpName()} ${wowStr}</div>
     <div class="ch-kpi-sub">${compLabel} ${compVal}</div>
   </div>`;
 }
@@ -3213,8 +3261,8 @@ function renderChTable(containerId, weeks, channels, pivot, key, headerColor) {
     return vb - va;
   });
   let html = `<table class="ch-tbl"><thead><tr><th style="background:${headerColor}">Channel</th>`;
-  weeks.forEach(w => html += `<th style="background:${headerColor}">${w}<br><span style="font-weight:400;font-size:7px;">(${CH_WEEK_RANGES[w]})</span></th>`);
-  html += `<th style="background:${headerColor}">WoW</th></tr></thead><tbody>`;
+  weeks.forEach(w => html += `<th style="background:${headerColor}">${CH_WEEK_RANGES[w] || w}</th>`);
+  html += `<th style="background:${headerColor}">${chCmpName()}</th></tr></thead><tbody>`;
   sorted.forEach(ch => {
     html += `<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${CH_COLORS[ch]||'#888'};margin-right:5px;vertical-align:middle;"></span>${ch}</td>`;
     weeks.forEach(w => {
@@ -3287,7 +3335,7 @@ function renderChLineChart(canvasId, weeks, channels, pivot, key, _unused, idx) 
   }));
   chChartInstances[idx] = new Chart(ctx, {
     type: 'line',
-    data: { labels: weeks.map(w => w+'\n'+CH_WEEK_RANGES[w]), datasets },
+    data: { labels: weeks.map(w => CH_WEEK_RANGES[w] || w), datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -3332,12 +3380,12 @@ function renderComboChart(weeks, channels, pivot) {
   const totSales = weeks.map(w => channels.reduce((s,ch)=>s+(pivot[ch]?.[w]?.s||0),0));
   const totCvr = weeks.map(w => {
     const v = channels.reduce((s,ch)=>s+(pivot[ch]?.[w]?.v||0),0);
-    const cSum = channels.reduce((s,ch)=>s+(pivot[ch]?.[w]?.c||0),0);
-    return v > 0 ? +(cSum / channels.length * 100).toFixed(2) : 0;
+    const cw = channels.reduce((s,ch)=>s+(pivot[ch]?.[w]?.cw||0),0);
+    return v > 0 ? +(cw / v * 100).toFixed(2) : 0; // 방문 가중 통합 CVR
   });
   comboChartInstance = new Chart(ctx, {
     data: {
-      labels: weeks.map(w => w + '\n' + CH_WEEK_RANGES[w]),
+      labels: weeks.map(w => CH_WEEK_RANGES[w] || w),
       datasets: [
         {
           type: 'bar',
@@ -4093,14 +4141,7 @@ function rebuildDerivedData() {
       r.week = Math.floor((new Date(r.date+'T00:00:00').getTime() - refTime) / (7*86400000)) + 1;
     });
   }
-  CH_WEEKS.length = 0;
-  [...new Set(CH_RAW.map(r => r.week))]
-    .sort((a,b) => parseInt(String(a).replace(/\D/g,'')) - parseInt(String(b).replace(/\D/g,'')))
-    .forEach(w => CH_WEEKS.push(w));
-  CH_CHANNELS.length = 0;
-  [...new Set(CH_RAW.map(r => r.channel))].forEach(c => CH_CHANNELS.push(c));
-  Object.keys(CH_WEEK_RANGES).forEach(k => delete CH_WEEK_RANGES[k]);
-  CH_RAW.forEach(r => { CH_WEEK_RANGES[r.week] = r.range; });
+  rebuildChannelAgg();
 }
 // ── Dashboard init ───────────────────────────────────────────────────────────
 function initDashboard() {
