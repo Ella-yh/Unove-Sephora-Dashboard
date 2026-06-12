@@ -3100,8 +3100,8 @@ function refreshChannel() {
     const cell = pivot[ch][w];
     cell.c = cell.v > 0 ? cell.cw / cell.v : 0;
   }));
-  // KPI: selected weeks total vs comparison period
-  const selW = activeWeeks;
+  // KPI 기준 기간: 선택 시 해당 구간, 미선택 시 최신 기간 1개 (vs 직전 기간)
+  const selW = selChWeeks.size > 0 ? activeWeeks : CH_WEEKS.slice(-1);
   const nSel = selW.length;
   // Comparison: previous N weeks
   const allIdx = CH_WEEKS.map((w,i) => ({w,i}));
@@ -3144,18 +3144,17 @@ function refreshChannel() {
 function renderChannelBestWorst() {
   var allData = CH_RAW;
   if (!allData.length) return;
-  var activeWeeks = getActiveWeeks();
-  var selW = selChWeeks.size > 0 ? Array.from(selChWeeks).sort() : [];
-  var periodTxt = '전체';
-  if (selW.length === 1) periodTxt = CH_WEEK_RANGES[selW[0]] || selW[0];
-  else if (selW.length > 1) periodTxt = (CH_WEEK_RANGES[selW[0]] || selW[0]) + '~' + (CH_WEEK_RANGES[selW[selW.length-1]] || selW[selW.length-1]);
+  // 기준 기간: 선택 시 해당 구간, 미선택 시 최신 기간 1개
+  var basisWeeks = selChWeeks.size > 0 ? Array.from(selChWeeks).sort() : CH_WEEKS.slice(-1);
+  if (!basisWeeks.length) return;
+  var _bl = function(w) { return CH_WEEK_RANGES[w] || w; };
+  var periodTxt = basisWeeks.length === 1 ? _bl(basisWeeks[0]) : _bl(basisWeeks[0]) + '~' + _bl(basisWeeks[basisWeeks.length-1]);
   var tag = document.getElementById('bwPeriodTag');
   if (tag) tag.textContent = periodTxt;
-  var prevWeek = null;
-  if (selW.length === 1) {
-    var idx = CH_WEEKS.indexOf(selW[0]);
-    if (idx > 0) prevWeek = CH_WEEKS[idx - 1];
-  }
+  // 비교 기간: 직전 동일 길이 구간
+  var minIdx2 = CH_WEEKS.indexOf(basisWeeks[0]);
+  var prevWeeks = [];
+  for (var pi = minIdx2 - basisWeeks.length; pi < minIdx2; pi++) { if (pi >= 0) prevWeeks.push(CH_WEEKS[pi]); }
   var chans = selChChans.size > 0 ? Array.from(selChChans) : Array.from(CH_CHANNELS);
   var cur = {}, prv = {};
   chans.forEach(function(ch) {
@@ -3164,13 +3163,13 @@ function renderChannelBestWorst() {
   });
   allData.forEach(function(r) {
     if (!cur[r.channel]) return;
-    if (activeWeeks.indexOf(r.week) >= 0) {
+    if (basisWeeks.indexOf(r.week) >= 0) {
       cur[r.channel].v += r.visits;
       cur[r.channel].s += r.sales;
       cur[r.channel].cvrSum += r.cvr * r.visits; // 방문 가중
       cur[r.channel].cvrCnt += r.visits;
     }
-    if (prevWeek && r.week === prevWeek) {
+    if (prevWeeks.indexOf(r.week) >= 0) {
       prv[r.channel].v += r.visits;
       prv[r.channel].s += r.sales;
       prv[r.channel].cvrSum += r.cvr * r.visits;
@@ -3188,7 +3187,7 @@ function renderChannelBestWorst() {
       pcvr: prv[ch].cvrCnt > 0 ? prv[ch].cvrSum / prv[ch].cvrCnt * 100 : 0
     };
   });
-  var hasPrev = !!prevWeek;
+  var hasPrev = prevWeeks.length > 0;
   function getDelta(curV, prevV) {
     if (!hasPrev || prevV === 0) return null;
     return (curV - prevV) / prevV * 100;
