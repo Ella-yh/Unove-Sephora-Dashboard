@@ -499,7 +499,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <button class="mkr-btn active" id="btnVisitsToggle" onclick="toggleVisits(this)" style="display:flex;align-items:center;gap:4px;">
         <span style="font-size:12px;font-weight:700;line-height:1;color:#6aadd5;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#6aadd5;"></span>Visits
       </button>
-      <button class="mkr-btn active" id="btnAdSpendToggle" onclick="toggleAdSpend(this)" style="display:flex;align-items:center;gap:4px;">
+      <button class="mkr-btn" id="btnAdSpendToggle" onclick="toggleAdSpend(this)" style="display:flex;align-items:center;gap:4px;">
         <span style="font-size:12px;font-weight:700;line-height:1;color:#e8c84a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e8c84a;"></span>광고비
       </button>
       <button class="mkr-btn" id="btnRoasToggle" onclick="toggleRoas(this)" style="display:flex;align-items:center;gap:4px;">
@@ -1495,7 +1495,7 @@ window.setTtChartType = function(btn, type) {
 let selSalesTypes = new Set(['com']); // multi-select set
 let showMarkers = false;
 let showVisits   = true;
-let showAdSpend  = true;
+let showAdSpend  = false;
 let showRoas     = false;
 let showCvr      = false;
 let mainPeriod   = 'daily';
@@ -3770,7 +3770,7 @@ function onAuthSuccess(user) {
           RAW_SALES.length = 0; c.sales.forEach(r => RAW_SALES.push(r));
           CH_RAW.length = 0;    c.channel.forEach(r => CH_RAW.push(r));
           ADS_RAW.length = 0;   (c.ads || []).forEach(r => ADS_RAW.push(r));
-          KOL_RAW.length = 0;   (c.kol || []).filter(r => r.date).forEach(r => KOL_RAW.push(r));
+          KOL_RAW.length = 0;   (c.kol || []).filter(r => r.date && r.date.startsWith('2026')).forEach(r => KOL_RAW.push(r));
           Object.keys(SALES_BY_DATE).forEach(k => delete SALES_BY_DATE[k]);
           RAW_SALES.forEach(r => { SALES_BY_DATE[r.date] = { total: r.total||0, com: r.com||0, bam: r.bam||0 }; });
           rebuildDerivedData();
@@ -3893,7 +3893,7 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     })();
 
     KOL_RAW.length = 0;
-    if (Array.isArray(data.kol)) data.kol.filter(r => r.date).forEach(r => KOL_RAW.push(r));
+    if (Array.isArray(data.kol)) data.kol.filter(r => r.date && r.date.startsWith('2026')).forEach(r => KOL_RAW.push(r));
 
     rebuildDerivedData();
     const ts = data.updatedAt ? new Date(data.updatedAt).toLocaleString('ko-KR') : '—';
