@@ -2236,6 +2236,7 @@ function renderChart() {
         },
         yS: {
           type: 'linear', position: 'right',
+          display: !showAdSpend,
           grid: { drawOnChartArea: false },
           ticks: { font:{size:9}, color:'#888', callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v },
           title: { display:true, text:'Sales (₩)', font:{size:9}, color:'#d97070' }
@@ -3504,7 +3505,7 @@ function renderChLineChart(canvasId, weeks, channels, pivot, key, _unused, idx) 
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 }, padding: 8 } },
+        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 }, padding: 8 } },
         tooltip: {
           callbacks: {
             label: function(ctx) {
@@ -3599,6 +3600,7 @@ function renderComboChart(weeks, channels, pivot) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: { right: 10 } },
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
@@ -4266,7 +4268,13 @@ function refreshAdsChart(chartNum) {
 }
 
 function refreshAds() {
-  if (ADS_RAW.length === 0) return;
+  if (ADS_RAW.length === 0) {
+    ['adsChart1','adsChart2','adsChart3'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) { var ctx = el.getContext('2d'); ctx.clearRect(0,0,el.width,el.height); }
+    });
+    return;
+  }
   refreshAdsChart(1);
   refreshAdsChart(2);
   refreshAdsChart(3);
@@ -4306,7 +4314,7 @@ function initDashboard() {
     buildWeekOptions();
   } catch(e) {}
   try { buildMonthOptions(); renderKPI(); renderChart(); renderEventList(); } catch(e) { console.warn('render error', e); }
-  try { refreshChannel(); } catch(e) {}
+  // refreshChannel은 탭 전환 시에만 렌더링 (hidden canvas 오버플로우 방지)
 }
 
 // ── Status helper ────────────────────────────────────────────────────────────
