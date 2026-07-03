@@ -613,7 +613,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   <div class="chart-card">
     <div class="leg-row">
       <div class="leg"><div class="leg-dot" style="background:rgba(47,84,150,0.25);border:1.5px solid rgba(47,84,150,0.6);"></div>Visits (Area)</div>
-      <div class="leg"><div class="leg-dot" style="background:#c8102e;border-radius:1px;"></div>Sales $ (Bar)</div>
+      <div class="leg"><div class="leg-dot" style="background:#c8102e;border-radius:1px;"></div>Sales (백만원) (Bar)</div>
       <div class="leg"><div class="leg-dot" style="background:#F4B942;border-radius:50%;"></div>CVR % (Line)</div>
     </div>
     <div class="chart-wrap" style="height:360px;"><canvas id="chComboChart"></canvas></div>
@@ -634,7 +634,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <div class="chart-wrap" style="height:300px;"><canvas id="chVisitsChart"></canvas></div>
     </div>
     <div class="chart-card">
-      <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#548235;margin-bottom:8px;">Sales TY ($)</div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#548235;margin-bottom:8px;">Sales TY (백만원)</div>
       <div class="chart-wrap" style="height:300px;"><canvas id="chSalesChart"></canvas></div>
     </div>
   </div>
@@ -647,7 +647,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <div id="chVisitsTable"></div>
     </div>
     <div class="chart-card">
-      <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#548235;margin-bottom:8px;">Sales TY ($)</div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#548235;margin-bottom:8px;">Sales TY (백만원)</div>
       <div id="chSalesTable"></div>
     </div>
   </div>
@@ -3126,7 +3126,7 @@ function refreshChannel() {
   const selLabel = nSel<=3 ? selW.map(_lb).join(', ') : _lb(selW[0])+'~'+_lb(selW[selW.length-1]);
   document.getElementById('chKpiRow').innerHTML = [
     kpiCard('Total Visits', selLabel, totV.toLocaleString(), wowV, compLabel, totVc.toLocaleString()),
-    kpiCard('Total Sales', selLabel, '$'+totS.toLocaleString(undefined,{maximumFractionDigits:0}), wowS, compLabel, '$'+totSc.toLocaleString(undefined,{maximumFractionDigits:0})),
+    kpiCard('Total Sales', selLabel, '₩'+(totS/1000000).toLocaleString('ko-KR',{maximumFractionDigits:1})+'백만', wowS, compLabel, '₩'+(totSc/1000000).toLocaleString('ko-KR',{maximumFractionDigits:1})+'백만'),
     kpiCard('Avg CVR', selLabel, avgCvr.toFixed(2)+'%', wowC, compLabel, avgCvrC.toFixed(2)+'%'),
   ].join('');
   // Combo chart
@@ -3221,7 +3221,7 @@ function renderChannelBestWorst() {
       + '</div>';
   }
   var fmtV   = function(v){ return Math.round(v).toLocaleString(); };
-  var fmtS   = function(v){ return '$' + (v >= 1000 ? (v/1000).toFixed(1)+'K' : Math.round(v).toLocaleString()); };
+  var fmtS = function(v){ return '₩' + (v/1000000).toLocaleString('ko-KR',{maximumFractionDigits:1}) + '백만'; };
   var fmtCvr = function(v){ return v.toFixed(2) + '%'; };
   var cols = [
     {title:'Visits',  key:'v',   pk:'pv',   fmt:fmtV},
@@ -3250,7 +3250,7 @@ function kpiCard(title, period, value, wow, compLabel, compVal) {
 }
 function renderChTable(containerId, weeks, channels, pivot, key, headerColor) {
   const fmt = key==='v' ? v=>v.toLocaleString()
-            : key==='s' ? v=>'$'+v.toLocaleString(undefined,{maximumFractionDigits:0})
+            : key==='s' ? v=>'₩'+(v/1000000).toLocaleString('ko-KR',{maximumFractionDigits:1})+'백만'
             : v=>(v*100).toFixed(2)+'%';
   // Sort channels by last week value desc
   const lastW = weeks[weeks.length-1];
@@ -3346,7 +3346,7 @@ function renderChLineChart(canvasId, weeks, channels, pivot, key, _unused, idx) 
             label: function(ctx) {
               const v = ctx.parsed.y;
               if (key==='v') return ctx.dataset.label+': '+v.toLocaleString();
-              if (key==='s') return ctx.dataset.label+': $'+v.toLocaleString(undefined,{maximumFractionDigits:0});
+              if (key==='s') return ctx.dataset.label+': ₩'+(v/1000000).toLocaleString('ko-KR',{maximumFractionDigits:1})+'백만';
               return ctx.dataset.label+': '+v.toFixed(2)+'%';
             }
           }
@@ -3358,7 +3358,7 @@ function renderChLineChart(canvasId, weeks, channels, pivot, key, _unused, idx) 
           ticks: {
             callback: function(v) {
               if (key==='v') return v>=1000?(v/1000)+'K':v;
-              if (key==='s') return '$'+(v>=1000?(v/1000)+'K':v);
+              if (key==='s') return '₩'+(v/1000000).toFixed(1)+'M';
               return v+'%';
             },
             font: { size: 10 }, color: '#ffffff'
@@ -3388,7 +3388,7 @@ function renderComboChart(weeks, channels, pivot) {
       datasets: [
         {
           type: 'bar',
-          label: 'Sales ($)',
+          label: 'Sales (백만원)',
           data: totSales,
           backgroundColor: makeGrad('chComboChart','#d97070',0.85,0.45),
           borderColor: '#d97070',
@@ -3439,7 +3439,7 @@ function renderComboChart(weeks, channels, pivot) {
           callbacks: {
             label: function(ctx) {
               if (ctx.dataset.label === 'Visits') return 'Visits: ' + ctx.parsed.y.toLocaleString();
-              if (ctx.dataset.label === 'Sales ($)') return 'Sales: $' + ctx.parsed.y.toLocaleString(undefined,{maximumFractionDigits:0});
+              if (ctx.dataset.label === 'Sales (백만원)') return 'Sales: ₩' + (ctx.parsed.y/1000000).toFixed(1) + '백만';
               return 'CVR: ' + ctx.parsed.y.toFixed(2) + '%';
             }
           }
@@ -3458,8 +3458,8 @@ function renderComboChart(weeks, channels, pivot) {
           type: 'linear',
           position: 'right',
           beginAtZero: true,
-          title: { display: true, text: 'Sales ($)', color: '#d97070', font: { size: 11, weight: 'bold' } },
-          ticks: { callback: v => '$'+(v>=1000?(v/1000)+'K':v), color: '#d97070', font: { size: 10 } },
+          title: { display: true, text: 'Sales (백만원)', color: '#d97070', font: { size: 11, weight: 'bold' } },
+          ticks: { callback: v => '₩'+(v/1000000).toFixed(1)+'M', color: '#d97070', font: { size: 10 } },
           grid: { drawOnChartArea: false },
         },
         yCvr: {
