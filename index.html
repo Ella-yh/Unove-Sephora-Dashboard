@@ -3346,7 +3346,7 @@ function renderChLineChart(canvasId, weeks, channels, pivot, key, _unused, idx) 
             label: function(ctx) {
               const v = ctx.parsed.y;
               if (key==='v') return ctx.dataset.label+': '+v.toLocaleString();
-              if (key==='s') return ctx.dataset.label+': ₩'+(v/1000000).toLocaleString('ko-KR',{maximumFractionDigits:1})+'백만';
+              if (key==='s') return ctx.dataset.label+': ₩'+Math.round(v).toLocaleString('ko-KR');
               return ctx.dataset.label+': '+v.toFixed(2)+'%';
             }
           }
@@ -3439,7 +3439,7 @@ function renderComboChart(weeks, channels, pivot) {
           callbacks: {
             label: function(ctx) {
               if (ctx.dataset.label === 'Visits') return 'Visits: ' + ctx.parsed.y.toLocaleString();
-              if (ctx.dataset.label === 'Sales (백만원)') return 'Sales: ₩' + (ctx.parsed.y/1000000).toFixed(1) + '백만';
+              if (ctx.dataset.label === 'Sales (백만원)') return 'Sales: ₩' + Math.round(ctx.parsed.y).toLocaleString('ko-KR');
               return 'CVR: ' + ctx.parsed.y.toFixed(2) + '%';
             }
           }
