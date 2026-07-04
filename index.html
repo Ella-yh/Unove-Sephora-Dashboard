@@ -590,7 +590,16 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     </div>
   </div>
   <div class="filter-block">
-    <div class="filter-lbl">기간 (Multi)</div>
+    <div class="filter-lbl">MONTH</div>
+    <div class="dd-wrap" id="ddWrap-chMonth">
+    <div class="dd-btn" id="ddBtn-chMonth" onclick="toggleChDD('chMonth')"><span id="ddLabel-chMonth">ALL</span><span class="arr">▾</span></div>
+    <div class="dd-panel" id="ddPanel-chMonth">
+    <div class="dd-all" onclick="clearChFilter('chMonth')"><input type="checkbox" id="chk-chMonth-all" checked readonly> ALL</div>
+    </div>
+    </div>
+    </div>
+    <div class="filter-block">
+    <div class="filter-lbl">WEEK (SUN–SAT)</div>
     <div class="dd-wrap" id="ddWrap-chWeek">
       <div class="dd-btn" id="ddBtn-chWeek" onclick="toggleChDD('chWeek')"><span id="ddLabel-chWeek">ALL</span><span class="arr">▾</span></div>
       <div class="dd-panel" id="ddPanel-chWeek">
@@ -3013,21 +3022,41 @@ function toggleSidebar() {
 }
 function buildChWeekOptions() {
   const panel = document.getElementById('ddPanel-chWeek');
-  // 기존 옵션 초기화 (중복 방지)
   panel.querySelectorAll('.dd-opt').forEach(el => el.remove());
-  selChWeeks.clear();
-  CH_WEEKS.forEach(w => {
-    const lbl = document.createElement('label');
-    lbl.className = 'dd-opt';
-    lbl.innerHTML = `<input type="checkbox" data-group="chWeek" value="${w}"> ${CH_WEEK_RANGES[w] || w}`;
+  const src = selChMonths.size > 0 ? CH_RAW.filter(r => selChMonths.has(r.date.slice(0,7))) : CH_RAW;
+  const weeks = [...new Set(src.map(r => getWeekKey(r.date)))].filter(Boolean).sort();
+  [...selChWeeks].forEach(w => { if (!weeks.includes(w)) selChWeeks.delete(w); });
+  weeks.forEach(w => {
+    const lbl = document.createElement('label'); lbl.className = 'dd-opt';
+    const s = new Date(w+'T00:00:00'), e = new Date(s); e.setDate(s.getDate()+6);
+    const lab = (s.getMonth()+1)+'/'+s.getDate()+'~'+(e.getMonth()+1)+'/'+e.getDate();
+    lbl.innerHTML = '<input type="checkbox" data-group="chWeek" value="'+w+'"'+(selChWeeks.has(w)?' checked':'')+'> '+lab;
     lbl.querySelector('input').addEventListener('change', function() {
       if (this.checked) selChWeeks.add(this.value); else selChWeeks.delete(this.value);
-      syncChCBs('chWeek', selChWeeks);
-      updateChLabel('chWeek');
-      refreshChannel();
+      syncChCBs('chWeek', selChWeeks); updateChLabel('chWeek'); refreshChannel();
     });
     panel.appendChild(lbl);
   });
+  syncChCBs('chWeek', selChWeeks); updateChLabel('chWeek');
+}
+
+function buildChMonthOptions() {
+  const panel = document.getElementById('ddPanel-chMonth');
+  if (!panel) return;
+  panel.querySelectorAll('.dd-opt').forEach(el => el.remove());
+  const months = [...new Set(CH_RAW.map(r => r.date.slice(0,7)))].filter(Boolean).sort();
+  months.forEach(m => {
+    const mm = m.slice(5,7);
+    const lbl = document.createElement('label'); lbl.className = 'dd-opt';
+    lbl.innerHTML = '<input type="checkbox" data-group="chMonth" value="'+m+'"'+(selChMonths.has(m)?' checked':'')+'> '+(CH_MONTH_NAMES[mm]||m);
+    lbl.querySelector('input').addEventListener('change', function() {
+      if (this.checked) selChMonths.add(this.value); else selChMonths.delete(this.value);
+      syncChCBs('chMonth', selChMonths); updateChLabel('chMonth');
+      selChWeeks.clear(); buildChWeekOptions(); refreshChannel();
+    });
+    panel.appendChild(lbl);
+  });
+  syncChCBs('chMonth', selChMonths); updateChLabel('chMonth');
 }
 function buildChChanOptions() {
   const panel = document.getElementById('ddPanel-chChan');
@@ -3056,10 +3085,12 @@ function toggleChDD(name) {
   if (!was) { panel.classList.add('show'); btn.classList.add('open'); }
 }
 function clearChFilter(name) {
+  if (name==='chMonth') { selChMonths.clear(); selChWeeks.clear(); }
   if (name==='chWeek') selChWeeks.clear();
   if (name==='chChan') selChChans.clear();
-  syncChCBs(name, name==='chWeek'?selChWeeks:selChChans);
-  updateChLabel(name);
+  const set = name==='chMonth'?selChMonths : name==='chWeek'?selChWeeks : selChChans;
+  syncChCBs(name, set); updateChLabel(name);
+  if (name==='chMonth') buildChWeekOptions();
   refreshChannel();
 }
 function syncChCBs(group, set) {
@@ -3069,18 +3100,28 @@ function syncChCBs(group, set) {
 }
 function updateChLabel(name) {
   const el = document.getElementById('ddLabel-'+name);
-  const set = name==='chWeek'?selChWeeks:selChChans;
+  if (!el) return;
+  const set = name==='chMonth'?selChMonths : name==='chWeek'?selChWeeks : selChChans;
   if (set.size === 0) el.textContent = 'ALL';
-  else if (set.size === 1) el.textContent = [...set][0];
+  else if (set.size === 1) { let v = [...set][0]; if (name==='chMonth') v = CH_MONTH_NAMES[v.slice(5,7)] || v; el.textContent = v; }
   else el.textContent = set.size + ' selected';
 }
+let selChMonths = new Set();
+const CH_MONTH_NAMES = {'01':'JAN','02':'FEB','03':'MAR','04':'APR','05':'MAY','06':'JUN','07':'JUL','08':'AUG','09':'SEP','10':'OCT','11':'NOV','12':'DEC'};
 function getFilteredChData() {
   let data = CH_RAW;
-  if (selChWeeks.size > 0) data = data.filter(r => selChWeeks.has(r.week));
+  if (selChMonths.size > 0) data = data.filter(r => selChMonths.has(r.date.slice(0,7)));
+  if (selChWeeks.size > 0) data = data.filter(r => selChWeeks.has(getWeekKey(r.date)));
   if (selChChans.size > 0) data = data.filter(r => selChChans.has(r.channel));
   return data;
 }
-function getActiveWeeks() { return selChWeeks.size > 0 ? [...selChWeeks].sort() : [...CH_WEEKS]; }
+function getActiveWeeks() {
+  const d = getFilteredChData();
+  const ws = new Set(d.map(r => r.week));
+  const res = CH_WEEKS.filter(w => ws.has(w));
+  const anyF = selChMonths.size || selChWeeks.size || selChChans.size;
+  return res.length ? res : (anyF ? [] : [...CH_WEEKS]);
+}
 function getActiveChans() { return selChChans.size > 0 ? [...selChChans] : [...CH_CHANNELS]; }
 function refreshChannel() {
   const activeWeeks = getActiveWeeks();
@@ -3479,6 +3520,7 @@ function renderComboChart(weeks, channels, pivot) {
     }
   });
 }
+buildChMonthOptions();
 buildChWeekOptions();
 buildChChanOptions();
 // ─── INIT ─────────────────────────────────────────────────────────────────────
