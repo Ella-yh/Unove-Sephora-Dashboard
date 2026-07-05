@@ -581,14 +581,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 <div id="tabChannel" style="display:none;">
 <div class="ch-kpi-row" id="chKpiRow"></div>
 <div class="filter-row">
-  <div class="filter-block">
-    <div class="filter-lbl">기간 단위</div>
-    <div style="display:flex;gap:3px;padding-top:1px;">
-      <button class="stgl" data-ch-period="monthly" onclick="setChPeriod(this,'monthly')">월</button>
-      <button class="stgl active" data-ch-period="weekly" onclick="setChPeriod(this,'weekly')">주</button>
-      <button class="stgl" data-ch-period="daily" onclick="setChPeriod(this,'daily')">일</button>
-    </div>
-  </div>
+  
   <div class="filter-block">
     <div class="filter-lbl">MONTH</div>
     <div class="dd-wrap" id="ddWrap-chMonth">
@@ -618,7 +611,14 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   </div>
 </div>
 <div class="chart-sec">
-  <div class="sec-hdr">Total Visits · Sales · CVR — Overview</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <div class="sec-hdr" style="margin-bottom:0;flex:1;">Total Visits · Sales · CVR — Overview</div>
+    <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+    <button class="ads-p-btn" data-ch-period="monthly" onclick="setChPeriod(this,'monthly')">월</button>
+    <button class="ads-p-btn active" data-ch-period="weekly" onclick="setChPeriod(this,'weekly')">주</button>
+    <button class="ads-p-btn" data-ch-period="daily" onclick="setChPeriod(this,'daily')">일</button>
+    </div>
+    </div>
   <div class="chart-card">
     <div class="leg-row">
       <div class="leg"><div class="leg-dot" style="background:rgba(47,84,150,0.25);border:1.5px solid rgba(47,84,150,0.6);"></div>Visits (Area)</div>
@@ -2861,7 +2861,6 @@ window.setChPeriod = function(btn, pd) {
   chPeriod = pd;
   document.querySelectorAll('[data-ch-period]').forEach(b => b.classList.toggle('active', b.dataset.chPeriod === pd));
   rebuildChannelAgg();
-  selChWeeks.clear();
   buildChWeekOptions();
   refreshChannel();
 };
@@ -4186,8 +4185,8 @@ function rebuildDerivedData() {
 }
 // ── Dashboard init ───────────────────────────────────────────────────────────
 function initDashboard() {
-  try { selChWeeks.clear(); selChChans.clear(); } catch(e) {}
-  try { buildChWeekOptions(); buildChChanOptions(); } catch(e) {}
+  try { selChMonths.clear(); selChWeeks.clear(); selChChans.clear(); } catch(e) {}
+  try { buildChMonthOptions(); buildChWeekOptions(); buildChChanOptions(); } catch(e) {}
   // Week 옵션 재빌드 (데이터 로드 후 week 번호가 확정되므로)
   try {
     const wp = document.getElementById('ddPanel-week');
