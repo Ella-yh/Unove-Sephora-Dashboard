@@ -635,7 +635,8 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   </div>
   <div class="bw-grid" id="bwGrid"></div>
 </div>
-<div class="chart-sec">
+<div class="filter-row" style="margin:2px 0 6px;"><div class="filter-block"><div class="filter-lbl">채널 (아래 3개 섹션)</div><div class="dd-wrap" id="ddWrap-chSec"><div class="dd-btn" id="ddBtn-chSec" onclick="toggleChDD('chSec')"><span id="ddLabel-chSec">ALL</span><span class="arr">▾</span></div><div class="dd-panel" id="ddPanel-chSec" style="min-width:220px;"><div class="dd-all" onclick="clearChFilter('chSec')"><input type="checkbox" id="chk-chSec-all" checked readonly> ALL</div></div></div></div></div>
+    <div class="chart-sec">
   <div class="sec-hdr">Visits · Sales — Weekly by Channel (Chart)</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
     <div class="chart-card">
@@ -3087,7 +3088,8 @@ function clearChFilter(name) {
   if (name==='chMonth') { selChMonths.clear(); selChWeeks.clear(); }
   if (name==='chWeek') selChWeeks.clear();
   if (name==='chChan') selChChans.clear();
-  const set = name==='chMonth'?selChMonths : name==='chWeek'?selChWeeks : selChChans;
+  if (name==='chSec') selChSec.clear();
+  const set = name==='chMonth'?selChMonths : name==='chWeek'?selChWeeks : name==='chSec'?selChSec : selChChans;
   syncChCBs(name, set); updateChLabel(name);
   if (name==='chMonth') buildChWeekOptions();
   refreshChannel();
@@ -3097,15 +3099,31 @@ function syncChCBs(group, set) {
   document.querySelectorAll(`input[data-group="${group}"]`).forEach(cb => cb.checked = set.has(cb.value));
   if (allC) allC.checked = set.size === 0;
 }
+function buildChSecOptions() {
+  const panel = document.getElementById('ddPanel-chSec');
+  if (!panel) return;
+  panel.querySelectorAll('.dd-opt').forEach(el => el.remove());
+  CH_CHANNELS.forEach(ch => {
+    const lbl = document.createElement('label'); lbl.className = 'dd-opt';
+    lbl.innerHTML = '<input type="checkbox" data-group="chSec" value="'+ch+'"'+(selChSec.has(ch)?' checked':'')+'> '+ch;
+    lbl.querySelector('input').addEventListener('change', function() {
+      if (this.checked) selChSec.add(this.value); else selChSec.delete(this.value);
+      syncChCBs('chSec', selChSec); updateChLabel('chSec'); refreshChannel();
+    });
+    panel.appendChild(lbl);
+  });
+  syncChCBs('chSec', selChSec); updateChLabel('chSec');
+}
 function updateChLabel(name) {
   const el = document.getElementById('ddLabel-'+name);
   if (!el) return;
-  const set = name==='chMonth'?selChMonths : name==='chWeek'?selChWeeks : selChChans;
+  const set = name==='chMonth'?selChMonths : name==='chWeek'?selChWeeks : name==='chSec'?selChSec : selChChans;
   if (set.size === 0) el.textContent = 'ALL';
   else if (set.size === 1) { let v = [...set][0]; if (name==='chMonth') v = CH_MONTH_NAMES[v.slice(5,7)] || v; el.textContent = v; }
   else el.textContent = set.size + ' selected';
 }
 let selChMonths = new Set();
+let selChSec = new Set();
 const CH_MONTH_NAMES = {'01':'JAN','02':'FEB','03':'MAR','04':'APR','05':'MAY','06':'JUN','07':'JUL','08':'AUG','09':'SEP','10':'OCT','11':'NOV','12':'DEC'};
 function getFilteredChData() {
   let data = CH_RAW;
@@ -3114,21 +3132,28 @@ function getFilteredChData() {
   if (selChChans.size > 0) data = data.filter(r => selChChans.has(r.channel));
   return data;
 }
+function getFilteredChDataTime() {
+  let data = CH_RAW;
+  if (selChMonths.size > 0) data = data.filter(r => selChMonths.has(r.date.slice(0,7)));
+  if (selChWeeks.size > 0) data = data.filter(r => selChWeeks.has(getWeekKey(r.date)));
+  return data;
+}
+function getSecChans() { return selChSec.size > 0 ? [...selChSec] : [...CH_CHANNELS]; }
 function getActiveWeeks() {
-  const d = getFilteredChData();
+  const d = getFilteredChDataTime();
   const ws = new Set(d.map(r => r.week));
   const res = CH_WEEKS.filter(w => ws.has(w));
-  const anyF = selChMonths.size || selChWeeks.size || selChChans.size;
+  const anyF = selChMonths.size || selChWeeks.size;
   return res.length ? res : (anyF ? [] : [...CH_WEEKS]);
 }
 function getActiveChans() { return selChChans.size > 0 ? [...selChChans] : [...CH_CHANNELS]; }
 function refreshChannel() {
   const activeWeeks = getActiveWeeks();
   const activeChans = getActiveChans();
-  const data = getFilteredChData();
+  const data = getFilteredChDataTime();
   // Build pivot
   const pivot = {};
-  activeChans.forEach(ch => { pivot[ch] = {}; activeWeeks.forEach(w => { pivot[ch][w] = {v:0,s:0,c:0,cw:0}; }); });
+  CH_CHANNELS.forEach(ch => { pivot[ch] = {}; activeWeeks.forEach(w => { pivot[ch][w] = {v:0,s:0,c:0,cw:0}; }); });
   data.forEach(r => {
     const cell = pivot[r.channel] && pivot[r.channel][r.week];
     if (!cell) return;
@@ -3136,7 +3161,7 @@ function refreshChannel() {
     cell.s  += (r.sales  || 0);
     cell.cw += (r.cvr || 0) * (r.visits || 0); // 방문 가중 CVR 분자
   });
-  activeChans.forEach(ch => activeWeeks.forEach(w => {
+  CH_CHANNELS.forEach(ch => activeWeeks.forEach(w => {
     const cell = pivot[ch][w];
     cell.c = cell.v > 0 ? cell.cw / cell.v : 0;
   }));
@@ -3172,13 +3197,13 @@ function refreshChannel() {
   // Combo chart
   renderComboChart(activeWeeks, activeChans, pivot);
   // Tables
-  renderChTable('chVisitsTable', activeWeeks, activeChans, pivot, 'v', '#2F5496');
-  renderChTable('chSalesTable', activeWeeks, activeChans, pivot, 's', '#548235');
-  renderChTable('chCvrTable', activeWeeks, activeChans, pivot, 'c', '#BF360C');
+  renderChTable('chVisitsTable', activeWeeks, getSecChans(), pivot, 'v', '#2F5496');
+  renderChTable('chSalesTable', activeWeeks, getSecChans(), pivot, 's', '#548235');
+  renderChTable('chCvrTable', activeWeeks, getSecChans(), pivot, 'c', '#BF360C');
   // Charts
-  renderChLineChart('chVisitsChart', activeWeeks, activeChans, pivot, 'v', 'chVisitsChart', 0);
-  renderChLineChart('chSalesChart', activeWeeks, activeChans, pivot, 's', 'chSalesChart', 1);
-  renderChLineChart('chCvrChart', activeWeeks, activeChans, pivot, 'c', 'chCvrChart', 2);
+  renderChLineChart('chVisitsChart', activeWeeks, getSecChans(), pivot, 'v', 'chVisitsChart', 0);
+  renderChLineChart('chSalesChart', activeWeeks, getSecChans(), pivot, 's', 'chSalesChart', 1);
+  renderChLineChart('chCvrChart', activeWeeks, getSecChans(), pivot, 'c', 'chCvrChart', 2);
   renderChannelBestWorst();
 }
 function renderChannelBestWorst() {
@@ -3357,7 +3382,7 @@ function renderChLineChart(canvasId, weeks, channels, pivot, key, _unused, idx) 
   // Top 7 by total
   const totals = channels.map(ch => ({ch, total: weeks.reduce((s,w) => s+(pivot[ch]?.[w]?.[key]||0),0)}));
   totals.sort((a,b) => b.total - a.total);
-  const top = totals.slice(0,7).map(t=>t.ch);
+  const top = totals.map(t=>t.ch);
   const datasets = top.map(ch => ({
     label: ch,
     data: weeks.map(w => {
@@ -4186,7 +4211,7 @@ function rebuildDerivedData() {
 // ── Dashboard init ───────────────────────────────────────────────────────────
 function initDashboard() {
   try { selChMonths.clear(); selChWeeks.clear(); selChChans.clear(); } catch(e) {}
-  try { buildChMonthOptions(); buildChWeekOptions(); buildChChanOptions(); } catch(e) {}
+  try { buildChMonthOptions(); buildChWeekOptions(); buildChChanOptions(); buildChSecOptions(); } catch(e) {}
   // Week 옵션 재빌드 (데이터 로드 후 week 번호가 확정되므로)
   try {
     const wp = document.getElementById('ddPanel-week');
