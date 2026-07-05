@@ -435,6 +435,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     </div>
   </div>
 </div>
+<style id="dmdStyle">#demandSec .dmd-chip{font-size:11px;padding:2px 9px;border:1px solid #ccc;border-radius:12px;background:#fff;color:#666;cursor:pointer;margin-right:3px;}#demandSec .dmd-chip.on{background:#33447a;color:#fff;border-color:#33447a;}#demandSec .dmd-ddbtn{font-size:12px;padding:4px 10px;border:1px solid #bbb;border-radius:6px;background:#fff;cursor:pointer;}#demandSec .dmd-ddbtn.muted{color:#aaa;border-color:#ddd;background:#fafafa;}#demandSec .dmd-ddpanel{display:none;position:absolute;top:110%;z-index:50;background:#fff;border:1px solid #ccc;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.12);padding:6px 10px;min-width:150px;}#demandSec .dmd-ddpanel.open{display:block;}#demandSec .dmd-ddpanel.right{right:0;}#demandSec .dmd-op{display:block;font-size:12px;padding:2px 0;white-space:nowrap;cursor:pointer;}#demandSec .dmd-ax{font-size:11px;color:#666;}#demandSec .dmd-ax input{width:50px;font-size:11px;padding:1px 3px;margin:0 1px;border:1px solid #ccc;border-radius:4px;}#demandSec .dmd-reset{font-size:11px;padding:3px 8px;border:1px solid #bbb;border-radius:6px;background:#fff;cursor:pointer;}</style><div class="chart-sec" id="demandSec"><div style="display:flex;justify-content:flex-start;align-items:center;margin-bottom:8px;gap:8px;"><div class="sec-hdr" id="dmdToggle" style="margin-bottom:0;cursor:pointer;user-select:none;"><span id="dmdCaret" style="display:inline-block;font-size:11px;">▾</span> 쿼리 현황</div></div><div id="dmdBody"><div class="chart-card"><div class="dmd-ctl" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-bottom:10px;"><div class="dmd-dd" style="position:relative;"><button class="dmd-ddbtn" id="dmdGBtn">구글 쿼리 ▾</button><div class="dmd-ddpanel" id="dmdGPanel"><label class="dmd-op"><input type="checkbox" data-p="g" data-k="합계" checked> 합계</label><label class="dmd-op"><input type="checkbox" data-p="g" data-k="unove"> unove</label><label class="dmd-op"><input type="checkbox" data-p="g" data-k="unove hair"> hair</label></div></div><div class="dmd-dd" style="position:relative;"><button class="dmd-ddbtn muted" id="dmdAzBtn">아마존 쿼리 ▾</button><div class="dmd-ddpanel" id="dmdAzPanel"><label class="dmd-op"><input type="checkbox" data-p="a" data-k="unove"> unove</label><label class="dmd-op"><input type="checkbox" data-p="a" data-k="unove hair treatment"> hair treatment</label><label class="dmd-op"><input type="checkbox" data-p="a" data-k="unove shampoo"> shampoo</label><label class="dmd-op"><input type="checkbox" data-p="a" data-k="unove deep damage treatment"> deep damage treatment</label><label class="dmd-op"><input type="checkbox" data-p="a" data-k="unove silk oil essence"> silk oil essence</label><label class="dmd-op"><input type="checkbox" data-p="a" data-k="합계"> 합계</label></div></div><span style="width:1px;height:16px;background:#ddd;"></span><span style="font-size:11px;color:#888;">겹쳐보기</span><span id="dmdOv"><button class="dmd-chip on" data-k="유입">유입</button><button class="dmd-chip on" data-k="매출">매출</button><button class="dmd-chip" data-k="KOL 노출">KOL 노출</button><button class="dmd-chip" data-k="광고 노출">광고 노출</button></span><span style="width:1px;height:16px;background:#ddd;"></span><span style="font-size:11px;color:#888;">축범위</span><span class="dmd-ax">쿼리 <input type="number" id="axQmin" placeholder="min">~<input type="number" id="axQmax" placeholder="max"></span><span class="dmd-ax">유입 <input type="number" id="axVmin" placeholder="min">~<input type="number" id="axVmax" placeholder="max"></span><span class="dmd-ax">매출 <input type="number" id="axRmin" placeholder="min">~<input type="number" id="axRmax" placeholder="max"></span><span class="dmd-ax">노출 <input type="number" id="axImin" placeholder="min">~<input type="number" id="axImax" placeholder="max"></span><button class="dmd-reset" id="dmdReset">자동</button></div><div class="chart-wrap" style="position:relative;height:300px;"><canvas id="demandChart"></canvas><div id="dmdDailyNote" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#aaa;font-size:13px;text-align:center;padding:0 20px;">일(daily) 단위에서는 쿼리·노출 데이터가 없습니다. 월/주 모드에서 확인하세요.</div></div></div></div></div>
 <div class="chart-sec">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
     <div class="sec-hdr" style="margin-bottom:0;flex:1;">통합 성과 그래프</div>
@@ -2169,6 +2170,7 @@ function renderChart() {
         yS: {
           type: 'linear', position: 'right',
           grid: { drawOnChartArea: false },
+          min: 0, beginAtZero: true,
           ticks: { font:{size:9}, color:'#888', callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v },
           title: { display:true, text:'Sales (₩)', font:{size:9}, color:'#d97070' }
         },
@@ -3672,6 +3674,7 @@ function onAuthSuccess(user) {
           KOL_RAW.length = 0;   (c.kol || []).filter(r => r.date && r.date.startsWith('2026')).forEach(r => KOL_RAW.push(r));
           DM_COST.monthly = (c.dmCost && c.dmCost.monthly) || {};
           DM_COST.weekly  = (c.dmCost && c.dmCost.weekly)  || {};
+          window.DEMAND = (c.demand) || {};
           Object.keys(SALES_BY_DATE).forEach(k => delete SALES_BY_DATE[k]);
           RAW_SALES.forEach(r => { SALES_BY_DATE[r.date] = { total: r.total||0, com: r.com||0, bam: r.bam||0 }; });
           rebuildDerivedData();
@@ -3798,6 +3801,7 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     if (Array.isArray(data.kol)) data.kol.filter(r => r.date && r.date.startsWith('2026')).forEach(r => KOL_RAW.push(r));
     DM_COST.monthly = (data.dmCost && data.dmCost.monthly) || {};
     DM_COST.weekly  = (data.dmCost && data.dmCost.weekly)  || {};
+    window.DEMAND = (data.demand) || {};
     rebuildDerivedData();
     const ts = data.updatedAt ? new Date(data.updatedAt).toLocaleString('ko-KR') : '—';
     const label = document.getElementById('lastUpdatedLabel');
@@ -4240,6 +4244,70 @@ setTimeout(function() {
              toggleSidebar:toggleSidebar, toggleVisits:toggleVisits};
   Object.assign(window, fns);
 }, 0);
+</script>
+<script>
+window.DSTATE = window.DSTATE || { g:{'합계':true}, a:{}, ov:{visits:true,sales:true,klImpr:false,adImpr:false}, axis:{qmin:'',qmax:'',vmin:'',vmax:'',rmin:'',rmax:'',imin:'',imax:''}, collapsed:false };
+function renderDemand(){
+  var sec=document.getElementById('demandSec'); if(!sec) return;
+  var cv=document.getElementById('demandChart'); if(!cv) return;
+  var dm=window.DEMAND||{}, st=window.DSTATE, daily=(typeof mainPeriod!=='undefined'&&mainPeriod==='daily');
+  var note=document.getElementById('dmdDailyNote'); if(note) note.style.display=daily?'flex':'none';
+  cv.style.display=daily?'none':'block';
+  sec.querySelectorAll('.dmd-ctl').forEach(function(el){el.style.opacity=daily?0.35:1;el.style.pointerEvents=daily?'none':'auto';});
+  if(window._demandChart){window._demandChart.destroy();window._demandChart=null;}
+  if(daily) return;
+  var rows=getMainChartData();
+  var labels=rows.map(function(r){return r.label;});
+  var keys=rows.map(function(r){return r.date;});
+  var bucket=(mainPeriod==='monthly')?'monthly':'weekly';
+  function ser(o){return keys.map(function(k){var v=o&&o[k];return (v||v===0)?v:null;});}
+  function qp(kind,lab){return dm.query&&dm.query[kind]&&dm.query[kind][bucket]&&dm.query[kind][bucket][lab];}
+  function ip(lab){return dm.impr&&dm.impr[bucket]&&dm.impr[bucket][lab];}
+  var gC={'합계':'#2f6fb0','unove':'#1a7a4a','unove hair':'#d0555a'};
+  var ds=[];
+  Object.keys(st.g).forEach(function(lab){if(!st.g[lab])return;ds.push({label:'구글 '+lab,data:ser(qp('google',lab)),borderColor:gC[lab]||'#2f6fb0',backgroundColor:'transparent',borderWidth:2,pointRadius:2,pointHoverRadius:4,tension:0.25,yAxisID:'yQ',order:1});});
+  Object.keys(st.a).forEach(function(lab){if(!st.a[lab])return;ds.push({label:'아마존 '+lab.replace('unove ',''),data:ser(qp('amazon',lab)),borderColor:'#e08a3c',backgroundColor:'transparent',borderWidth:1.6,borderDash:[3,3],pointRadius:1.5,tension:0.25,yAxisID:'yQ',order:2});});
+  if(st.ov.visits)ds.push({label:'유입',data:rows.map(function(r){return r.visits;}),borderColor:'#33447a',backgroundColor:'rgba(51,68,122,0.06)',borderWidth:1.6,pointRadius:1.5,tension:0.25,yAxisID:'yV',fill:false,order:3});
+  if(st.ov.sales)ds.push({label:'매출',data:rows.map(function(r){return r.sales;}),borderColor:'#d0454a',backgroundColor:'transparent',borderWidth:1.8,borderDash:[5,4],pointRadius:2,tension:0.25,yAxisID:'yS',order:4});
+  if(st.ov.klImpr)ds.push({label:'KOL 노출',data:ser(ip('KOL')),borderColor:'#8257c5',backgroundColor:'transparent',borderWidth:1.6,pointRadius:1.5,tension:0.25,yAxisID:'yI',order:5});
+  if(st.ov.adImpr)ds.push({label:'광고 노출',data:ser(ip('퍼포먼스')),borderColor:'#2ba7c0',backgroundColor:'transparent',borderWidth:1.6,pointRadius:1.5,tension:0.25,yAxisID:'yI',order:6});
+  function nn(v){return (v===''||v==null||isNaN(+v))?undefined:+v;}
+  var ax=st.axis, showV=st.ov.visits, showI=(st.ov.klImpr||st.ov.adImpr);
+  window._demandChart=new Chart(cv.getContext('2d'),{type:'line',data:{labels:labels,datasets:ds},options:{
+    responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{position:'top',labels:{font:{size:10},boxWidth:12,padding:8}},
+      tooltip:{callbacks:{label:function(c){var v=c.parsed.y;if(v==null)return c.dataset.label+': -';var l=c.dataset.label;if(l==='매출')return l+': ₩'+Math.round(v).toLocaleString();return l+': '+Math.round(v).toLocaleString();}}}},
+    scales:{
+      x:{grid:{color:'rgba(0,0,0,0.07)'},ticks:{font:{size:9},color:'#888',maxRotation:45}},
+      yQ:{type:'linear',position:'left',min:nn(ax.qmin),max:nn(ax.qmax),grid:{color:'rgba(0,0,0,0.07)'},title:{display:true,text:'쿼리 (건)',font:{size:9},color:'#2f6fb0'},ticks:{font:{size:9},color:'#2f6fb0',callback:function(v){return v>=1000?(v/1000).toFixed(0)+'K':v;}}},
+      yV:{type:'linear',position:'left',display:showV,offset:true,min:nn(ax.vmin),max:nn(ax.vmax),grid:{drawOnChartArea:false},title:{display:true,text:'유입 (방문)',font:{size:9},color:'#33447a'},ticks:{font:{size:9},color:'#33447a',callback:function(v){return v>=1000?(v/1000).toFixed(0)+'K':v;}}},
+      yS:{type:'linear',position:'right',min:nn(ax.rmin),max:nn(ax.rmax),grid:{drawOnChartArea:false},title:{display:true,text:'매출 (₩백만)',font:{size:9},color:'#d0454a'},ticks:{font:{size:9},color:'#d0454a',callback:function(v){return (v/1000000).toFixed(0);}}},
+      yI:{type:'linear',position:'right',display:showI,offset:true,min:nn(ax.imin),max:nn(ax.imax),grid:{drawOnChartArea:false},title:{display:true,text:'노출 (백만)',font:{size:9},color:'#8257c5'},ticks:{font:{size:9},color:'#8257c5',callback:function(v){return (v/1000000).toFixed(1);}}}
+    }
+  }});
+}
+window.renderDemand=renderDemand;
+function initDemandControls(){
+  if(window.__dmdInit) return;
+  var sec=document.getElementById('demandSec'); if(!sec) return;
+  var st=window.DSTATE;
+  var tg=document.getElementById('dmdToggle');
+  if(tg) tg.onclick=function(){st.collapsed=!st.collapsed;var b=document.getElementById('dmdBody');if(b)b.style.display=st.collapsed?'none':'block';var cr=document.getElementById('dmdCaret');if(cr)cr.textContent=st.collapsed?'▸':'▾';};
+  var gp=document.getElementById('dmdGPanel'), ap=document.getElementById('dmdAzPanel');
+  var gb=document.getElementById('dmdGBtn'), ab=document.getElementById('dmdAzBtn');
+  if(gb) gb.onclick=function(e){if(e)e.stopPropagation();gp.classList.toggle('open');};
+  if(ab) ab.onclick=function(e){if(e)e.stopPropagation();ap.classList.toggle('open');};
+  [].forEach.call(sec.querySelectorAll('.dmd-op input'),function(cb){cb.onchange=function(){var p=cb.getAttribute('data-p'),k=cb.getAttribute('data-k');(p==='g'?st.g:st.a)[k]=cb.checked;renderDemand();};});
+  [].forEach.call(document.querySelectorAll('#dmdOv .dmd-chip'),function(b){b.onclick=function(){var map={'유입':'visits','매출':'sales','KOL 노출':'klImpr','광고 노출':'adImpr'};var f=map[b.getAttribute('data-k')];st.ov[f]=!st.ov[f];b.classList.toggle('on',st.ov[f]);renderDemand();};});
+  function axHook(id,key){var e=document.getElementById(id);if(!e)return;e.value=st.axis[key];e.oninput=function(){st.axis[key]=e.value;renderDemand();};}
+  axHook('axQmin','qmin');axHook('axQmax','qmax');axHook('axVmin','vmin');axHook('axVmax','vmax');axHook('axRmin','rmin');axHook('axRmax','rmax');axHook('axImin','imin');axHook('axImax','imax');
+  var rs=document.getElementById('dmdReset');
+  if(rs) rs.onclick=function(){st.axis={qmin:'',qmax:'',vmin:'',vmax:'',rmin:'',rmax:'',imin:'',imax:''};['axQmin','axQmax','axVmin','axVmax','axRmin','axRmax','axImin','axImax'].forEach(function(i){var el=document.getElementById(i);if(el)el.value='';});renderDemand();};
+  if(!window.__rcWrapped && typeof renderChart==='function'){window.__rcWrapped=true;var _o=renderChart;window.renderChart=renderChart=function(){_o.apply(this,arguments);try{renderDemand();}catch(e){console.warn('renderDemand',e);}};}
+  window.__dmdInit=true;
+  try{renderDemand();}catch(e){}
+}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initDemandControls);}else{initDemandControls();}
 </script>
 </body>
 </html>
