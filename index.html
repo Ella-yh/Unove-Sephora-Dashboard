@@ -443,8 +443,8 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <button class="mkr-btn" id="btnMarkerToggle" onclick="toggleMarkers(this)" style="min-width:96px;font-size:9px;">이벤트 마커 표시</button>
       <div style="width:1px;height:13px;background:#E0E0E4;margin:0 2px;"></div>
       <button class="ads-p-btn" data-main-period="monthly" onclick="setMainPeriod(this,'monthly')">월</button>
-      <button class="ads-p-btn" data-main-period="weekly" onclick="setMainPeriod(this,'weekly')">주</button>
-      <button class="ads-p-btn active" data-main-period="daily" onclick="setMainPeriod(this,'daily')">일</button>
+      <button class="ads-p-btn active" data-main-period="weekly" onclick="setMainPeriod(this,'weekly')">주</button>
+      <button class="ads-p-btn" data-main-period="daily" onclick="setMainPeriod(this,'daily')">일</button>
     </div>
   </div>
   <div class="chart-card" style="position:relative;">
@@ -1420,7 +1420,7 @@ let showBrandCost = false, showKolCost = false; // DM 비용 토글 (월/주 단
 const DM_COST = { monthly: {}, weekly: {} };    // SUMMARY(월/주차)_DM 비용 데이터
 let showRoas     = false;
 let showCvr      = false;
-let mainPeriod   = 'daily';
+let mainPeriod   = 'weekly';
 window.toggleMarkers = function(btn) {
   showMarkers = !showMarkers;
   btn.classList.toggle('active', showMarkers);
@@ -1577,20 +1577,7 @@ function buildMonthOptions() {
       updateLabel('month'); refresh();
     });
   });
-  // 최근 3개월 자동 선택 (동적)
-  var _now = new Date();
-  var _sel = [];
-  for (var _i = 0; _i < 3; _i++) { var _dd = new Date(_now.getFullYear(), _now.getMonth() - _i, 1); _sel.push(String(_dd.getMonth() + 1).padStart(2, "0")); }
-  var _anyM = false;
-  months.forEach(function(mm) {
-    if (_sel.indexOf(mm) >= 0) {
-      selMonths.add(mm);
-      var _cb = panel.querySelector('input[value="' + mm + '"]');
-      if (_cb) _cb.checked = true;
-      _anyM = true;
-    }
-  });
-  if (_anyM) { document.getElementById('chk-month-all').checked = false; updateLabel('month'); }
+  // 기본: 전체(ALL) 월 선택 — 자동선택 없음
 }
 // Bind month checkboxes (fallback for static ones)
 document.querySelectorAll('[data-group="month"]').forEach(cb => {
@@ -1947,7 +1934,6 @@ function buildAnnotations(labels) {
 // ─── MAIN CHART DATA (period-aware) ──────────────────────────────────────────
 function getMainChartData() {
   var raw = getFiltered();
-  raw = raw.filter(function(r){return r.date >= '2026-02-08';});
   if (mainPeriod === 'daily') {
     return raw.map(function(d) {
       var sb = SALES_BY_DATE[d.date] || {};
@@ -3153,7 +3139,7 @@ function getActiveWeeks() {
   const ws = new Set(d.map(r => r.week));
   const res = CH_WEEKS.filter(w => ws.has(w));
   const anyF = selChMonths.size || selChWeeks.size;
-  return (res.length ? res : (anyF ? [] : [...CH_WEEKS])).filter(function(w){return w >= '2026-02-08';});
+  return res.length ? res : (anyF ? [] : [...CH_WEEKS]);
 }
 function getActiveChans() { return selChChans.size > 0 ? [...selChChans] : [...CH_CHANNELS]; }
 function refreshChannel() {
@@ -4263,8 +4249,7 @@ function dmQueryKeys(p){var dm=window.DEMAND||{},q=dm.query||{},set={};
 function dmDailyKeys(){var set={};try{RAW_SKU.forEach(function(r){set[r.date]=1;});}catch(e){}try{Object.keys(SALES_BY_DATE).forEach(function(d){set[d]=1;});}catch(e){}return Object.keys(set).sort();}
 function dmPeriodKeys(){var st=window.DSTATE,p=st.period,keys=(p==='daily')?dmDailyKeys():dmQueryKeys(p);
   var startKey=(p==='monthly')?DSTART_MO:DSTART_WK;
-  if(st.fMonths.size===0&&st.fWeeks.size===0){var _n=new Date();var _d=new Date(_n.getFullYear(),_n.getMonth()-2,1);var _sk=_d.getFullYear()+'-'+('0'+(_d.getMonth()+1)).slice(-2);var ds3=(p==='monthly')?_sk:_sk+'-01';keys=keys.filter(function(k){return k>=ds3;});}
-  else{keys=keys.filter(function(k){var mo=k.slice(0,7);var mOk=st.fMonths.size===0||st.fMonths.has(mo);var wOk=st.fWeeks.size===0||st.fWeeks.has(k);return mOk&&wOk;});}
+  if(st.fMonths.size||st.fWeeks.size){keys=keys.filter(function(k){var mo=k.slice(0,7);var mOk=st.fMonths.size===0||st.fMonths.has(mo);var wOk=st.fWeeks.size===0||st.fWeeks.has(k);return mOk&&wOk;});}
   return keys;}
 function dmVisitsMap(p){var m={};try{RAW_SKU.forEach(function(r){var k=getPeriodKey(r.date,p);m[k]=(m[k]||0)+(r.visits||0);});}catch(e){}return m;}
 function dmSalesMap(p){var m={};try{Object.keys(SALES_BY_DATE).forEach(function(d){var k=getPeriodKey(d,p);m[k]=(m[k]||0)+((SALES_BY_DATE[d]||{}).total||0);});}catch(e){}return m;}
