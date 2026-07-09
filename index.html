@@ -3734,6 +3734,7 @@ function onAuthSuccess(user) {
           DM_COST.weekly  = (c.dmCost && c.dmCost.weekly)  || {};
           window.DEMAND = (c.demand) || {};
           window.ONSITE = (c.onsite) || null;
+          try { var _at=document.querySelector('.sb-item.active'); if (_at && _at.getAttribute('data-tab')==='onsite' && typeof refreshOnsite==='function') refreshOnsite(); } catch(e){}
           Object.keys(SALES_BY_DATE).forEach(k => delete SALES_BY_DATE[k]);
           RAW_SALES.forEach(r => { SALES_BY_DATE[r.date] = { total: r.total||0, com: r.com||0, bam: r.bam||0 }; });
           rebuildDerivedData();
