@@ -3832,6 +3832,8 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     const newSku   = Array.isArray(data.commerce) ? data.commerce : [];
     const newSales = Array.isArray(data.sales)    ? data.sales    : [];
     const newCh    = Array.isArray(data.channel)  ? data.channel  : [];
+    window.ONSITE = data.onsite || null;
+    try { var _at2=document.querySelector('.sb-item.active'); if (_at2 && _at2.getAttribute('data-tab')==='onsite' && typeof refreshOnsite==='function') refreshOnsite(); } catch(e){}
     if (!newSku.length)   throw new Error('RAW_commerce 데이터가 비어 있습니다.');
     if (!newSales.length) throw new Error('Raw_실매출 데이터가 비어 있습니다.');
     if (!newCh.length)    throw new Error('Raw_유입 데이터가 비어 있습니다.');
