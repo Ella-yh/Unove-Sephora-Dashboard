@@ -384,6 +384,9 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     <div class="sb-item" data-tab="ads" onclick="switchTab('ads')">
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><polyline points="1,11.5 4.5,7.5 7.5,9.5 13,3.5"/><polyline points="9.5,3.5 13,3.5 13,7"/></svg></span><span class="sb-text">퍼포먼스 광고</span>
     </div>
+    <div class="sb-item" data-tab="onsite" onclick="switchTab('onsite')">
+      <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><rect x="1" y="1" width="12" height="12" rx="1.5"/><line x1="1" y1="5" x2="13" y2="5"/><line x1="5" y1="5" x2="5" y2="13"/></svg></span><span class="sb-text">온사이트 광고</span>
+    </div>
     <div class="sb-section-lbl">System</div>
     <div class="sb-item" data-tab="events" onclick="switchTab('events')">
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><rect x="1" y="2.5" width="12" height="10" rx="1.5"/><line x1="1" y1="6" x2="13" y2="6"/><line x1="4" y1="1" x2="4" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><circle cx="4.5" cy="9" r="0.8" fill="currentColor" stroke="none"/><circle cx="7" cy="9" r="0.8" fill="currentColor" stroke="none"/><circle cx="9.5" cy="9" r="0.8" fill="currentColor" stroke="none"/></svg></span><span class="sb-text">이벤트 관리</span>
@@ -919,6 +922,67 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   </div>
 </div>
 </div><!-- /tabAds -->
+<div id="tabOnsite" style="display:none;padding:16px 28px 40px">
+  <style>
+    .ons-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border:0.5px solid #D8D8DC;background:#fff;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#9ca3af;cursor:pointer;border-radius:3px}
+    .ons-chip .d{width:9px;height:9px;border-radius:2px;background:currentColor;opacity:.5}
+    .ons-chip.on{color:#fff !important;border-color:#1D2847;background:#1D2847}
+    .ons-chip.on .d{opacity:1;background:#fff}
+    #tabOnsite .ons-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:820px){#tabOnsite .ons-two{grid-template-columns:1fr}}
+    #onsSkuTbl th{background:#1D2847;color:#fff;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:7px 9px;text-align:right;white-space:nowrap}
+    #onsSkuTbl th:first-child{text-align:left}
+    #onsSkuTbl td{padding:6px 9px;border-bottom:0.5px solid #EBEBEF;text-align:right;color:#666;font-size:11px;white-space:nowrap;font-variant-numeric:tabular-nums}
+    #onsSkuTbl td:first-child{text-align:left;font-weight:600;color:#333}
+  </style>
+
+  <div id="onsPlaceholder" style="display:none;padding:60px 20px;text-align:center;color:#9ca3af;font-size:12px">
+    온사이트 데이터 연동 대기 — Apps Script <b>parseOnsite</b> 배포 후 표시됩니다.
+  </div>
+
+  <div id="onsBody">
+    <div class="sec-hdr">Banner · PLA · Total 성과 요약</div>
+    <div class="kpi-row" id="onsSummary" style="grid-template-columns:repeat(3,1fr);padding:0"></div>
+    <div class="chart-card" id="onsBudget" style="margin-top:12px"></div>
+
+    <div class="sec-hdr" style="margin-top:22px">통합 광고 지표</div>
+    <div class="chart-card">
+      <div id="onsChips" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">
+        <span class="ons-chip on" data-k="세일즈" style="color:#d97070"><span class="d"></span>세일즈</span>
+        <span class="ons-chip" data-k="광고비" style="color:#F4B942"><span class="d"></span>광고비</span>
+        <span class="ons-chip" data-k="노출" style="color:#999999"><span class="d"></span>노출</span>
+        <span class="ons-chip" data-k="클릭" style="color:#3D85C6"><span class="d"></span>클릭</span>
+        <span class="ons-chip" data-k="CTR" style="color:#45818E"><span class="d"></span>CTR</span>
+        <span class="ons-chip" data-k="전환율" style="color:#A64D79"><span class="d"></span>전환율(CVR)</span>
+        <span class="ons-chip on" data-k="BM유입" style="color:#6aadd5"><span class="d"></span>Brand Media 유입</span>
+      </div>
+      <div style="position:relative;height:330px"><canvas id="onsIntegrated"></canvas></div>
+      <div style="font-size:9px;color:#bbb;margin-top:6px">첫 구간(~날짜) = 캠페인 누적(6/22~), 이후 일별 · Brand Media = 방문(visit) 기준</div>
+    </div>
+
+    <div class="sec-hdr" style="margin-top:22px">Banner · PLA 일별 추이</div>
+    <div class="ons-two">
+      <div class="chart-card"><div class="chart-sec-title">Banner 일별 Spend·Sales·ROAS</div><div style="position:relative;height:290px"><canvas id="onsBanner"></canvas></div></div>
+      <div class="chart-card"><div class="chart-sec-title">PLA 일별 Spend·Sales·ROAS</div><div style="position:relative;height:290px"><canvas id="onsPla"></canvas></div></div>
+    </div>
+
+    <div class="sec-hdr" style="margin-top:22px">PLA SKU별 성과</div>
+    <div class="chart-card"><div class="chart-sec-title">SKU별 매출 & ROAS</div><div style="position:relative;height:360px"><canvas id="onsSku"></canvas></div></div>
+    <div class="chart-card" style="margin-top:12px;overflow-x:auto">
+      <table id="onsSkuTbl" style="width:100%;border-collapse:collapse">
+        <thead><tr><th>Product</th><th>단가($)</th><th>Spend</th><th>Sales</th><th>ROAS</th><th>매출%</th><th>CVR</th><th>CPM</th><th>CPC</th><th>CPA</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="sec-hdr" style="margin-top:22px">Brand Media 유입 비교 (Banner · PLA · Total)</div>
+    <div class="ons-two">
+      <div class="chart-card"><div class="chart-sec-title">온사이트 클릭 vs Brand Media 방문</div><div style="position:relative;height:290px"><canvas id="onsBmDaily"></canvas></div></div>
+      <div class="chart-card"><div class="chart-sec-title">채널 기여 — 매출</div><div style="position:relative;height:290px"><canvas id="onsBmShare"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════ SETTINGS TAB ═══════════ -->
 <div id="tabSettings" style="display:none;">
 <div class="tab-content">
@@ -2871,16 +2935,17 @@ let selChChans = new Set();
 let chVisitsChart, chSalesChart, chCvrChart;
 function switchTab(tab) {
   document.querySelectorAll('.sb-item').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  const tabs = {main:'tabMain',channel:'tabChannel',ads:'tabAds',settings:'tabSettings',events:'tabEvents'};
+  const tabs = {main:'tabMain',channel:'tabChannel',ads:'tabAds',settings:'tabSettings',events:'tabEvents',onsite:'tabOnsite'};
   Object.entries(tabs).forEach(([k,id]) => {
     const el = document.getElementById(id);
     if (el) el.style.display = k === tab ? '' : 'none';
   });
-  const titles = {main:'통합 대시보드',channel:'유입 채널별',ads:'퍼포먼스 광고',events:'이벤트 관리',settings:'Settings'};
+  const titles = {main:'통합 대시보드',channel:'유입 채널별',ads:'퍼포먼스 광고',events:'이벤트 관리',settings:'Settings',onsite:'온사이트 광고'};
   const pt = document.getElementById('pageTitle');
   if (pt) pt.textContent = titles[tab] || '';
   if (tab === 'channel') { try { refreshChannel(); } catch(e){} }
   if (tab === 'ads')     { try { refreshAds();     } catch(e){} }
+  if (tab === 'onsite')  { try { refreshOnsite(); } catch(e){} }
   if (tab === 'events')  { try { renderTypeLegend(); renderEventListFull(); } catch(e){} }
 }
 // ── KOL Table ─────────────────────────────────────────────────────────────────
@@ -3668,6 +3733,7 @@ function onAuthSuccess(user) {
           DM_COST.monthly = (c.dmCost && c.dmCost.monthly) || {};
           DM_COST.weekly  = (c.dmCost && c.dmCost.weekly)  || {};
           window.DEMAND = (c.demand) || {};
+          window.ONSITE = (c.onsite) || null;
           Object.keys(SALES_BY_DATE).forEach(k => delete SALES_BY_DATE[k]);
           RAW_SALES.forEach(r => { SALES_BY_DATE[r.date] = { total: r.total||0, com: r.com||0, bam: r.bam||0 }; });
           rebuildDerivedData();
@@ -4124,6 +4190,414 @@ function renderLegend(containerId, datasets, metricLabel) {
     return '<div class="leg"><div class="leg-dot" style="' + dotStyle + '"></div>' + ds.label + '</div>';
   }).join('');
 }
+/* ═══════════ ONSITE TAB — refreshOnsite() ═══════════
+   window.ONSITE = parseOnsite_ 결과. 없으면 안내 placeholder.
+   차트는 재진입마다 destroy 후 재생성. 색상=대시보드 팔레트. */
+function refreshOnsite() {
+  var O = window.ONSITE;
+  var root = document.getElementById('tabOnsite');
+  if (!root) return;
+  var ph = document.getElementById('onsPlaceholder');
+  if (!O || !O.periods || !O.periods.length) {
+    if (ph) ph.style.display = '';
+    var body = document.getElementById('onsBody'); if (body) body.style.display = 'none';
+    return;
+  }
+  if (ph) ph.style.display = 'none';
+  var body = document.getElementById('onsBody'); if (body) body.style.display = '';
+
+  var SALES='#d97070', VISITS='#6aadd5', SPEND='#F4B942', CLICKS='#3D85C6',
+      IMPR='#999999', CTR='#45818E', CVR='#A64D79', NAVY='#1D2847', ROSE='#D9A89A',
+      GRID='rgba(0,0,0,0.07)';
+  var won = function(v){ return '₩' + (v/1e6).toFixed(1) + 'M'; };
+  var wonK = function(v){ return '₩' + Math.round(v).toLocaleString(); };
+  var lbl = function(p,i){ var d = String(p).slice(5).replace('-','/'); return i===0 ? '~'+d : d; };
+  // SKU 단가($)·표시명 매핑 (라이브 name 기준 — 데이터엔 단가 없음)
+  var PRICE = {'Deep Damage Repair Hydrating Shampoo':22,'Deep Damage Repair Hydrating Hair Mask':26,'Deep Damage Repair Mini Trio Hair Set':28,'Silk Shine Hair Oil for Damaged Hair':25,'Mini Silk Shine Hair Oil for Damaged Hair':13,'Detangling Heat Protection Spray for Damaged Hair':28,'Damage Repair & Shine Leave in Conditioner':28,'Frizz-Calming Leave in Conditioner with Heat Protectant':26,'Mini Deep Damage Repair Hydrating Hair Mask':11,'Frizz-Calming Gel Hair Taming Wand':15};
+  var DNAME = {'Deep Damage Repair Hydrating Shampoo':'Deep Damage Shampoo 290ml','Deep Damage Repair Hydrating Hair Mask':'Deep Damage Hair Mask 207ml','Deep Damage Repair Mini Trio Hair Set':'Deep Essentials Kit (Mini Trio)','Silk Shine Hair Oil for Damaged Hair':'Silk Shine Hair Oil 70ml','Mini Silk Shine Hair Oil for Damaged Hair':'Mini Silk Shine Oil 10ml','Detangling Heat Protection Spray for Damaged Hair':'Detangling Heat Protectant Spray','Damage Repair & Shine Leave in Conditioner':'Damage Repair & Shine LIC 150ml','Frizz-Calming Leave in Conditioner with Heat Protectant':'Frizz-Calming LIC 150ml','Mini Deep Damage Repair Hydrating Hair Mask':'Mini Deep Damage Hair Mask 40ml','Frizz-Calming Gel Hair Taming Wand':'Frizz-Calming Gel Taming Wand'};
+  var dn = function(n){ return DNAME[n] || n; };
+  var pr = function(n){ return PRICE[n]!=null ? 'Chart(chartNum) {
+  if (ADS_RAW.length === 0) return;
+  _curMetric = adsChartMetric[chartNum] || 'spend';
+  const p = adsChartPeriod[chartNum] || 'weekly';
+  const sep = buildSephoraByPeriod(p);
+  if (chartNum === 1) {
+    const ads1 = buildAdsByPeriod(selAdsMedia, p);
+    const weeks1 = [...new Set([...Object.keys(ads1), ...Object.keys(sep)])].sort();
+    const cfg1 = makeAdsChartCfg(weeks1, ads1, sep, false, [], getMetricLabel(), p, 1);
+    renderLegend('adsChart1Leg', cfg1.data.datasets);
+    const ctx1 = document.getElementById('adsChart1');
+    if (ctx1) { if (adsChart1) adsChart1.destroy(); adsChart1 = new Chart(ctx1.getContext('2d'), cfg1); }
+  } else if (chartNum === 2) {
+    const ads2 = buildAdsByPeriod(new Set(['meta']), p);
+    const weeks2 = [...new Set([...Object.keys(ads2), ...Object.keys(sep)])].sort();
+    const allMetaObjs = ['전환(장바구니)','전환(구매)','트래픽(click)','트래픽(lpv)','조회'];
+    const metaObjs = allMetaObjs.filter(o => metaActiveCampaigns.has(o));
+    const cfg2 = makeAdsChartCfg(weeks2, ads2, sep, true, metaObjs, '', p, 2);
+    if (metaChartType === 'line') {
+      cfg2.data.datasets = cfg2.data.datasets.map(function(ds) {
+        if (ds.yAxisID !== 'yA') return ds;
+        var col = OBJ_COLORS[ds.label] || '#999';
+        return Object.assign({}, ds, {type:'line', borderColor:col, backgroundColor:'transparent', fill:false, borderWidth:2, pointRadius:1.5, pointHoverRadius:3, tension:0.3, stack:undefined});
+      });
+      cfg2.options.scales.x.stacked = false;
+      cfg2.options.scales.yA.stacked = false;
+    }
+    renderLegend('adsChart2Leg', cfg2.data.datasets, getMetricLabel());
+    const ctx2 = document.getElementById('adsChart2');
+    if (ctx2) { if (adsChart2) adsChart2.destroy(); adsChart2 = new Chart(ctx2.getContext('2d'), cfg2); }
+  } else if (chartNum === 3) {
+    const ads3 = buildAdsByPeriod(new Set(['tiktok']), p);
+    const weeks3 = [...new Set([...Object.keys(ads3), ...Object.keys(sep)])].sort();
+    const allTtObjs = ['검색','조회'];
+    const ttObjs = allTtObjs.filter(o => ttActiveCampaigns.has(o));
+    const cfg3 = makeAdsChartCfg(weeks3, ads3, sep, true, ttObjs, '', p, 3);
+    if (ttChartType === 'line') {
+      cfg3.data.datasets = cfg3.data.datasets.map(function(ds) {
+        if (ds.yAxisID !== 'yA') return ds;
+        var col = OBJ_COLORS[ds.label] || '#999';
+        return Object.assign({}, ds, {type:'line', borderColor:col, backgroundColor:'transparent', fill:false, borderWidth:2, pointRadius:1.5, pointHoverRadius:3, tension:0.3, stack:undefined});
+      });
+      cfg3.options.scales.x.stacked = false;
+      cfg3.options.scales.yA.stacked = false;
+    }
+    renderLegend('adsChart3Leg', cfg3.data.datasets, getMetricLabel());
+    const ctx3 = document.getElementById('adsChart3');
+    if (ctx3) { if (adsChart3) adsChart3.destroy(); adsChart3 = new Chart(ctx3.getContext('2d'), cfg3); }
+  }
+}
+function refreshAds() {
+  if (ADS_RAW.length === 0) return;
+  // ER 버튼은 engagement 데이터가 실제 존재할 때만 노출 (Apps Script 미반영 시 허수 0% 차트 방지)
+  var hasEng = ADS_RAW.some(function(r) { return ((r.likes||0) + (r.comments||0) + (r.shares||0) + (r.saves||0)) > 0; });
+  document.querySelectorAll('[data-ads-metric="er"]').forEach(function(b) { b.style.display = hasEng ? '' : 'none'; });
+  if (!hasEng) {
+    [1,2,3].forEach(function(cn) {
+      if (adsChartMetric[cn] === 'er') {
+        adsChartMetric[cn] = 'spend';
+        document.querySelectorAll('[data-metric-chart="' + cn + '"]').forEach(function(b) { b.classList.toggle('active', b.dataset.adsMetric === 'spend'); });
+      }
+    });
+  }
+  refreshAdsChart(1);
+  refreshAdsChart(2);
+  refreshAdsChart(3);
+}
+function rebuildDerivedData() {
+  if (RAW_SKU.length > 0) {
+    const allDates = [...new Set(RAW_SKU.map(r => r.date))].sort();
+    const minD   = new Date(allDates[0] + 'T00:00:00');
+    const refSun = new Date(minD);
+    refSun.setDate(minD.getDate() - minD.getDay());
+    _refTime = refSun.getTime();
+    const refTime = _refTime;
+    RAW_SKU.forEach(r => {
+      r.week = Math.floor((new Date(r.date+'T00:00:00').getTime() - refTime) / (7*86400000)) + 1;
+    });
+  }
+  rebuildChannelAgg();
+}
+// ── Dashboard init ───────────────────────────────────────────────────────────
+function initDashboard() {
+  try { selChMonths.clear(); selChWeeks.clear(); selChChans.clear(); } catch(e) {}
+  try { buildChMonthOptions(); buildChWeekOptions(); buildChChanOptions(); buildChSecOptions(); } catch(e) {}
+  // Week 옵션 재빌드 (데이터 로드 후 week 번호가 확정되므로)
+  try {
+    const wp = document.getElementById('ddPanel-week');
+    if (wp) wp.querySelectorAll('.dd-opt').forEach(el => el.remove());
+    selWeeks.clear(); updateLabel('week');
+    buildWeekOptions();
+  } catch(e) {}
+  try { buildMonthOptions(); renderKPI(); renderChart(); renderEventList(); } catch(e) { console.warn('render error', e); }
+  try { refreshChannel(); } catch(e) {}
+}
+// ── Status helper ────────────────────────────────────────────────────────────
+function showStgStatus(msg, type) {
+  const el = document.getElementById('stgStatus');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'stg-status ' + (type || '');
+  el.style.display = msg ? '' : 'none';
+}
+// ── window 전역 등록 (onclick 참조용) ────────────────────────────────────────
+// eval 대신 직접 참조로 등록 (strict mode 호환)
+setTimeout(function() {
+  var fns = {addEvent:addEvent, clearChFilter:clearChFilter, clearFilter:clearFilter,
+             editEvent:editEvent, removeEvent:removeEvent, removeEventFull:removeEventFull,
+             renderEventList:renderEventList, saveEvent:saveEvent, switchTab:switchTab,
+             toggleAdSpend:toggleAdSpend, toggleBrandCost:toggleBrandCost, toggleKolCost:toggleKolCost, toggleChDD:toggleChDD, toggleDD:toggleDD,
+             toggleSidebar:toggleSidebar, toggleVisits:toggleVisits};
+  Object.assign(window, fns);
+}, 0);
+</script>
+<script>
+window.DSTART_WK='2026-02-08'; window.DSTART_MO='2026-02';
+window.DSTATE=window.DSTATE&&window.DSTATE.period?window.DSTATE:{ g:{'합계':true}, a:{}, ov:{visits:true,sales:true,klImpr:false,adImpr:false,imprSum:false}, axis:{qmin:'',qmax:'',vmin:'',vmax:'',rmin:'',rmax:'',imin:'',imax:''}, period:'weekly', fMonths:new Set(), fWeeks:new Set(), collapsed:true };
+function dmQueryKeys(p){var dm=window.DEMAND||{},q=dm.query||{},set={};
+  ['google','amazon'].forEach(function(kind){var b=q[kind]&&q[kind][p];if(!b)return;Object.keys(b).forEach(function(lab){Object.keys(b[lab]||{}).forEach(function(k){set[k]=1;});});});
+  var keys=Object.keys(set).sort();
+  function tot(k){var t=0;['google','amazon'].forEach(function(kind){var sm=q[kind]&&q[kind][p]&&q[kind][p]['합계'];if(sm&&sm[k])t+=sm[k];});return t;}
+  while(keys.length&&!tot(keys[keys.length-1]))keys.pop();return keys;}
+function dmDailyKeys(){var set={};try{RAW_SKU.forEach(function(r){set[r.date]=1;});}catch(e){}try{Object.keys(SALES_BY_DATE).forEach(function(d){set[d]=1;});}catch(e){}return Object.keys(set).sort();}
+function dmPeriodKeys(){var st=window.DSTATE,p=st.period,keys=(p==='daily')?dmDailyKeys():dmQueryKeys(p);
+  var startKey=(p==='monthly')?DSTART_MO:DSTART_WK;
+  if(st.fMonths.size||st.fWeeks.size){keys=keys.filter(function(k){var mo=k.slice(0,7);var mOk=st.fMonths.size===0||st.fMonths.has(mo);var wOk=st.fWeeks.size===0||st.fWeeks.has(k);return mOk&&wOk;});}
+  return keys;}
+function dmVisitsMap(p){var m={};try{RAW_SKU.forEach(function(r){var k=getPeriodKey(r.date,p);m[k]=(m[k]||0)+(r.visits||0);});}catch(e){}return m;}
+function dmSalesMap(p){var m={};try{Object.keys(SALES_BY_DATE).forEach(function(d){var k=getPeriodKey(d,p);m[k]=(m[k]||0)+((SALES_BY_DATE[d]||{}).total||0);});}catch(e){}return m;}
+function renderDemand(){
+  var sec=document.getElementById('demandSec'); if(!sec) return;
+  var st=window.DSTATE, p=st.period, daily=(p==='daily');
+  var gbtn=document.getElementById('dmdGBtn'), abtn=document.getElementById('dmdAzBtn');
+  if(gbtn){gbtn.classList.toggle('muted',daily);gbtn.disabled=daily;}
+  if(abtn){abtn.disabled=daily;}
+  if(st.collapsed){ if(window._demandChart){window._demandChart.destroy();window._demandChart=null;} return; }
+  var cv=document.getElementById('demandChart'); if(!cv) return;
+  if(window._demandChart){window._demandChart.destroy();window._demandChart=null;}
+  var dm=window.DEMAND||{};
+  var keys=dmPeriodKeys();
+  var labels=keys.map(function(k){return daily?k.slice(5):fmtPeriodLabel(k,p);});
+  function ser(o){return keys.map(function(k){var v=o&&o[k];return (v||v===0)?v:null;});}
+  function qp(kind,lab){return dm.query&&dm.query[kind]&&dm.query[kind][p]&&dm.query[kind][p][lab];}
+  function ip(lab){return dm.impr&&dm.impr[p]&&dm.impr[p][lab];}
+  var vMap=dmVisitsMap(p), sMap=dmSalesMap(p);
+  var gC={'합계':'#2f6fb0','unove':'#1a7a4a','unove hair':'#d0555a'};
+  var ds=[];
+  if(!daily){
+    Object.keys(st.g).forEach(function(lab){if(!st.g[lab])return;ds.push({label:'구글 '+lab,data:ser(qp('google',lab)),borderColor:gC[lab]||'#2f6fb0',backgroundColor:'transparent',borderWidth:3,pointRadius:2,pointHoverRadius:4,tension:0.25,yAxisID:'yQ',order:1});});
+    Object.keys(st.a).forEach(function(lab){if(!st.a[lab])return;ds.push({label:'아마존 '+lab.replace('unove ',''),data:ser(qp('amazon',lab)),borderColor:'#e08a3c',backgroundColor:'transparent',borderWidth:2.6,borderDash:[3,3],pointRadius:1.5,tension:0.25,yAxisID:'yQ2',order:2});});
+  }
+  if(st.ov.visits)ds.push({label:'유입',data:keys.map(function(k){return vMap[k]!=null?vMap[k]:null;}),borderColor:'#33447a',backgroundColor:'rgba(51,68,122,0.06)',borderWidth:2.4,pointRadius:1.5,tension:0.25,yAxisID:'yV',fill:false,order:3});
+  if(st.ov.sales)ds.push({label:'매출',data:keys.map(function(k){return sMap[k]!=null?sMap[k]:null;}),borderColor:'#d0454a',backgroundColor:'transparent',borderWidth:2.6,borderDash:[5,4],pointRadius:2,tension:0.25,yAxisID:'yS',order:4});
+  if(!daily&&st.ov.klImpr)ds.push({label:'KOL 노출',data:ser(ip('KOL')),borderColor:'#8257c5',backgroundColor:'transparent',borderWidth:2.4,pointRadius:1.5,tension:0.25,yAxisID:'yI',order:5});
+  if(!daily&&st.ov.adImpr)ds.push({label:'광고 노출',data:ser(ip('퍼포먼스')),borderColor:'#2ba7c0',backgroundColor:'transparent',borderWidth:2.4,pointRadius:1.5,tension:0.25,yAxisID:'yI',order:6});
+  if(!daily&&st.ov.imprSum){var _kl=ip('KOL'),_pf=ip('퍼포먼스');ds.push({label:'노출 합계',data:keys.map(function(k){return ((_kl&&_kl[k])||0)+((_pf&&_pf[k])||0);}),borderColor:'#6a4fb0',backgroundColor:'transparent',borderWidth:2.8,pointRadius:1.5,tension:0.25,yAxisID:'yI',order:7});}
+  function nn(v){return (v===''||v==null||isNaN(+v))?undefined:+v;}
+  var ax=st.axis, showA=Object.keys(st.a).some(function(k){return st.a[k];}), showV=st.ov.visits, showI=(!daily&&(st.ov.klImpr||st.ov.adImpr||st.ov.imprSum));
+  window._demandChart=new Chart(cv.getContext('2d'),{type:'line',data:{labels:labels,datasets:ds},options:{
+    responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{position:'top',labels:{font:{size:10},boxWidth:12,padding:8}},
+      tooltip:{callbacks:{label:function(c){var v=c.parsed.y;if(v==null)return c.dataset.label+': -';var l=c.dataset.label;if(l==='매출')return l+': ₩'+Math.round(v).toLocaleString();return l+': '+Math.round(v).toLocaleString();}}}},
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:9},color:'#888',maxRotation:45}},
+      yQ:{type:'linear',position:'left',display:!daily,min:nn(ax.qmin),max:nn(ax.qmax),grid:{display:false},title:{display:true,text:'쿼리 (건)',font:{size:9},color:'#2f6fb0'},ticks:{font:{size:9},color:'#2f6fb0',callback:function(v){return v>=1000?(v/1000).toFixed(0)+'K':v;}}},
+      yQ2:{type:'linear',position:'right',display:showA,offset:true,grid:{drawOnChartArea:false},title:{display:true,text:'아마존 (건)',font:{size:9},color:'#e08a3c'},ticks:{font:{size:9},color:'#e08a3c',callback:function(v){return v>=1000?(v/1000).toFixed(0)+'K':v;}}},
+      yV:{type:'linear',position:'left',display:showV,offset:true,min:nn(ax.vmin),max:nn(ax.vmax),grid:{drawOnChartArea:false},title:{display:true,text:'유입 (방문)',font:{size:9},color:'#33447a'},ticks:{font:{size:9},color:'#33447a',callback:function(v){return v>=1000?(v/1000).toFixed(0)+'K':v;}}},
+      yS:{type:'linear',position:'right',min:nn(ax.rmin),max:nn(ax.rmax),grid:{drawOnChartArea:false},title:{display:true,text:'매출 (₩백만)',font:{size:9},color:'#d0454a'},ticks:{font:{size:9},color:'#d0454a',callback:function(v){return (v/1000000).toFixed(0);}}},
+      yI:{type:'linear',position:'right',display:showI,offset:true,min:nn(ax.imin),max:nn(ax.imax),grid:{drawOnChartArea:false},title:{display:true,text:'노출 (백만)',font:{size:9},color:'#8257c5'},ticks:{font:{size:9},color:'#8257c5',callback:function(v){return (v/1000000).toFixed(1);}}}
+    }
+  }});
+}
+window.renderDemand=renderDemand;
+function availMonths(){var s={};dmQueryKeys('monthly').forEach(function(k){s[k]=1;});dmQueryKeys('weekly').forEach(function(k){s[k.slice(0,7)]=1;});return Object.keys(s).sort();}
+function availWeeks(){var ks=dmQueryKeys('weekly');if(window.DSTATE.fMonths.size)ks=ks.filter(function(k){return window.DSTATE.fMonths.has(k.slice(0,7));});return ks;}
+function moLabel(k){return k.slice(2).replace('-','/');}
+function buildMoPanel(){var el=document.getElementById('dmdMoPanel');if(!el)return;var st=window.DSTATE;el.innerHTML='<label class="dmd-op"><input type="checkbox" id="dmdMoAll"'+(st.fMonths.size===0?' checked':'')+'> 전체</label>'+availMonths().map(function(k){return '<label class="dmd-op"><input type="checkbox" data-mo="'+k+'"'+(st.fMonths.has(k)?' checked':'')+'> '+moLabel(k)+'</label>';}).join('');
+  var all=document.getElementById('dmdMoAll');if(all)all.onchange=function(){st.fMonths.clear();buildMoPanel();buildWkPanel();updFilterLabels();renderDemand();};
+  [].forEach.call(el.querySelectorAll('input[data-mo]'),function(cb){cb.onchange=function(){var k=cb.getAttribute('data-mo');if(cb.checked)st.fMonths.add(k);else st.fMonths.delete(k);buildWkPanel();updFilterLabels();renderDemand();};});}
+function buildWkPanel(){var el=document.getElementById('dmdWkPanel');if(!el)return;var st=window.DSTATE;el.innerHTML='<label class="dmd-op"><input type="checkbox" id="dmdWkAll"'+(st.fWeeks.size===0?' checked':'')+'> 전체</label>'+availWeeks().map(function(k){return '<label class="dmd-op"><input type="checkbox" data-wk="'+k+'"'+(st.fWeeks.has(k)?' checked':'')+'> '+fmtPeriodLabel(k,'weekly')+'</label>';}).join('');
+  var all=document.getElementById('dmdWkAll');if(all)all.onchange=function(){st.fWeeks.clear();buildWkPanel();updFilterLabels();renderDemand();};
+  [].forEach.call(el.querySelectorAll('input[data-wk]'),function(cb){cb.onchange=function(){var k=cb.getAttribute('data-wk');if(cb.checked)st.fWeeks.add(k);else st.fWeeks.delete(k);updFilterLabels();renderDemand();};});}
+function updFilterLabels(){var st=window.DSTATE;var m=document.getElementById('dmdMoBtn'),w=document.getElementById('dmdWkBtn');if(m)m.textContent='기간(월)'+(st.fMonths.size?' ('+st.fMonths.size+')':'')+' ▾';if(w)w.textContent='기간(주)'+(st.fWeeks.size?' ('+st.fWeeks.size+')':'')+' ▾';}
+function syncWkEnable(){var w=document.getElementById('dmdWkBtn');if(!w)return;var off=(window.DSTATE.period!=='weekly');w.disabled=off;w.classList.toggle('muted',off);}
+function refreshDemand(){if(!(window.DEMAND&&window.DEMAND.query))return;try{buildMoPanel();buildWkPanel();updFilterLabels();syncWkEnable();}catch(e){}if(!window.DSTATE.collapsed)renderDemand();}
+window.refreshDemand=refreshDemand;
+function initDemandControls(){
+  if(window.__dmdInit) return;
+  var sec=document.getElementById('demandSec'); if(!sec) return;
+  var st=window.DSTATE;
+  var tg=document.getElementById('dmdToggle');
+  if(tg)tg.onclick=function(){st.collapsed=!st.collapsed;var b=document.getElementById('dmdBody');if(b)b.style.display=st.collapsed?'none':'block';var cr=document.getElementById('dmdCaret');if(cr)cr.textContent=st.collapsed?'▸':'▾';if(!st.collapsed){renderDemand();}else if(window._demandChart){window._demandChart.destroy();window._demandChart=null;}};
+  [].forEach.call(sec.querySelectorAll('.dmd-seg button'),function(btn){btn.onclick=function(){st.period=btn.getAttribute('data-per');[].forEach.call(sec.querySelectorAll('.dmd-seg button'),function(b){b.classList.toggle('on',b===btn);});buildMoPanel();buildWkPanel();updFilterLabels();syncWkEnable();renderDemand();};});
+  var gp=document.getElementById('dmdGPanel'),ap=document.getElementById('dmdAzPanel'),gb=document.getElementById('dmdGBtn'),ab=document.getElementById('dmdAzBtn');
+  if(gb)gb.onclick=function(e){if(e)e.stopPropagation();if(this.disabled)return;gp.classList.toggle('open');};
+  if(ab)ab.onclick=function(e){if(e)e.stopPropagation();if(this.disabled)return;ap.classList.toggle('open');};
+  var mb=document.getElementById('dmdMoBtn'),wb=document.getElementById('dmdWkBtn');
+  if(mb)mb.onclick=function(e){if(e)e.stopPropagation();document.getElementById('dmdMoPanel').classList.toggle('open');};
+  if(wb)wb.onclick=function(e){if(e)e.stopPropagation();if(this.disabled)return;document.getElementById('dmdWkPanel').classList.toggle('open');};
+  [].forEach.call(sec.querySelectorAll('#dmdGPanel .dmd-op input, #dmdAzPanel .dmd-op input'),function(cb){cb.onchange=function(){var pp=cb.getAttribute('data-p'),k=cb.getAttribute('data-k');(pp==='g'?st.g:st.a)[k]=cb.checked;renderDemand();};});
+  [].forEach.call(document.querySelectorAll('#dmdOv .dmd-chip'),function(b){b.onclick=function(){var map={'유입':'visits','매출':'sales','KOL 노출':'klImpr','광고 노출':'adImpr','노출 합계':'imprSum'};var f=map[b.getAttribute('data-k')];st.ov[f]=!st.ov[f];b.classList.toggle('on',st.ov[f]);renderDemand();};});
+  function axHook(id,key){var e=document.getElementById(id);if(!e)return;e.value=st.axis[key];e.oninput=function(){st.axis[key]=e.value;renderDemand();};}
+  axHook('axQmin','qmin');axHook('axQmax','qmax');axHook('axVmin','vmin');axHook('axVmax','vmax');axHook('axRmin','rmin');axHook('axRmax','rmax');axHook('axImin','imin');axHook('axImax','imax');
+  var rs=document.getElementById('dmdReset');if(rs)rs.onclick=function(){st.axis={qmin:'',qmax:'',vmin:'',vmax:'',rmin:'',rmax:'',imin:'',imax:''};['axQmin','axQmax','axVmin','axVmax','axRmin','axRmax','axImin','axImax'].forEach(function(i){var el=document.getElementById(i);if(el)el.value='';});renderDemand();};
+  document.addEventListener('click',function(ev){if(!ev.target.closest('#demandSec .dmd-dd')){[].forEach.call(document.querySelectorAll('#demandSec .dmd-ddpanel.open'),function(p){p.classList.remove('open');});}});
+  if(!window.__rcWrapped && typeof renderChart==='function'){window.__rcWrapped=true;var _o=renderChart;window.renderChart=renderChart=function(){_o.apply(this,arguments);try{refreshDemand();}catch(e){console.warn('refreshDemand',e);}};}
+  window.__dmdInit=true;
+  refreshDemand();
+}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initDemandControls);}else{initDemandControls();}
+</script>
+
+</body>
+</html>
+
+
+<!-- redeploy trigger -->
+
+<!-- redeploy2 -->
++PRICE[n] : '—'; };
+
+  var periods = O.periods;
+  var labels = periods.map(lbl);
+  var dt = O.daily.total, db = O.daily.banner, dp = O.daily.pla;
+  var s = O.summary;
+
+  // ---- destroy previous ----
+  window.__onsCharts = window.__onsCharts || {};
+  Object.keys(window.__onsCharts).forEach(function(k){ try{ window.__onsCharts[k].destroy(); }catch(e){} });
+  window.__onsCharts = {};
+  var mk = function(id, cfg){ var el=document.getElementById(id); if(!el) return; window.__onsCharts[id]=new Chart(el.getContext('2d'), cfg); };
+
+  // ---- 1) 요약 KPI 카드 (Banner/PLA/Total) ----
+  var seg = [
+    { key:'banner', lab:'BANNER', accent:ROSE, d:s.banner, note:'' },
+    { key:'pla',    lab:'PLA',    accent:NAVY, d:s.pla,    note:'' },
+    { key:'total',  lab:'TOTAL',  accent:'#c8102e', d:s.total, note:'통합' }
+  ];
+  var totalSalesAll = s.total.sales || 1;
+  var kpiHtml = seg.map(function(g){
+    var d = g.d;
+    var up = d.roas >= 1;
+    var share = g.key==='total' ? '통합' : Math.round((d.sales/totalSalesAll)*100)+'% 기여';
+    return '<div class="kpi" style="border-left:3px solid '+g.accent+'">'
+      + '<div class="kpi-header"><div class="kpi-label">'+g.lab+'</div>'
+      + '<div class="kpi-badge '+(up?'up':'dn')+'">ROAS '+d.roas.toFixed(2)+'×</div></div>'
+      + '<div class="kpi-value">'+won(d.sales)+'</div>'
+      + '<div class="kpi-vs">Spend '+won(d.spend)+' · '+share+'</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;margin-top:10px;font-size:11px;color:#666">'
+      + '<div><span style="color:#9ca3af">Impr</span> '+Math.round(d.impr).toLocaleString()+'</div>'
+      + '<div><span style="color:#9ca3af">Clicks</span> '+Math.round(d.clicks).toLocaleString()+'</div>'
+      + '<div><span style="color:#9ca3af">Units</span> '+Math.round(d.units).toLocaleString()+'</div>'
+      + '<div><span style="color:#9ca3af">CTR/CVR</span> '+d.ctr.toFixed(2)+'% / '+Math.round(d.cvr)+'%</div>'
+      + '</div></div>';
+  }).join('');
+  document.getElementById('onsSummary').innerHTML = kpiHtml;
+
+  // 예산 소진 게이지 (예산 ₩75,000,000 고정)
+  var BUDGET = 75000000;
+  var pace = 50; // 기간 진행율(표시용)
+  var soji = Math.min(100, Math.round(s.total.spend / BUDGET * 100));
+  document.getElementById('onsBudget').innerHTML =
+      '<div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">'
+    + '<div style="min-width:110px"><div style="font-size:20px;font-weight:700;color:#111827">'+soji+'%</div>'
+    + '<div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af">예산 소진율</div></div>'
+    + '<div style="flex:1;min-width:220px"><div style="height:12px;background:#EBEBEF;border-radius:20px;position:relative;overflow:hidden">'
+    + '<div style="height:100%;width:'+soji+'%;background:'+NAVY+';border-radius:20px"></div>'
+    + '<div style="position:absolute;top:-3px;bottom:-3px;left:'+pace+'%;width:2px;background:#c8102e"></div></div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;margin-top:6px">'
+    + '<span>₩0</span><span style="color:#c8102e;font-weight:700">▲ 기간 진행율 '+pace+'%</span>'
+    + '<span>예산 ₩75,000,000 ($50,000)</span></div></div></div>';
+
+  // ---- 2) 통합 광고 지표 ----
+  var arr = function(f){ return dt.map(function(x){ return x[f]; }); };
+  var grad = function(ctx,rgb){ var g=ctx.createLinearGradient(0,0,0,320); g.addColorStop(0,'rgba('+rgb+',0.20)'); g.addColorStop(1,'rgba('+rgb+',0.02)'); return g; };
+  var ictx = document.getElementById('onsIntegrated').getContext('2d');
+  window.__onsCharts['onsIntegrated'] = new Chart(ictx, {
+    data:{ labels:labels, datasets:[
+      { key:'세일즈', type:'bar', label:'세일즈', data:arr('sales'), backgroundColor:SALES+'cc', yAxisID:'yWon', order:7 },
+      { key:'광고비', type:'line', label:'광고비', data:arr('spend'), borderColor:SPEND, backgroundColor:SPEND, borderWidth:2, tension:.3, pointRadius:2, yAxisID:'yWon', order:6, hidden:true },
+      { key:'노출', type:'line', label:'노출', data:arr('impr'), borderColor:IMPR, backgroundColor:IMPR, borderWidth:2, tension:.3, pointRadius:2, yAxisID:'yImpr', order:5, hidden:true },
+      { key:'클릭', type:'line', label:'클릭', data:arr('clicks'), borderColor:CLICKS, backgroundColor:CLICKS, borderWidth:2, tension:.3, pointRadius:2, yAxisID:'yClick', order:4, hidden:true },
+      { key:'CTR', type:'line', label:'CTR(%)', data:arr('ctr'), borderColor:CTR, backgroundColor:CTR, borderWidth:2, tension:.3, pointRadius:2, yAxisID:'yCTR', order:3, hidden:true },
+      { key:'전환율', type:'line', label:'전환율(CVR,%)', data:arr('cvr'), borderColor:CVR, backgroundColor:CVR, borderWidth:2, tension:.3, pointRadius:2, yAxisID:'yCVR', order:2, hidden:true },
+      { key:'BM유입', type:'line', label:'Brand Media 유입', data:O.brandMedia.visits, borderColor:VISITS, backgroundColor:grad(ictx,'106,173,213'), borderWidth:1.6, fill:true, tension:.25, pointRadius:0, yAxisID:'yVis', order:1 }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{display:false},
+        tooltip:{ callbacks:{ label:function(c){ var l=c.dataset.label;
+          if(l.indexOf('%')>=0) return l+' '+c.parsed.y.toFixed(1)+'%';
+          if(l==='세일즈'||l==='광고비') return l+' '+won(c.parsed.y);
+          return l+' '+Math.round(c.parsed.y).toLocaleString(); } } } },
+      scales:{
+        yWon:{position:'left',grid:{color:GRID},ticks:{callback:function(v){return '₩'+(v/1e6).toFixed(0)+'M';}}},
+        yVis:{position:'right',grid:{display:false},title:{display:true,text:'유입/방문'},ticks:{callback:function(v){return (v/1000).toFixed(0)+'K';}}},
+        yImpr:{display:false}, yClick:{display:false}, yCTR:{display:false,min:0}, yCVR:{display:false,min:0},
+        x:{grid:{color:GRID}}
+      } }
+  });
+  // 칩 토글
+  var chips = document.getElementById('onsChips');
+  if (chips && !chips.__wired) {
+    chips.addEventListener('click', function(e){
+      var c = e.target.closest('.ons-chip'); if(!c) return;
+      var ch = window.__onsCharts['onsIntegrated'];
+      var ds = ch.data.datasets.filter(function(d){ return d.key===c.getAttribute('data-k'); })[0];
+      if(!ds) return; ds.hidden = !ds.hidden; c.classList.toggle('on', !ds.hidden); ch.update();
+    });
+    chips.__wired = true;
+  }
+
+  // ---- 3) Banner / PLA 일별 콤보 ----
+  var combo = function(id, series, barColor){
+    mk(id, { data:{ labels:labels, datasets:[
+        { type:'bar', label:'Spend', data:series.map(function(x){return x.spend;}), backgroundColor:barColor+'55', borderColor:barColor, borderWidth:0.5, yAxisID:'y', order:3 },
+        { type:'bar', label:'Sales', data:series.map(function(x){return x.sales;}), backgroundColor:barColor, yAxisID:'y', order:2 },
+        { type:'line', label:'ROAS', data:series.map(function(x){ return x.spend ? x.sales/x.spend : 0; }), borderColor:NAVY, backgroundColor:NAVY, borderWidth:2, tension:.3, pointRadius:2.5, yAxisID:'y1', order:1 }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+        plugins:{ legend:{position:'bottom',labels:{boxWidth:10,boxHeight:10,padding:9,font:{size:10}}},
+          tooltip:{ callbacks:{ label:function(c){ return c.dataset.label==='ROAS' ? 'ROAS '+c.parsed.y.toFixed(2)+'×' : c.dataset.label+' '+won(c.parsed.y); } } } },
+        scales:{ y:{position:'left',grid:{color:GRID},ticks:{callback:function(v){return '₩'+(v/1e6).toFixed(0)+'M';}}},
+          y1:{position:'right',grid:{display:false},min:0,suggestedMax:3.2,ticks:{callback:function(v){return v+'×';}}},
+          x:{grid:{color:GRID}} } }
+    });
+  };
+  combo('onsBanner', db, SALES);
+  combo('onsPla', dp, NAVY);
+
+  // ---- 4) PLA SKU ----
+  var skus = O.skus.slice();
+  var skuLabels = skus.map(function(d){ return dn(d.name); });
+  mk('onsSku', { data:{ labels:skuLabels, datasets:[
+      { type:'bar', label:'매출', data:skus.map(function(d){return d.sales;}), backgroundColor:NAVY, xAxisID:'x', yAxisID:'y', borderRadius:2 },
+      { type:'line', label:'ROAS', data:skus.map(function(d){return d.roas;}), borderColor:SALES, backgroundColor:SALES, borderWidth:0, pointStyle:'rectRot', pointRadius:6, showLine:false, xAxisID:'x1', yAxisID:'y' }
+    ]},
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,boxHeight:10,padding:9,font:{size:10}}},
+        tooltip:{ callbacks:{ label:function(c){ return c.dataset.label==='ROAS' ? 'ROAS '+c.parsed.x.toFixed(2)+'×' : '매출 '+won(c.parsed.x); } } } },
+      scales:{ y:{grid:{display:false},ticks:{font:{size:10}}},
+        x:{position:'top',grid:{color:GRID},title:{display:true,text:'매출(₩)',font:{size:10}},ticks:{callback:function(v){return '₩'+(v/1e6).toFixed(0)+'M';}}},
+        x1:{position:'bottom',min:0,suggestedMax:4,grid:{display:false},title:{display:true,text:'ROAS(×)',font:{size:10}},ticks:{callback:function(v){return v+'×';}}} } }
+  });
+  // SKU 표
+  var tot = { spend:0, sales:0, units:0, clicks:0 };
+  skus.forEach(function(d){ tot.spend+=d.spend; tot.sales+=d.sales; tot.units+=d.units; tot.clicks+=d.clicks; });
+  var rows = skus.map(function(d){
+    var pct = tot.sales ? Math.round(d.sales/tot.sales*100) : 0;
+    return '<tr><td>'+dn(d.name)+'</td><td style="color:#1D2847;font-weight:700">'+pr(d.name)+'</td><td>'+wonK(d.spend)+'</td><td>'+wonK(d.sales)+'</td>'
+      + '<td>'+d.roas.toFixed(2)+'×</td><td>'+pct+'%</td><td>'+Math.round(d.cvr)+'%</td>'
+      + '<td>'+wonK(d.cpm)+'</td><td>'+wonK(d.cpc)+'</td><td>'+wonK(d.cpa)+'</td></tr>';
+  }).join('');
+  var totRoas = tot.spend ? (tot.sales/tot.spend) : 0;
+  rows += '<tr style="font-weight:700;background:#F5F5F8"><td>PLA 합계</td><td>—</td><td>'+wonK(tot.spend)+'</td><td>'+wonK(tot.sales)+'</td>'
+    + '<td>'+totRoas.toFixed(2)+'×</td><td>100%</td><td>'+(tot.clicks?Math.round(tot.units/tot.clicks*100):0)+'%</td><td>—</td><td>—</td><td>—</td></tr>';
+  document.getElementById('onsSkuTbl').querySelector('tbody').innerHTML = rows;
+
+  // ---- 5) Brand Media 비교 ----
+  var bctx = document.getElementById('onsBmDaily').getContext('2d');
+  window.__onsCharts['onsBmDaily'] = new Chart(bctx, {
+    data:{ labels:labels, datasets:[
+      { type:'bar', label:'온사이트 클릭', data:arr('clicks'), backgroundColor:IMPR, yAxisID:'y' },
+      { type:'line', label:'Brand Media 방문', data:O.brandMedia.visits, borderColor:VISITS, backgroundColor:grad(bctx,'106,173,213'), borderWidth:2, fill:true, tension:.3, pointRadius:2.5, yAxisID:'y1' }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,boxHeight:10,padding:9,font:{size:10}}} },
+      scales:{ y:{position:'left',grid:{color:GRID},title:{display:true,text:'온사이트 클릭'}},
+        y1:{position:'right',grid:{display:false},title:{display:true,text:'BM 방문'}}, x:{grid:{color:GRID}} } }
+  });
+  mk('onsBmShare', { type:'bar',
+    data:{ labels:['Banner','PLA','Total'], datasets:[
+      { label:'온사이트 매출', data:[s.banner.sales/1e6, s.pla.sales/1e6, s.total.sales/1e6], backgroundColor:NAVY },
+      { label:'Brand Media 매출', data:(function(){ var t=(O.brandMedia.sales||[]).reduce(function(a,b){return a+b;},0)/1e6; return [t,t,t]; })(), backgroundColor:ROSE }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,boxHeight:10,padding:9,font:{size:10}}},
+        tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+' ₩'+c.parsed.y.toFixed(1)+'M'; } } } },
+      scales:{ y:{grid:{color:GRID},title:{display:true,text:'매출 (₩M)'}}, x:{grid:{color:GRID}} } }
+  });
+}
+
+
 function refreshAdsChart(chartNum) {
   if (ADS_RAW.length === 0) return;
   _curMetric = adsChartMetric[chartNum] || 'spend';
