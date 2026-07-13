@@ -4259,7 +4259,7 @@ function refreshOnsite() {
 
   // 예산 소진 게이지 (예산 ₩75,000,000 고정)
   var BUDGET = 75000000;
-  var pace = 50; // 기간 진행율(표시용)
+  var PSTART=new Date(2026,5,22), PEND=new Date(2026,6,21), _pd=Math.floor((new Date()-PSTART)/86400000)+1, _pn=Math.floor((PEND-PSTART)/86400000)+1; var pace=Math.max(0,Math.min(100,Math.round(_pd/_pn*100))); // 기간 진행율(표시용)
   var soji = Math.min(100, Math.round(s.total.spend / BUDGET * 100));
   document.getElementById('onsBudget').innerHTML =
       '<div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">'
@@ -4344,8 +4344,8 @@ function refreshOnsite() {
         x1:{position:'bottom',min:0,suggestedMax:4,grid:{display:false},title:{display:true,text:'ROAS(×)',font:{size:10}},ticks:{callback:function(v){return v+'×';}}} } }
   });
   // SKU 표
-  var tot = { spend:0, sales:0, units:0, clicks:0 };
-  skus.forEach(function(d){ tot.spend+=d.spend; tot.sales+=d.sales; tot.units+=d.units; tot.clicks+=d.clicks; });
+  var tot = { spend:0, sales:0, units:0, clicks:0, impr:0 };
+  skus.forEach(function(d){ tot.spend+=d.spend; tot.sales+=d.sales; tot.units+=d.units; tot.clicks+=d.clicks; tot.impr+=d.impr; });
   var rows = skus.map(function(d){
     var pct = tot.sales ? Math.round(d.sales/tot.sales*100) : 0;
     return '<tr><td>'+dn(d.name)+'</td><td style="color:#1D2847;font-weight:700">'+pr(d.name)+'</td><td>'+wonK(d.spend)+'</td><td>'+wonK(d.sales)+'</td>'
@@ -4354,7 +4354,7 @@ function refreshOnsite() {
   }).join('');
   var totRoas = tot.spend ? (tot.sales/tot.spend) : 0;
   rows += '<tr style="font-weight:700;background:#F5F5F8"><td>PLA 합계</td><td>—</td><td>'+wonK(tot.spend)+'</td><td>'+wonK(tot.sales)+'</td>'
-    + '<td>'+totRoas.toFixed(2)+'×</td><td>100%</td><td>'+(tot.clicks?Math.round(tot.units/tot.clicks*100):0)+'%</td><td>—</td><td>—</td><td>—</td></tr>';
+    + '<td>'+totRoas.toFixed(2)+'×</td><td>100%</td><td>'+(tot.clicks?Math.round(tot.units/tot.clicks*100):0)+'%</td><td>'+wonK(tot.impr?tot.spend/tot.impr*1000:0)+'</td><td>'+wonK(tot.clicks?tot.spend/tot.clicks:0)+'</td><td>'+wonK(tot.units?tot.spend/tot.units:0)+'</td></tr>';
   document.getElementById('onsSkuTbl').querySelector('tbody').innerHTML = rows;
 
   // ---- 5) Brand Media 비교 ----
