@@ -1116,24 +1116,56 @@ let EVENTS = [
   {start:'2026-03-18',end:'2026-03-18',type:'ETC',placement:'Tatyana_IG/TT',product:'Standard Kits'},
   {start:'2026-04-06',end:'2026-04-06',type:'ETC',placement:'natalie_IG/TT',product:'Shampoo+Conditioner'},
 ];
-// ─── EVENT PERSISTENCE (localStorage) ───────────────────────────────────────
-const EV_STORAGE_KEY = 'sephora_events_v1';
+// ─── EVENT PERSISTENCE (구글 시트 정본 / Apps Script 경유) ───────────────────
+//  이전: localStorage. 본인 브라우저에만 저장돼 팀원 화면과 어긋났음.
+//  현재: Raw_이벤트 시트가 정본. 추가/수정/삭제는 doPost, 조회는 ？only=events(캐시 우회).
+//  위 EVENTS 시드는 서버 로드 실패 시 폴백으로만 사용됨.
 let evFullTypeFilter = 'ALL';
-function saveEventsToStorage() {
-  try { localStorage.setItem(EV_STORAGE_KEY, JSON.stringify(EVENTS)); } catch(e) {}
+let EV_SYNC_ERR = null;
+
+function evApiUrl_() {
+  return localStorage.getItem('sephora_apps_script_url') || DEFAULT_APPS_SCRIPT_URL;
 }
-(function loadEventsFromStorage() {
+
+// 서버 쓰기 (add / update / delete) → 성공 시 EVENTS를 서버 응답으로 교체
+async function evPost_(action, event) {
+  const token = sessionStorage.getItem('sephora_token');
+  if (!token) { alert('로그인이 필요합니다. 새로고침 후 다시 로그인해주세요.'); return false; }
   try {
-    const saved = localStorage.getItem(EV_STORAGE_KEY);
-    if (saved) {
-      const arr = JSON.parse(saved);
-      if (Array.isArray(arr) && arr.length > 0) {
-        EVENTS.length = 0;
-        arr.forEach(function(e) { EVENTS.push(e); });
-      }
+    const r = await fetch(evApiUrl_() + '?token=' + encodeURIComponent(token), {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: action, event: event })
+    });
+    const j = await r.json();
+    if (!j.ok) { alert('저장 실패: ' + (j.error || '알 수 없는 오류')); return false; }
+    if (Array.isArray(j.events)) { EVENTS.length = 0; j.events.forEach(function(e){ EVENTS.push(e); }); }
+    EV_SYNC_ERR = null;
+    return true;
+  } catch (e) {
+    alert('서버에 저장하지 못했습니다. 네트워크를 확인해주세요.\n' + e.message);
+    return false;
+  }
+}
+
+// 서버에서 이벤트 로드 (실패 시 시드 유지)
+async function loadEventsFromServer() {
+  const token = sessionStorage.getItem('sephora_token');
+  if (!token) return;
+  try {
+    const r = await fetch(evApiUrl_() + '?token=' + encodeURIComponent(token) + '&only=events', { cache: 'no-store' });
+    const j = await r.json();
+    if (j.error) throw new Error(j.error);
+    if (Array.isArray(j.events)) {
+      EVENTS.length = 0;
+      j.events.forEach(function(e){ EVENTS.push(e); });
+      EV_SYNC_ERR = null;
     }
-  } catch(e) {}
-})();
+  } catch (e) {
+    EV_SYNC_ERR = e.message;
+    console.warn('[EVENTS] 서버 로드 실패 → 기본 시드 사용:', e.message);
+  }
+}
 // ─── STATE ────────────────────────────────────────────────────────────────────
 const USD_TO_KRW = 1500; // 환율 기준: 1 USD = 1,500 KRW (수동 업데이트)
 let selMonths = new Set(), selWeeks = new Set(), selCats = new Set(), selSkus = new Set(), selEvType = new Set(['KOL']);
@@ -2396,7 +2428,7 @@ function renderTypeLegend() {
   ).join('');
 }
 // ─── EVENT FORM ───────────────────────────────────────────────────────────────
-function addEvent() {
+async function addEvent() {
   const start   = document.getElementById('evStart').value;
   const end     = document.getElementById('evEnd').value || start;
   const type    = document.getElementById('evType').value;
@@ -2416,8 +2448,8 @@ function addEvent() {
     return;
   }
   if (end < start) { alert('종료일이 시작일보다 이전입니다.'); return; }
-  EVENTS.push({ start, end, type, placement:place, product });
-  saveEventsToStorage();
+  const _ok = await evPost_('add', { start: start, end: end, type: type, placement: place, product: product });
+  if (!_ok) return;
   ['evStart','evEnd','evPlacement','evProduct'].forEach(id => {
     document.getElementById(id).value = '';
     document.getElementById(id).classList.remove('err');
@@ -2550,10 +2582,10 @@ function renderEventList() {
     </div>`;
   }).join('');
 }
-function removeEvent(idx) {
+async function removeEvent(idx) {
   if (!confirm('등록된 이벤트를 정말 삭제하시겠습니까?')) return;
-  EVENTS.splice(idx, 1);
-  saveEventsToStorage();
+  const _ok = await evPost_('delete', { id: EVENTS[idx].id });
+  if (!_ok) return;
   renderEventList(); renderChart();
 }
 function buildEvFullFilterBtns() {
@@ -2608,10 +2640,10 @@ function renderEventListFull() {
       '<button class="btn-rm" onclick="removeEventFull(' + origIdx + ')">×</button></div></div>';
   }).join('');
 }
-function removeEventFull(idx) {
+async function removeEventFull(idx) {
   if (!confirm('이벤트를 삭제하시겠습니까?')) return;
-  EVENTS.splice(idx, 1);
-  saveEventsToStorage();
+  const _ok = await evPost_('delete', { id: EVENTS[idx].id });
+  if (!_ok) return;
   renderEventListFull(); renderEventList(); renderChart();
 }
 // ─── EVENT EDIT ───────────────────────────────────────────────────────────────
@@ -2637,18 +2669,20 @@ window.editEventFull = function(origIdx) {
     '<button class="btn-cancel" onclick="renderEventListFull()">취소</button>' +
     '</div></div>';
 };
-window.saveEventFull = function(origIdx) {
+window.saveEventFull = async function(origIdx) {
   var start = document.getElementById('efS' + origIdx).value;
   var end   = document.getElementById('efE' + origIdx).value || start;
   if (!start) { alert('시작일을 입력해주세요.'); return; }
   if (end < start) { alert('종료일이 시작일보다 이전입니다.'); return; }
-  EVENTS[origIdx] = {
-    start: start, end: end,
-    type:      document.getElementById('efT' + origIdx).value,
-    placement: document.getElementById('efP' + origIdx).value.trim(),
-    product:   document.getElementById('efPr' + origIdx).value.trim(),
-  };
-  saveEventsToStorage();
+      const _ok = await evPost_('update', {
+        id:        EVENTS[origIdx].id,
+        start:     start,
+        end:       end,
+        type:      document.getElementById('efT' + origIdx).value,
+        placement: document.getElementById('efP' + origIdx).value.trim(),
+        product:   document.getElementById('efPr' + origIdx).value.trim()
+      });
+      if (!_ok) return;
   renderEventListFull(); renderEventList(); renderChart();
 };
 function editEvent(idx) {
@@ -2678,19 +2712,20 @@ function editEvent(idx) {
       </div>
     </div>`;
 }
-function saveEvent(idx) {
+async function saveEvent(idx) {
   const start = document.getElementById(`eeS${idx}`).value;
   const end   = document.getElementById(`eeE${idx}`).value || start;
   if (!start) { alert('시작일을 입력해주세요.'); return; }
   if (end < start) { alert('종료일이 시작일보다 이전입니다.'); return; }
-  EVENTS[idx] = {
-    start,
-    end,
-    type:      document.getElementById(`eeT${idx}`).value,
-    placement: document.getElementById(`eeP${idx}`).value.trim(),
-    product:   document.getElementById(`eePr${idx}`).value.trim(),
-  };
-  saveEventsToStorage();
+      const _ok = await evPost_('update', {
+        id:        EVENTS[idx].id,
+        start:     start,
+        end:       end,
+        type:      document.getElementById(`eeT${idx}`).value,
+        placement: document.getElementById(`eeP${idx}`).value.trim(),
+        product:   document.getElementById(`eePr${idx}`).value.trim()
+      });
+      if (!_ok) return;
   renderEventList();
   renderChart();
 }
@@ -3740,6 +3775,12 @@ function onAuthSuccess(user) {
           rebuildDerivedData();
           const lbl = document.getElementById('lastUpdatedLabel');
           if (lbl) lbl.textContent = '캐시: ' + (age >= 60 ? Math.round(age/60) + '시간 전' : Math.round(age) + '분 전');
+      // 이벤트는 시트가 정본 — 논블로킹으로 로드 후 재렌더
+      loadEventsFromServer().then(function () {
+        try { renderEventList(); } catch (e) {}
+        try { if (typeof renderEventListFull === 'function') renderEventListFull(); } catch (e) {}
+        try { renderChart(); } catch (e) {}
+      });
           initDashboard();
           // 백그라운드 갱신
           setTimeout(() => loadFromAppsScript(appsScriptUrl, true), 500);
@@ -3880,6 +3921,12 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     showStgStatus('✅ 로드 완료 — SKU ' + RAW_SKU.length + '행 / 매출 ' + RAW_SALES.length + '행 / Channel ' + CH_RAW.length + '행 / Ads ' + ADS_RAW.length + '행', 'ok');
     const _lo = document.getElementById('loadingOverlay');
     if (_lo) _lo.style.display = 'none';
+      // 이벤트는 시트가 정본 — 논블로킹으로 로드 후 재렌더
+      loadEventsFromServer().then(function () {
+        try { renderEventList(); } catch (e) {}
+        try { if (typeof renderEventListFull === 'function') renderEventListFull(); } catch (e) {}
+        try { renderChart(); } catch (e) {}
+      });
     initDashboard();
     if (!isSilent && document.getElementById('tabSettings') &&
         document.getElementById('tabSettings').style.display !== 'none') switchTab('main');
