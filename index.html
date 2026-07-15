@@ -937,7 +937,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   </style>
 
   <div id="onsPlaceholder" style="display:none;padding:60px 20px;text-align:center;color:#9ca3af;font-size:15px">
-    온사이트 데이터를 연동 중입니다. 최대 30초가 소요될 수 있어 잠시만 기다려주세요!
+    온사이트 데이터를 연동 중입니다. 최초 접속 시 1분 정도 걸릴 수 있어 잠시만 기다려주세요!
   </div>
 
   <div id="onsBody">
@@ -3872,7 +3872,7 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     try {
       localStorage.setItem('sephora_data_cache', JSON.stringify({
         ts: Date.now(),
-        commerce: newSku, sales: newSales, channel: newCh,
+        commerce: newSku, sales: newSales, channel: newCh, onsite: (data.onsite || null),
         ads: Array.from(ADS_RAW), kol: Array.from(KOL_RAW),
         dmCost: { monthly: DM_COST.monthly, weekly: DM_COST.weekly }, updatedAt: data.updatedAt
       }));
