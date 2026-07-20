@@ -4578,7 +4578,7 @@ function renderDemand(){
   var ds=[];
   if(!daily){
     Object.keys(st.g).forEach(function(lab){if(!st.g[lab])return;ds.push({label:'구글 '+lab,data:ser(qp('google',lab)),borderColor:gC[lab]||'#2f6fb0',backgroundColor:'transparent',borderWidth:3,pointRadius:2,pointHoverRadius:4,tension:0.25,yAxisID:'yQ',order:1});});
-    Object.keys(st.a).forEach(function(lab){if(!st.a[lab])return;ds.push({label:'아마존 '+lab.replace('unove ',''),data:ser(qp('amazon',lab)),borderColor:'#e08a3c',backgroundColor:'transparent',borderWidth:2.6,borderDash:[3,3],pointRadius:1.5,tension:0.25,yAxisID:'yQ2',order:2});});
+    Object.keys(st.a).forEach(function(lab){if(!st.a[lab])return;ds.push({label:'아마존 '+lab.replace('unove ',''),data:ser(qp('amazon',lab)),borderColor:({'합계':'#E0730C','unove':'#F7B23A','unove deep damage treatment':'#A83DB0','unove hair treatment':'#5E5AF5','unove shampoo':'#1E9E8A','unove silk oil essence':'#9A7B12'}[lab]||'#e08a3c'),backgroundColor:'transparent',borderWidth:(lab==='합계'?3.2:2.0),borderDash:[3,3],pointRadius:1.5,tension:0.25,yAxisID:'yQ2',order:2});});
   }
   if(st.ov.visits)ds.push({label:'유입',data:keys.map(function(k){return vMap[k]!=null?vMap[k]:null;}),borderColor:'#33447a',backgroundColor:'rgba(51,68,122,0.06)',borderWidth:2.4,pointRadius:1.5,tension:0.25,yAxisID:'yV',fill:false,order:3});
   if(st.ov.sales)ds.push({label:'매출',data:keys.map(function(k){return sMap[k]!=null?sMap[k]:null;}),borderColor:'#d0454a',backgroundColor:'transparent',borderWidth:2.6,borderDash:[5,4],pointRadius:2,tension:0.25,yAxisID:'yS',order:4});
