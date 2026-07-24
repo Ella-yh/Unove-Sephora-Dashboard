@@ -955,15 +955,17 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
         <span class="ons-chip" data-k="CTR" style="color:#45818E"><span class="d"></span>CTR</span>
         <span class="ons-chip" data-k="전환율" style="color:#A64D79"><span class="d"></span>전환율(CVR)</span>
         <span class="ons-chip on" data-k="BM유입" style="color:#6aadd5"><span class="d"></span>Brand Media 유입</span>
+        <span class="ons-chip on" data-k="세일즈원본" style="color:#e4e6e8"><span class="d"></span>세일즈 원본(7/11~13 이상치)</span>
       </div>
       <div style="position:relative;height:330px"><canvas id="onsIntegrated"></canvas></div>
       <div style="font-size:9px;color:#bbb;margin-top:6px">첫 구간(~날짜) = 캠페인 누적(6/22~), 이후 일별 · Brand Media = 방문(visit) 기준</div>
+      <div style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div>
     </div>
 
     <div class="sec-hdr" style="margin-top:22px">Banner · PLA 일별 추이</div>
     <div class="ons-two">
-      <div class="chart-card"><div class="chart-sec-title">Banner 일별 Spend·Sales·ROAS</div><div style="position:relative;height:290px"><canvas id="onsBanner"></canvas></div></div>
-      <div class="chart-card"><div class="chart-sec-title">PLA 일별 Spend·Sales·ROAS</div><div style="position:relative;height:290px"><canvas id="onsPla"></canvas></div></div>
+      <div class="chart-card"><div class="chart-sec-title">Banner 일별 Spend·Sales·ROAS</div><div style="position:relative;height:290px"><canvas id="onsBanner"></canvas></div><div style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div></div>
+      <div class="chart-card"><div class="chart-sec-title">PLA 일별 Spend·Sales·ROAS</div><div style="position:relative;height:290px"><canvas id="onsPla"></canvas></div><div style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div></div>
     </div>
 
     <div class="sec-hdr" style="margin-top:22px">PLA SKU별 성과</div>
@@ -4322,10 +4324,21 @@ function refreshOnsite() {
   // ---- 2) 통합 광고 지표 ----
   var arr = function(f){ return dt.map(function(x){ return x[f]; }); };
   var grad = function(ctx,rgb){ var g=ctx.createLinearGradient(0,0,0,320); g.addColorStop(0,'rgba('+rgb+',0.20)'); g.addColorStop(1,'rgba('+rgb+',0.02)'); return g; };
+  // ===== 7/11~13 이상치 B보정(클릭비례 재배분) + 축 baseline 정렬 =====
+  var GREYO='#e4e6e8', GREYO_LABEL='세일즈 원본(7/11~13 이상치)';
+  var OUT_I=[]; periods.forEach(function(p,i){ if(p==='2026-07-11'||p==='2026-07-12'||p==='2026-07-13') OUT_I.push(i); });
+  function bMapOns(series){ var sumS=0,sumC=0; OUT_I.forEach(function(i){ sumS+=series[i].sales; sumC+=series[i].clicks; }); var m={}; OUT_I.forEach(function(i){ m[i]= sumC? Math.round(sumS*series[i].clicks/sumC):0; }); return m; }
+  function adoptedOns(series){ var b=bMapOns(series); return series.map(function(x,i){ return (i in b)? b[i] : x.sales; }); }
+  function greyOns(series){ var b=bMapOns(series); return series.map(function(x,i){ return (i in b)? x.sales : null; }); }
+  function niceRng(vals){ var f=vals.filter(function(v){return v!=null&&isFinite(v);}); return [Math.floor(Math.min.apply(null,[0].concat(f))/5e6)*5e6, Math.ceil(Math.max.apply(null,f)/5e6)*5e6]; }
+  function alignMM(av,f0,head){ head=head||1.08; var mx=Math.max.apply(null,av.filter(function(v){return v!=null&&isFinite(v);}))*head; return {min:f0*mx/(f0-1), max:mx}; }
+  var _wr=niceRng(adoptedOns(dt).concat(greyOns(dt)).concat(arr('spend'))), wMinO=_wr[0], wMaxO=_wr[1], f0O=(0-wMinO)/(wMaxO-wMinO);
+  var visA=alignMM(O.brandMedia.visits,f0O,1.1), imprA=alignMM(arr('impr'),f0O,1.05), clkA=alignMM(arr('clicks'),f0O,1.05), ctrA=alignMM(arr('ctr'),f0O,1.1), cvrA=alignMM(arr('cvr').map(function(v){return Math.abs(v);}),f0O,1.1);
   var ictx = document.getElementById('onsIntegrated').getContext('2d');
   window.__onsCharts['onsIntegrated'] = new Chart(ictx, {
     data:{ labels:labels, datasets:[
-      { key:'세일즈', type:'bar', label:'세일즈', data:arr('sales'), backgroundColor:SALES+'cc', yAxisID:'yWon', order:7 },
+      { key:'세일즈원본', type:'bar', label:GREYO_LABEL, data:greyOns(dt), backgroundColor:GREYO, yAxisID:'yWon', order:8, grouped:false },
+      { key:'세일즈', type:'bar', label:'세일즈', data:adoptedOns(dt), backgroundColor:SALES+'cc', yAxisID:'yWon', order:7, grouped:false },
       { key:'광고비', type:'line', label:'광고비', data:arr('spend'), borderColor:SPEND, backgroundColor:SPEND, borderWidth:2, tension:.3, pointRadius:2, yAxisID:'yWon', order:6, hidden:true },
       { key:'노출', type:'line', label:'노출', data:arr('impr'), borderColor:IMPR, backgroundColor:IMPR, borderWidth:2, tension:.3, pointRadius:2, yAxisID:'yImpr', order:5, hidden:true },
       { key:'클릭', type:'line', label:'클릭', data:arr('clicks'), borderColor:CLICKS, backgroundColor:CLICKS, borderWidth:2, tension:.3, pointRadius:2, yAxisID:'yClick', order:4, hidden:true },
@@ -4340,9 +4353,9 @@ function refreshOnsite() {
           if(l==='세일즈'||l==='광고비') return l+' '+won(c.parsed.y);
           return l+' '+Math.round(c.parsed.y).toLocaleString(); } } } },
       scales:{
-        yWon:{position:'left',grid:{color:GRID},ticks:{callback:function(v){return '₩'+(v/1e6).toFixed(0)+'M';}}},
-        yVis:{position:'right',grid:{display:false},title:{display:true,text:'유입/방문'},ticks:{callback:function(v){return v.toLocaleString();}}},
-        yImpr:{display:false}, yClick:{display:false}, yCTR:{display:false,min:0}, yCVR:{display:false,min:0},
+        yWon:{position:'left',min:wMinO,max:wMaxO,grid:{color:GRID},ticks:{callback:function(v){return '₩'+(v/1e6).toFixed(0)+'M';}}},
+        yVis:{position:'right',min:visA.min,max:visA.max,grid:{display:false},title:{display:true,text:'유입/방문'},ticks:{callback:function(v){return v.toLocaleString();}}},
+        yImpr:{display:false,min:imprA.min,max:imprA.max}, yClick:{display:false,min:clkA.min,max:clkA.max}, yCTR:{display:false,min:ctrA.min,max:ctrA.max}, yCVR:{display:false,min:cvrA.min,max:cvrA.max},
         x:{grid:{color:GRID}}
       } }
   });
@@ -4358,20 +4371,35 @@ function refreshOnsite() {
     chips.__wired = true;
   }
 
-  // ---- 3) Banner / PLA 일별 콤보 ----
+  // ---- 3) Banner / PLA 일별 콤보 (7/11~13 회색 원본 오버레이 + baseline 정렬) ----
+  var greyOnSalesPlugin = function(series){
+    var orig = series.map(function(x){return x.sales;});
+    return { id:'greyOnSales', beforeDatasetsDraw:function(chart){
+      var meta=chart.getDatasetMeta(1); if(!meta||!meta.data) return;
+      var ys=chart.scales.y, cx=chart.ctx; cx.save(); cx.fillStyle=GREYO;
+      OUT_I.forEach(function(i){ var bar=meta.data[i]; if(!bar) return; var w=bar.width, x=bar.x, y0=ys.getPixelForValue(0), yv=ys.getPixelForValue(orig[i]); cx.fillRect(x-w/2, Math.min(y0,yv), w, Math.abs(yv-y0)); });
+      cx.restore();
+    }};
+  };
   var combo = function(id, series, barColor){
+    var salesAd = adoptedOns(series), spendA = series.map(function(x){return x.spend;});
+    var roasA = salesAd.map(function(v,i){ return spendA[i]? v/spendA[i] : 0; });
+    var _yr = niceRng(salesAd.concat(greyOns(series)).concat(spendA)), yMinC=_yr[0], yMaxC=_yr[1], cf0=(0-yMinC)/(yMaxC-yMinC);
+    var rMaxC=Math.max.apply(null,roasA)*1.15, r1MinC=cf0*rMaxC/(cf0-1);
     mk(id, { data:{ labels:labels, datasets:[
-        { type:'bar', label:'Spend', data:series.map(function(x){return x.spend;}), backgroundColor:barColor+'55', borderColor:barColor, borderWidth:0.5, yAxisID:'y', order:3 },
-        { type:'bar', label:'Sales', data:series.map(function(x){return x.sales;}), backgroundColor:barColor, yAxisID:'y', order:2 },
-        { type:'line', label:'ROAS', data:series.map(function(x){ return x.spend ? x.sales/x.spend : 0; }), borderColor:NAVY, backgroundColor:NAVY, borderWidth:2, tension:.3, pointRadius:2.5, yAxisID:'y1', order:1 }
+        { type:'bar', label:'Spend', data:spendA, backgroundColor:barColor+'55', borderColor:barColor, borderWidth:0.5, yAxisID:'y', order:3 },
+        { type:'bar', label:'Sales', data:salesAd, backgroundColor:barColor, yAxisID:'y', order:2 },
+        { type:'line', label:'ROAS', data:roasA, borderColor:NAVY, backgroundColor:NAVY, borderWidth:2, tension:.3, pointRadius:2.5, yAxisID:'y1', order:1 }
       ]},
       options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
-        plugins:{ legend:{position:'bottom',labels:{boxWidth:10,boxHeight:10,padding:9,font:{size:10}}},
+        plugins:{ legend:{position:'bottom',
+            onClick:function(e,item,legend){ if(item.datasetIndex==null||item.datasetIndex<0) return; Chart.defaults.plugins.legend.onClick.call(this,e,item,legend); },
+            labels:{boxWidth:10,boxHeight:10,padding:9,font:{size:10}, generateLabels:function(chart){ var items=Chart.defaults.plugins.legend.labels.generateLabels(chart); items.push({text:GREYO_LABEL,fillStyle:GREYO,strokeStyle:GREYO,lineWidth:0,hidden:false,datasetIndex:-1}); return items; }}},
           tooltip:{ callbacks:{ label:function(c){ return c.dataset.label==='ROAS' ? 'ROAS '+c.parsed.y.toFixed(2)+'×' : c.dataset.label+' '+won(c.parsed.y); } } } },
-        scales:{ y:{position:'left',grid:{color:GRID},ticks:{callback:function(v){return '₩'+(v/1e6).toFixed(0)+'M';}}},
-          y1:{position:'right',grid:{display:false},min:0,suggestedMax:3.2,ticks:{callback:function(v){return v+'×';}}},
-          x:{grid:{color:GRID}} } }
-    });
+        scales:{ y:{position:'left',min:yMinC,max:yMaxC,grid:{color:GRID},ticks:{callback:function(v){return '₩'+(v/1e6).toFixed(0)+'M';}}},
+          y1:{position:'right',min:r1MinC,max:rMaxC,grid:{display:false},ticks:{callback:function(v){return v.toFixed(1)+'×';}}},
+          x:{grid:{color:GRID}} } },
+      plugins:[greyOnSalesPlugin(series)] });
   };
   combo('onsBanner', db, SALES);
   combo('onsPla', dp, NAVY);
