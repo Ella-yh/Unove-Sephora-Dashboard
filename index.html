@@ -95,6 +95,12 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 /* Chart section title */
 .chart-sec-title{font-size:12px;font-weight:500;color:#444;margin-bottom:1px;}
 .chart-sec-sub{font-size:10px;color:#aaa;margin-bottom:12px;}
+.ads-tbl-wrap{overflow-x:auto;}
+.ads-metric-tbl{border-collapse:collapse;font-size:10px;white-space:nowrap;width:100%;}
+.ads-metric-tbl th,.ads-metric-tbl td{padding:5px 9px;border-bottom:1px solid #EEE;text-align:right;}
+.ads-metric-tbl th:first-child,.ads-metric-tbl td.ads-metric-lbl{text-align:left;position:sticky;left:0;background:#fff;font-weight:600;color:#1D2847;z-index:1;}
+.ads-metric-tbl thead th{color:#9ca3af;font-weight:700;border-bottom:2px solid #E0E0E4;font-size:9px;letter-spacing:.5px;text-transform:uppercase;}
+.ads-metric-tbl tbody tr:hover td{background:#F8F8FB;}
 /* Event section */
 .ev-sec{padding:0 28px 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .ev-card{background:#ffffff;border:0.5px solid #E8E8EC;padding:16px 18px;border-radius:3px;}
@@ -761,6 +767,11 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     <div class="chart-wrap" style="height:300px;"><canvas id="adsChart1"></canvas></div>
     <div class="chart-note">좌축: 광고비  /  우축: 매출(₩) · 유입</div>
   </div>
+  <div class="chart-card" style="margin-top:10px;">
+    <div class="chart-sec-sub" style="margin-bottom:8px;">지표 확인용 표 (18개 지표 · 현재 필터 기준)</div>
+    <div class="ads-tbl-wrap"><table class="ads-metric-tbl" id="adsTable1"></table></div>
+    <div class="chart-note" style="text-align:left;color:#999;margin-top:6px;">Sales·ROAS = 전환 매출(달러) → 원 환산(1,500원/달러, 대시보드 표준 트렌드 환율 기준) ÷ 최종 광고비(원). 광고비는 raw 산정 환율(1,450원/달러) 기준이라 Sales와 적용 환율이 다름 — 관행상 병존하는 기준으로 반영.</div>
+  </div>
 </div>
 <!-- Chart 2: Meta 캠페인 목표별 -->
 <div class="chart-sec">
@@ -842,6 +853,11 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     <div class="leg-row" id="adsChart2Leg" style="flex-wrap:wrap;gap:10px;margin-bottom:10px;"></div>
     <div class="chart-wrap" style="height:300px;"><canvas id="adsChart2"></canvas></div>
   </div>
+  <div class="chart-card" style="margin-top:10px;">
+    <div class="chart-sec-sub" style="margin-bottom:8px;">지표 확인용 표 (18개 지표 · 현재 필터 기준)</div>
+    <div class="ads-tbl-wrap"><table class="ads-metric-tbl" id="adsTable2"></table></div>
+    <div class="chart-note" style="text-align:left;color:#999;margin-top:6px;">Sales·ROAS = 전환 매출(달러) → 원 환산(1,500원/달러, 대시보드 표준 트렌드 환율 기준) ÷ 최종 광고비(원). 광고비는 raw 산정 환율(1,450원/달러) 기준이라 Sales와 적용 환율이 다름 — 관행상 병존하는 기준으로 반영.</div>
+  </div>
 </div>
 <!-- Chart 3: TikTok 캠페인 목표별 -->
 <div class="chart-sec" style="padding-bottom:28px;">
@@ -919,6 +935,11 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   <div class="chart-card">
     <div class="leg-row" id="adsChart3Leg" style="flex-wrap:wrap;gap:10px;margin-bottom:10px;"></div>
     <div class="chart-wrap" style="height:300px;"><canvas id="adsChart3"></canvas></div>
+  </div>
+  <div class="chart-card" style="margin-top:10px;">
+    <div class="chart-sec-sub" style="margin-bottom:8px;">지표 확인용 표 (18개 지표 · 현재 필터 기준)</div>
+    <div class="ads-tbl-wrap"><table class="ads-metric-tbl" id="adsTable3"></table></div>
+    <div class="chart-note" style="text-align:left;color:#999;margin-top:6px;">Sales·ROAS = 전환 매출(달러) → 원 환산(1,500원/달러, 대시보드 표준 트렌드 환율 기준) ÷ 최종 광고비(원). 광고비는 raw 산정 환율(1,450원/달러) 기준이라 Sales와 적용 환율이 다름 — 관행상 병존하는 기준으로 반영.</div>
   </div>
 </div>
 </div><!-- /tabAds -->
@@ -4030,16 +4051,24 @@ function buildAdsByPeriod(mediaFilter, period) {
     if (adsSelectedRange.size > 0 && !adsSelectedRange.has(getPeriodKey(r.date, adsGlobalPeriod2))) return;
     const k = getPeriodKey(r.date, period);
     const _eng = (r.likes||0) + (r.comments||0) + (r.shares||0) + (r.saves||0);
-    if (!byP[k]) byP[k] = { spend:0, impressions:0, clicks:0, eng:0, byObj:{} };
+    if (!byP[k]) byP[k] = { spend:0, impressions:0, clicks:0, eng:0, views:0, purchases:0, revenue:0, atc:0, byObj:{} };
     byP[k].spend       += (r.spend       || 0);
     byP[k].impressions += (r.impressions || 0);
     byP[k].clicks      += (r.clicks      || 0);
     byP[k].eng         += _eng;
-    if (!byP[k].byObj[r.objective]) byP[k].byObj[r.objective] = {spend:0,impressions:0,clicks:0,eng:0};
+    byP[k].views       += (r.views       || 0);
+    byP[k].purchases   += (r.purchases   || 0);
+    byP[k].revenue     += (r.revenue     || 0);
+    byP[k].atc         += (r.atc         || 0);
+    if (!byP[k].byObj[r.objective]) byP[k].byObj[r.objective] = {spend:0,impressions:0,clicks:0,eng:0,views:0,purchases:0,revenue:0,atc:0};
     byP[k].byObj[r.objective].spend       += (r.spend       || 0);
     byP[k].byObj[r.objective].impressions += (r.impressions || 0);
     byP[k].byObj[r.objective].clicks      += (r.clicks      || 0);
     byP[k].byObj[r.objective].eng         += _eng;
+    byP[k].byObj[r.objective].views       += (r.views       || 0);
+    byP[k].byObj[r.objective].purchases   += (r.purchases   || 0);
+    byP[k].byObj[r.objective].revenue     += (r.revenue     || 0);
+    byP[k].byObj[r.objective].atc         += (r.atc         || 0);
   });
   return byP;
 }
@@ -4241,6 +4270,81 @@ function renderLegend(containerId, datasets, metricLabel) {
       : 'background:' + col + ';border-radius:2px;';
     return '<div class="leg"><div class="leg-dot" style="' + dotStyle + '"></div>' + ds.label + '</div>';
   }).join('');
+}
+// ══════════ NEW: 퍼포먼스 광고 탭 — 지표 확인용 표 (18개 지표) ══════════
+const TABLE_METRICS = [
+  {key:'spend',     label:'광고비(백만원)', fmt:v => v==null ? '-' : (v/1e6).toLocaleString('ko-KR', {maximumFractionDigits:1})},
+  {key:'impressions',label:'노출',    fmt:v => v==null ? '-' : Math.round(v).toLocaleString()},
+  {key:'clicks',    label:'클릭',    fmt:v => v==null ? '-' : Math.round(v).toLocaleString()},
+  {key:'views',     label:'조회',    fmt:v => v==null ? '-' : Math.round(v).toLocaleString()},
+  {key:'eng',       label:'인게이지먼트', fmt:v => v==null ? '-' : Math.round(v).toLocaleString()},
+  {key:'ctr',       label:'CTR',     fmt:pctFmt},
+  {key:'vtr',       label:'VTR',     fmt:pctFmt},
+  {key:'er',        label:'ER',      fmt:pctFmt},
+  {key:'cpm',       label:'CPM',     fmt:wonFmt},
+  {key:'cpc',       label:'CPC',     fmt:wonFmt},
+  {key:'cpv',       label:'CPV',     fmt:wonFmt},
+  {key:'cpe',       label:'CPE',     fmt:wonFmt},
+  {key:'atc',       label:'ATC',     fmt:v => v==null ? '-' : Math.round(v).toLocaleString()},
+  {key:'purchases', label:'Purchase',fmt:v => v==null ? '-' : Math.round(v).toLocaleString()},
+  {key:'sales',     label:'Sales(백만원)', fmt:v => v==null ? '-' : (v/1e6).toLocaleString('ko-KR', {maximumFractionDigits:1})},
+  {key:'cpatc',     label:'CPATC',   fmt:wonFmt},
+  {key:'cpa',       label:'CPA',     fmt:wonFmt},
+  {key:'roas',      label:'ROAS',    fmt:v => v==null ? '-' : v.toFixed(2)+'×'},
+];
+function pctFmt(v){ return v==null ? '-' : v.toFixed(2)+'%'; }
+function wonFmt(v){ return v==null ? '-' : '₩'+Math.round(v).toLocaleString('ko-KR'); }
+function safeDiv(a,b){ return (b && b!==0) ? (a/b) : null; }
+function computeTableMetrics(bucket) {
+  if (!bucket) return {};
+  const b = bucket;
+  return {
+    spend: b.spend||0, impressions: b.impressions||0, clicks: b.clicks||0,
+    views: b.views||0, eng: b.eng||0, atc: b.atc||0, purchases: b.purchases||0,
+    sales: b.revenue||0,
+    ctr:   safeDiv(b.clicks, b.impressions) != null ? safeDiv(b.clicks, b.impressions)*100 : null,
+    vtr:   safeDiv(b.views,  b.impressions) != null ? safeDiv(b.views,  b.impressions)*100 : null,
+    er:    safeDiv(b.eng,    b.impressions) != null ? safeDiv(b.eng,    b.impressions)*100 : null,
+    cpm:   safeDiv(b.spend,  b.impressions) != null ? safeDiv(b.spend,  b.impressions)*1000 : null,
+    cpc:   safeDiv(b.spend,  b.clicks),
+    cpv:   safeDiv(b.spend,  b.views),
+    cpe:   safeDiv(b.spend,  b.eng),
+    cpatc: safeDiv(b.spend,  b.atc),
+    cpa:   safeDiv(b.spend,  b.purchases),
+    roas:  safeDiv(b.revenue||0, b.spend),
+  };
+}
+function sumBucketsByObj(periodBucket, objectives) {
+  const out = {spend:0,impressions:0,clicks:0,eng:0,views:0,purchases:0,revenue:0,atc:0};
+  if (!periodBucket || !periodBucket.byObj) return out;
+  objectives.forEach(function(obj){
+    const o = periodBucket.byObj[obj];
+    if (!o) return;
+    out.spend+=o.spend||0; out.impressions+=o.impressions||0; out.clicks+=o.clicks||0; out.eng+=o.eng||0;
+    out.views+=o.views||0; out.purchases+=o.purchases||0; out.revenue+=o.revenue||0; out.atc+=o.atc||0;
+  });
+  return out;
+}
+function renderAdsTable(tableId, weeks, adsByPeriod, objectives, period) {
+  const el = document.getElementById(tableId);
+  if (!el) return;
+  const labels = weeks.map(k => fmtPeriodLabel(k, period || 'weekly'));
+  const perPeriodMetrics = weeks.map(function(wk) {
+    const bucket = objectives ? sumBucketsByObj(adsByPeriod[wk], objectives) : adsByPeriod[wk];
+    return computeTableMetrics(bucket);
+  });
+  let html = '<thead><tr><th>지표</th>';
+  labels.forEach(function(l){ html += '<th>' + l + '</th>'; });
+  html += '</tr></thead><tbody>';
+  TABLE_METRICS.forEach(function(m){
+    html += '<tr><td class="ads-metric-lbl">' + m.label + '</td>';
+    perPeriodMetrics.forEach(function(pm){
+      html += '<td>' + m.fmt(pm[m.key] === undefined ? null : pm[m.key]) + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  el.innerHTML = html;
 }
 /* ═══════════ ONSITE TAB — refreshOnsite() ═══════════
    window.ONSITE = parseOnsite_ 결과. 없으면 안내 placeholder.
@@ -4469,6 +4573,7 @@ function refreshAdsChart(chartNum) {
     renderLegend('adsChart1Leg', cfg1.data.datasets);
     const ctx1 = document.getElementById('adsChart1');
     if (ctx1) { if (adsChart1) adsChart1.destroy(); adsChart1 = new Chart(ctx1.getContext('2d'), cfg1); }
+    renderAdsTable('adsTable1', weeks1, ads1, null, p);
   } else if (chartNum === 2) {
     const ads2 = buildAdsByPeriod(new Set(['meta']), p);
     const weeks2 = [...new Set([...Object.keys(ads2), ...Object.keys(sep)])].sort();
@@ -4487,6 +4592,7 @@ function refreshAdsChart(chartNum) {
     renderLegend('adsChart2Leg', cfg2.data.datasets, getMetricLabel());
     const ctx2 = document.getElementById('adsChart2');
     if (ctx2) { if (adsChart2) adsChart2.destroy(); adsChart2 = new Chart(ctx2.getContext('2d'), cfg2); }
+    renderAdsTable('adsTable2', weeks2, ads2, metaObjs, p);
   } else if (chartNum === 3) {
     const ads3 = buildAdsByPeriod(new Set(['tiktok']), p);
     const weeks3 = [...new Set([...Object.keys(ads3), ...Object.keys(sep)])].sort();
@@ -4505,6 +4611,7 @@ function refreshAdsChart(chartNum) {
     renderLegend('adsChart3Leg', cfg3.data.datasets, getMetricLabel());
     const ctx3 = document.getElementById('adsChart3');
     if (ctx3) { if (adsChart3) adsChart3.destroy(); adsChart3 = new Chart(ctx3.getContext('2d'), cfg3); }
+    renderAdsTable('adsTable3', weeks3, ads3, ttObjs, p);
   }
 }
 function refreshAds() {
