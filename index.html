@@ -1030,7 +1030,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 </div>
 
 <div class="sec-hdr"><span class="bar"></span>재고 현황 <span style="font-weight:500;letter-spacing:0;text-transform:none;color:#9ca3af">B&amp;M + .COM</span>
-  <span class="note">판정 기준: In-Stock 80% 미만 = 재고 부족 경보 · WOS 4주 미만 = 보충 신호</span></div>
+  <span class="note">판정 기준: In-Stock 80% 미만 = 재고 부족 경보 · WOS 0~4주 = 보충 신호(음수는 매출·재고 이상치로 제외)</span></div>
 <div class="two">
   <div class="chart-card">
     <div class="chart-sec-title"><span>B&amp;M 재고보유율 (매출 가중 In-Stock%)</span></div>
@@ -1086,7 +1086,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 <div class="gloss">
   <b>In-Stock%</b> 해당 SKU가 배치된 매장 중 재고를 보유한 매장의 비율. 매장별 편차가 매출에 미치는 영향을 반영하기 위해 <b>SKU별 B&amp;M 매출로 가중평균</b>합니다(단순평균은 판매가 적은 SKU가 지표를 왜곡). <b>80% 미만이면 재고 부족 경보</b>입니다.<br>
   <b>OOS</b> 해당 SKU가 품절된 매장 수. &nbsp;·&nbsp; <b>AFS / DC</b> 세포라 물류센터(Distribution Center, 미국 5개소)에 있는 즉시 출고 가능 재고. AFS가 크면서 In-Stock%가 낮으면 물량 부족이 아니라 <b>세포라 내부 배분 문제</b>입니다.<br>
-  <b>OH / OO</b> OH = 현재 보유 재고(On Hand), OO = 입고 예정 물량(On Order). &nbsp;·&nbsp; <b>WOS</b> 현재 재고가 현재 판매 속도로 버티는 주수(Weeks of Supply). <b>4주 미만이면 보충 신호</b>입니다.<br>
+  <b>OH / OO</b> OH = 현재 보유 재고(On Hand), OO = 입고 예정 물량(On Order). &nbsp;·&nbsp; <b>WOS</b> 현재 재고가 현재 판매 속도로 버티는 주수(Weeks of Supply). <b>0주 이상 4주 미만이면 보충 신호</b>입니다. 반품 등으로 그 주 매출이나 재고가 음수면 WOS가 음수가 되는데, 이 경우는 계산이 성립하지 않아 판정에서 제외합니다.<br>
   <b>SpD</b> 매장당 주간 매출(Sales per Door) = 권역 주간 매출 ÷ 판매 발생 매장 수. 권역별 매장 수가 달라(61~87개) 매출 총액으로는 생산성을 비교할 수 없어 사용합니다.<br>
   <b>활성(판매 발생) 매장</b> 해당 주에 실제 판매가 발생한 매장. 판매 없이 반품만 처리된 매장은 제외합니다. &nbsp;·&nbsp; <b>매장 등급(Tier)</b> 최근 4주 주당 매출 기준 — Tier 1 $200 이상 / Tier 2 $100~200 / Tier 3 $50~100 / Tier 4 $50 미만.<br>
   <b>목표 주당 속도</b> 연 $5M 베이스라인 목표 ÷ 52주 = $96,154. <b>기간 이상치</b>는 경과 주수만큼 균등 달성했을 때의 누계 비율입니다. <b>누계</b>는 세포라 리포트의 YTD(회계연도 누계) 값을 그대로 사용합니다.
@@ -1332,7 +1332,7 @@ function renderSku(all){
   const rows=all?D.skus:D.skus.filter(s=>!s.co).slice(0,6);
   const dash='<span style="color:#ccc">—</span>';
   BMQ1('#skuTbl tbody').innerHTML=rows.map(s=>{
-    const lowIS=s.isp!=null&&s.isp<80,lowW=s.wos!=null&&s.wos<4,lowCW=s.cw!=null&&s.cw<4;
+    const lowIS=s.isp!=null&&s.isp<80,lowW=s.wos!=null&&s.wos>=0&&s.wos<4,lowCW=s.cw!=null&&s.cw>=0&&s.cw<4;
     return '<tr><td class="l skuname"><a class="sku" href="https://www.sephora.com/search?keyword='+s.id+'" target="_blank" rel="noopener">'+s.n+'</a>'
      +(s.co?' <span style="color:#9ca3af;font-size:9px">🌐</span>':'')+'</td>'
      +'<td class="l" style="color:#9ca3af;font-size:9.5px">'+s.id+'</td>'
@@ -1358,10 +1358,10 @@ BMQ('btnAll').onclick=function(){this.classList.add('on');BMQ('btnTop').classLis
   D.skus.forEach(s=>{if(s.isp!=null&&s.isp<80)sig.push({g:'crit',t:'재고 부족 경보 — '+s.n,
     d:'In-Stock '+s.isp.toFixed(1)+'% (경보선 80% 하회) · 품절 '+s.oos+'개 매장 · 물류센터 재고(AFS) '+s.dc.toLocaleString()+'개',
     a:s.dc>s.oos*3?'물류센터에 재고가 있어 세포라 내부 재배분 요청 대상':'물류센터 재고도 부족 — 입고 일정 확인 필요',v:s.isp});});
-  D.skus.forEach(s=>{if(s.wos!=null&&s.wos<4)sig.push({g:'warn',t:'B&M 보충 신호 — '+s.n,d:'WOS '+s.wos+'주 (4주 미만)',a:'차주 보충 우선순위',v:100+s.wos});});
-  D.skus.forEach(s=>{if(s.cw!=null&&s.cw<4)sig.push({g:'warn',t:'.COM 보충 신호 — '+s.n,
+  D.skus.forEach(s=>{if(s.wos!=null&&s.wos>=0&&s.wos<4)sig.push({g:'warn',t:'B&M 보충 신호 — '+s.n,d:'WOS '+s.wos+'주 (4주 미만)',a:'차주 보충 우선순위',v:100+s.wos});});
+  D.skus.forEach(s=>{if(s.cw!=null&&s.cw>=0&&s.cw<4)sig.push({g:'warn',t:'.COM 보충 신호 — '+s.n,
     d:'.COM WOS '+s.cw+'주 (4주 미만) · 현재고 '+s.coh.toLocaleString()+' / 입고예정 '+s.coo.toLocaleString(),a:'닷컴 보충 계획 점검',v:200+s.cw});});
-  const low=D.stores.filter(s=>s[8]!=null&&s[8]<4);
+  const low=D.stores.filter(s=>s[8]!=null&&s[8]>=0&&s[8]<4);
   if(low.length)sig.push({g:'warn',t:'매장 재고 소진 — '+low.length+'개 매장',
     d:'WOS 4주 미만. 상위: '+low.slice(0,4).map(s=>s[0]+'('+s[8]+'주)').join(' · '),a:'매장 보충 요청 대상',v:300});
   const k=D.kpi,dt=(k.ttl[0]/k.ttl[1]-1)*100;
@@ -1378,7 +1378,7 @@ BMQ('btnAll').onclick=function(){this.classList.add('on');BMQ('btnTop').classLis
     +'<span class="grade g-'+s.g+'">'+LB[s.g]+'</span>'
     +'<span style="flex:1;min-width:0"><b style="color:#333">'+s.t+'</b><br><span style="color:#9ca3af;font-size:10px">'+s.d+'</span></span>'
     +'<span style="width:230px;flex:none;color:#666;font-size:10px;text-align:right">'+s.a+'</span></div>').join('')
-   +'<div class="foot" style="padding:8px 11px;margin:0">판정 규칙: In-Stock 80% 미만 = 경보 · WOS 4주 미만 = 주의 · 전주 대비 ±30% = 급변. 규칙에 걸린 항목만 자동 표시되며, 해당 없으면 비어 있는 것이 정상입니다.</div>';})();
+   +'<div class="foot" style="padding:8px 11px;margin:0">판정 규칙: In-Stock 80% 미만 = 경보 · WOS 0주 이상 4주 미만 = 주의 · 전주 대비 ±30% = 급변. WOS가 음수인 항목(그 주 매출 또는 재고가 음수)은 계산이 성립하지 않아 판정에서 제외합니다. 규칙에 걸린 항목만 자동 표시되며, 해당 없으면 비어 있는 것이 정상입니다.</div>';})();
 
 /* region */
 (function(){const R=D.regions,W=560,H=228,pl=38,pr=8,pt=12,pb=42,n=R.length,iw=W-pl-pr,ih=H-pt-pb;
@@ -1437,10 +1437,10 @@ function spark(v){const w=98,h=20,fv=v.filter(x=>x!=null),lo=Math.min(0,...fv),h
   +'<circle cx="'+X(v.length-1)+'" cy="'+Y(v[v.length-1])+'" r="2" fill="'+NAVY+'"/></svg>';}
 function renderStores(f){
   let rows=D.stores.slice();
-  if(f==='LOW')rows=rows.filter(s=>s[8]!=null&&s[8]<4);
+  if(f==='LOW')rows=rows.filter(s=>s[8]!=null&&s[8]>=0&&s[8]<4);
   else if(f!=='ALL')rows=rows.filter(s=>s[2]===f);
   const shown=rows.slice(0,50),tb=BMQ1('#stTbl tbody');
-  tb.innerHTML=shown.map((s,idx)=>{const wow=s[6]>0?(s[5]/s[6]-1)*100:null,low=s[8]!=null&&s[8]<4;
+  tb.innerHTML=shown.map((s,idx)=>{const wow=s[6]>0?(s[5]/s[6]-1)*100:null,low=s[8]!=null&&s[8]>=0&&s[8]<4;
     return '<tr data-i="'+idx+'"><td class="l" title="'+s[0]+'">'+s[0]+'</td>'
      +'<td class="l" style="color:#9ca3af;font-weight:500;font-size:9.5px">'+s[1]+'</td>'
      +'<td class="l"><span class="tier '+TC[s[2]]+'">'+s[2].replace('Tier ','T')+'</span> '
