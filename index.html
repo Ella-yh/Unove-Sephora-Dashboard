@@ -1179,10 +1179,15 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   function BMQ(id){ return (id==="bmTip") ? document.getElementById("bmTip") : (BMROOT()?BMROOT().querySelector("#"+id):null); }
   function BMQ1(sel){ return BMROOT()?BMROOT().querySelector(sel):null; }
   function BMQA(sel){ return BMROOT()?BMROOT().querySelectorAll(sel):[]; }
+  function BMMSG(t){ var r=BMROOT(); if(!r) return; var m=r.querySelector("#bmMsg");
+    if(!m){ m=document.createElement("div"); m.id="bmMsg"; m.style.cssText="padding:48px 20px;text-align:center;color:#9ca3af;font-size:12px"; r.insertBefore(m, r.firstChild); }
+    m.innerHTML=t; m.style.display=t?"":"none";
+    for(var i=0;i<r.children.length;i++){ var c=r.children[i]; if(c.id!=="bmMsg") c.style.display=t?"none":""; } }
   window.refreshBM=function(){
     if(_bmDone) return;
     D = window.BMDATA;
-    if(!D || !D.weeks){ var r=BMROOT(); if(r) r.innerHTML='<div style="padding:40px;text-align:center;color:#9ca3af">B&amp;M · 재고 데이터를 불러오지 못했습니다.</div>'; return; }
+    if(!D || !D.weeks){ BMMSG("B&amp;M · 재고 데이터를 불러오는 중입니다. 잠시 후 자동으로 표시됩니다."); return; }
+    BMMSG("");
     try{
 
 const CW=D.weeks[D.weeks.length-1],PW=D.weeks[D.weeks.length-2];
@@ -1466,7 +1471,7 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
   BMQA('#stBtns button').forEach(x=>x.classList.remove('on'));b.classList.add('on');renderStores(b.dataset.t);});
 
     _bmDone=true;
-    }catch(e){ console.error("[BM] 렌더 실패", e); }
+    }catch(e){ console.error("[BM] 렌더 실패", e); BMMSG("B&amp;M · 재고 데이터를 표시하지 못했습니다."); }
   };
 })();
 </script>
