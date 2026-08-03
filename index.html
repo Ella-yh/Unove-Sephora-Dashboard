@@ -393,6 +393,9 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     <div class="sb-item" data-tab="onsite" onclick="switchTab('onsite')">
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><rect x="1" y="1" width="12" height="12" rx="1.5"/><line x1="1" y1="5" x2="13" y2="5"/><line x1="5" y1="5" x2="5" y2="13"/></svg></span><span class="sb-text">온사이트 광고</span>
     </div>
+    <div class="sb-item" data-tab="bm" onclick="switchTab('bm')">
+      <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><path d="M1.6 4.6 3 1.4h8l1.4 3.2"/><path d="M2.2 4.6v8h9.6v-8"/><path d="M1.6 4.6a1.6 1.6 0 0 0 3.2 0 1.6 1.6 0 0 0 3.2 0 1.6 1.6 0 0 0 3.2 0"/></svg></span><span class="sb-text">B&amp;M · 재고</span>
+    </div>
     <div class="sb-section-lbl">System</div>
     <div class="sb-item" data-tab="events" onclick="switchTab('events')">
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><rect x="1" y="2.5" width="12" height="10" rx="1.5"/><line x1="1" y1="6" x2="13" y2="6"/><line x1="4" y1="1" x2="4" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><circle cx="4.5" cy="9" r="0.8" fill="currentColor" stroke="none"/><circle cx="7" cy="9" r="0.8" fill="currentColor" stroke="none"/><circle cx="9.5" cy="9" r="0.8" fill="currentColor" stroke="none"/></svg></span><span class="sb-text">이벤트 관리</span>
@@ -1005,6 +1008,461 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     </div>
   </div>
 </div>
+
+
+<!-- ══ B&M 매출 및 재고 현황 탭 (2026-08-03 신설) ══════════════════════════ -->
+<div id="tabBm" style="display:none">
+
+
+<div class="sec-hdr"><span class="bar"></span>주간 핵심 지표 <span style="font-weight:500;letter-spacing:0;text-transform:none;color:#9ca3af">W26 vs W25</span></div>
+<div class="kpi-row" id="kpiRow"></div>
+
+<div class="sec-hdr"><span class="bar"></span>매출 추이 &amp; $5M 목표 <span class="note">목표선은 보기 단위에 맞춰 환산 — 주 $96,154 / 일 $13,736 / 월 = 주 목표 × 해당 월 주수</span></div>
+<div class="g32">
+  <div class="chart-card">
+    <div class="chart-sec-title"><span>채널별 매출 추이 · 목표 기준선</span>
+      <span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span class="legend"><span><i style="background:#1D2847"></i>B&amp;M</span><span><i style="background:#D9A89A"></i>.COM</span><span><i style="background:#3D85C6"></i>B&amp;M 비중</span></span>
+      <span><button class="btn" data-g="d">일</button><button class="btn on" data-g="w">주</button><button class="btn" data-g="m">월</button></span></span></div>
+    <div id="chTrend"></div><div class="foot" id="trendFoot"></div>
+  </div>
+  <div class="chart-card" id="goalCard"></div>
+</div>
+
+<div class="sec-hdr"><span class="bar"></span>재고 현황 <span style="font-weight:500;letter-spacing:0;text-transform:none;color:#9ca3af">B&amp;M + .COM</span>
+  <span class="note">판정 기준: In-Stock 80% 미만 = 재고 부족 경보 · WOS 4주 미만 = 보충 신호</span></div>
+<div class="two">
+  <div class="chart-card">
+    <div class="chart-sec-title"><span>B&amp;M 재고보유율 (매출 가중 In-Stock%)</span></div>
+    <div id="chInstock"></div>
+    <div class="foot">W9~W26. W11~W19 장기간 경보선(80%) 하회 → W20 이후 회복, W23 97.8% 정점 → 이후 3주 연속 하락해 W26 94.0%. 회색 배경 = 주간 리포트 기반 재계산 구간(W9~W13).</div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-sec-title"><span>.COM 재고(On-Hand) · 매출 대비</span>
+      <span class="legend"><span><i style="background:#6aadd5"></i>재고(units)</span><span><i style="background:#D9A89A"></i>.COM 매출</span></span></div>
+    <div id="chComInv"></div>
+    <div class="foot">W26 재고 8,858 units(▼2.0%) — 4주 연속 감소. 입고 대기 9,356 units(▲9.5%). W13은 원본에 재고 값이 비어 있어 결측.</div>
+  </div>
+</div>
+
+<div class="chart-card" style="margin-top:9px">
+  <div class="chart-sec-title"><span>SKU별 재고 건전성 — W26</span>
+    <span><button class="btn on" id="btnTop">주요 SKU (B&amp;M 상위 6)</button><button class="btn" id="btnAll" style="margin-left:4px">전체 SKU (20개)</button></span></div>
+  <div class="scroll"><table id="skuTbl">
+    <colgroup><col style="width:19.5%"><col style="width:6%"><col style="width:4.5%"><col style="width:7.5%"><col style="width:5.5%"><col style="width:6.5%"><col style="width:6.5%"><col style="width:5.5%"><col style="width:6.5%"><col style="width:6.5%"><col style="width:6.5%"><col style="width:9.5%"><col style="width:9.5%"></colgroup>
+    <thead><tr><th class="l">SKU</th><th class="l">SKU ID</th><th>단가</th><th>In-Stock%</th><th>OOS<br>매장</th>
+      <th>매장<br>재고</th><th>DC<br>(AFS)</th><th>WOS</th><th>.COM<br>OH</th><th>.COM<br>OO</th><th>.COM<br>WOS</th>
+      <th>W26<br>B&amp;M</th><th>W26<br>.COM</th></tr></thead><tbody></tbody></table></div>
+  <div class="foot">SKU명 클릭 → 세포라닷컴 상품 페이지 · <b>🌐</b> = 닷컴 전용(B&amp;M 미배치, 음수는 반품 처리분) · <span class="alert">빨간 숫자</span> = In-Stock 80% 미만 또는 WOS 4주 미만</div>
+</div>
+
+<div class="sec-hdr"><span class="bar"></span>이상 징후 <span class="note">기준값 자동 판정 — In-Stock 80% · WOS 4주 · 전주 대비 ±30%</span></div>
+<div class="chart-card" style="padding:0"><div id="signals"></div></div>
+
+<div class="sec-hdr"><span class="bar"></span>B&amp;M 매장별 실적
+  <span class="note">매장당 주간 매출(SpD) = 권역 주간 매출 ÷ 판매 발생 매장 수</span></div>
+<div class="gRT">
+  <div class="chart-card">
+    <div class="chart-sec-title"><span>권역별 매장당 주간 매출 (SpD)</span>
+      <span class="legend"><span><i style="background:#D8D8DC"></i>W25</span><span><i style="background:#1D2847"></i>W26</span></span></div>
+    <div id="chRegion"></div>
+    <div class="foot">막대에 마우스를 올리면 해당 주차 상세(매출·매장 수·재고)가 표시됩니다. 서부·NYC 3개 권역 $175~199 vs 하위 3개 권역 $89~103 — 약 2배 격차 지속.</div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-sec-title"><span>매장 등급 분포</span><span style="font-size:9px;color:#9ca3af">등급 클릭 → 상위 10개 매장</span></div>
+    <div id="chTier"></div><div id="tierPanel" style="margin-top:8px"></div>
+  </div>
+</div>
+
+<div class="chart-card" style="margin-top:9px">
+  <div class="chart-sec-title"><span>매장별 실적 · 재고</span>
+    <span id="stBtns"><button class="btn on" data-t="ALL">전체</button><button class="btn" data-t="Tier 1" style="margin-left:4px">Tier 1</button><button class="btn" data-t="Tier 2" style="margin-left:4px">Tier 2</button><button class="btn" data-t="LOW" style="margin-left:4px">WOS 4주 미만</button></span></div>
+  <div class="scroll"><table id="stTbl">
+    <colgroup><col style="width:25%"><col style="width:11%"><col style="width:10%"><col style="width:14%"><col style="width:9%"><col style="width:8%"><col style="width:7%"><col style="width:8%"><col style="width:8%"></colgroup>
+    <thead><tr><th class="l">매장</th><th class="l">권역</th><th class="l">등급</th><th class="l">W2→W26 추이</th>
+    <th>최근4주<br>주당</th><th>W26</th><th>WoW</th><th>매장<br>재고</th><th>WOS</th></tr></thead><tbody></tbody></table></div>
+  <div class="foot" id="stFoot"></div>
+</div>
+
+<div class="sec-hdr"><span class="bar"></span>용어 · 산출 기준</div>
+<div class="gloss">
+  <b>In-Stock%</b> 해당 SKU가 배치된 매장 중 재고를 보유한 매장의 비율. 매장별 편차가 매출에 미치는 영향을 반영하기 위해 <b>SKU별 B&amp;M 매출로 가중평균</b>합니다(단순평균은 판매가 적은 SKU가 지표를 왜곡). <b>80% 미만이면 재고 부족 경보</b>입니다.<br>
+  <b>OOS</b> 해당 SKU가 품절된 매장 수. &nbsp;·&nbsp; <b>AFS / DC</b> 세포라 물류센터(Distribution Center, 미국 5개소)에 있는 즉시 출고 가능 재고. AFS가 크면서 In-Stock%가 낮으면 물량 부족이 아니라 <b>세포라 내부 배분 문제</b>입니다.<br>
+  <b>OH / OO</b> OH = 현재 보유 재고(On Hand), OO = 입고 예정 물량(On Order). &nbsp;·&nbsp; <b>WOS</b> 현재 재고가 현재 판매 속도로 버티는 주수(Weeks of Supply). <b>4주 미만이면 보충 신호</b>입니다.<br>
+  <b>SpD</b> 매장당 주간 매출(Sales per Door) = 권역 주간 매출 ÷ 판매 발생 매장 수. 권역별 매장 수가 달라(61~87개) 매출 총액으로는 생산성을 비교할 수 없어 사용합니다.<br>
+  <b>활성(판매 발생) 매장</b> 해당 주에 실제 판매가 발생한 매장. 판매 없이 반품만 처리된 매장은 제외합니다. &nbsp;·&nbsp; <b>매장 등급(Tier)</b> 최근 4주 주당 매출 기준 — Tier 1 $200 이상 / Tier 2 $100~200 / Tier 3 $50~100 / Tier 4 $50 미만.<br>
+  <b>목표 주당 속도</b> 연 $5M 베이스라인 목표 ÷ 52주 = $96,154. <b>기간 이상치</b>는 경과 주수만큼 균등 달성했을 때의 누계 비율입니다. <b>누계</b>는 세포라 리포트의 YTD(회계연도 누계) 값을 그대로 사용합니다.
+</div>
+
+<div class="disc">
+  데이터 출처 — 매출·재고·매장 실적: 세포라 주간 리포트(Best Seller / Weekly Sales by Location) · 권역 매핑: 세포라 브랜드포털 Net Sales by Door(2026-07-27 추출본, 이후 접근 불가) · W2~W16 매출 및 W9~W13 재고: 웨스턴사업팀 주간 리포트 기반 재계산(겹치는 구간 원본과 일치 확인).<br>
+  산출 기준 안내 — In-Stock% 가중평균은 <b>B&amp;M 상시 배치 10개 SKU 기준</b>으로 계산하며, 신규 입고 중인 SKU(현재 Hydracoat Hair Mist, 홀리데이 세트)는 주차 간 비교 일관성을 위해 평균에서 제외합니다. 신규 SKU의 평균 편입 시점에 대한 확정된 기준은 아직 없으며, 기존 운영 방식을 그대로 따르고 있습니다. 이 기준이 변경되면 과거 주차 수치도 함께 재계산이 필요합니다.<br>
+  W25에 판매가 없어 직전 회차 표에 없던 매장 33곳 중 27곳은 웨스턴사업팀 주간 리포트(W25)의 매장 성과 시트에서 W2~W16 추이를 보완했습니다. 나머지 6곳(CAPITOL HILL · CHESTNUT MALL · DEDHAM · HUNTSVILLE · MAUI · MOHEGAN SUN)은 그 시트에도 없어 W17부터만 표시합니다.<br>
+  누계·달성률·목표 속도는 세포라 주간 리포트의 YTD 값(회계연도 W1 시작 · 26주 경과)을 기준으로 합니다. 주간·월간 차트는 원본이 보관된 W2부터 표시하므로 첫 주(W1) 약 $11.9K가 차트에는 나타나지 않습니다. W2~W13 구간은 세포라 원본 파일이 보관돼 있지 않아 주간 리포트에서 재계산한 값이며, 그중 W7은 채널 합계와 전체 합계가 $5,744 차이가 있어 검증되지 않았습니다. W2~W8 재고 및 W2~W13 일별 수치는 확보된 자료가 없어 표시하지 않습니다. 캐나다는 현재 매출이 발생하지 않아 미국 실적만 집계합니다.
+</div>
+</div>
+<div id="bmTip" class="tip"></div>
+<style id="bmStyles">
+/* 외부 전역 스타일 침투 차단 */
+#tabBm table,#tabBm th,#tabBm td{border:0;margin:0}
+#tabBm td{border-bottom:.5px solid #EBEBEF}
+#tabBm button{margin:0;font-family:inherit}
+#tabBm svg{max-width:none}
+#tabBm, #tabBm *{box-sizing:border-box}
+#tabBm{margin:0;background:#F5F5F8;color:#333;font-family:'Pretendard',-apple-system,'Segoe UI',system-ui,sans-serif;font-size:12px}
+#tabBm{padding:14px 24px 46px}
+#tabBm .sec-hdr{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#1D2847;margin:20px 0 8px;display:flex;align-items:center;gap:8px}
+#tabBm .sec-hdr:first-child{margin-top:2px}
+#tabBm .sec-hdr .bar{width:3px;height:12px;background:#c8102e}
+#tabBm .sec-hdr .note{font-size:9px;font-weight:500;letter-spacing:0;text-transform:none;color:#9ca3af;margin-left:auto}
+#tabBm .kpi-row{display:grid;gap:9px;grid-template-columns:repeat(6,1fr)}
+@media(max-width:1150px){#tabBm .kpi-row{grid-template-columns:repeat(3,1fr)}}
+#tabBm .kpi{background:#fff;border:.5px solid #EBEBEF;border-left:3px solid #1D2847;border-radius:3px;padding:10px 12px}
+#tabBm .kpi-header{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-bottom:6px}
+#tabBm .kpi-label{font-size:8.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:#9ca3af}
+#tabBm .kpi-badge{font-size:8.5px;font-weight:700;padding:1.5px 5px;border-radius:2px;white-space:nowrap}
+#tabBm .kpi-badge.up{background:#E8F3EC;color:#1E7C43}
+#tabBm .kpi-badge.dn{background:#FBEAEC;color:#c8102e}
+#tabBm .kpi-value{font-size:18px;font-weight:700;color:#111827;font-variant-numeric:tabular-nums;line-height:1.15}
+#tabBm .kpi-sub{font-size:9px;color:#c8102e;font-weight:600;margin-top:2px}
+#tabBm .kpi-vs{font-size:8.5px;color:#9ca3af;margin-top:4px}
+#tabBm .chart-card{background:#fff;border:.5px solid #EBEBEF;border-radius:3px;padding:13px 15px}
+#tabBm .chart-sec-title{font-size:10.5px;font-weight:700;color:#333;margin-bottom:9px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#tabBm .two{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+#tabBm .g32{display:grid;grid-template-columns:1.6fr 1fr;gap:9px}
+#tabBm .gRT{display:grid;grid-template-columns:1.32fr 1fr;gap:9px;align-items:start}
+@media(max-width:1000px){#tabBm .two, #tabBm .g32, #tabBm .gRT{grid-template-columns:1fr}}
+#tabBm table{width:100%;border-collapse:collapse;table-layout:fixed}
+#tabBm th{background:#1D2847;color:#fff;font-size:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:6px 5px;text-align:right;position:sticky;top:0;line-height:1.35}
+#tabBm th:first-child, #tabBm th.l{text-align:left}
+#tabBm td{padding:5px 5px;border-bottom:.5px solid #EBEBEF;text-align:right;color:#666;font-size:10.5px;white-space:nowrap;font-variant-numeric:tabular-nums;overflow:hidden}
+#tabBm td:first-child, #tabBm td.l{text-align:left;font-weight:600;color:#333;font-variant-numeric:normal}
+#tabBm td.skuname{white-space:normal;line-height:1.32;word-break:keep-all;padding:6px 5px}
+#tabBm tbody tr:hover{background:#FAFAFC}
+#tabBm tr.sumrow td{font-weight:700;background:#F5F5F8;color:#1D2847;border-top:1px solid #D8D8DC}
+#tabBm a.sku{color:#1D2847;text-decoration:none;border-bottom:.5px dotted #9ca3af}
+#tabBm a.sku:hover{color:#c8102e;border-bottom-color:#c8102e}
+#tabBm .alert{color:#c8102e;font-weight:700}
+#tabBm .tier{display:inline-block;font-size:8px;font-weight:700;padding:1px 4px;border-radius:2px}
+#tabBm .t1{background:#d97070;color:#fff}
+#tabBm .t2{background:#1D2847;color:#fff}
+#tabBm .t3{background:#B9C4D6;color:#1D2847}
+#tabBm .t4{background:#F0F0F4;color:#9ca3af}
+#tabBm .foot{font-size:9px;color:#bbb;margin-top:6px;line-height:1.65}
+#tabBm .btn{font-size:9.5px;font-weight:700;padding:3px 9px;border:.5px solid #D8D8DC;background:#fff;color:#1D2847;border-radius:3px;cursor:pointer}
+#tabBm .btn.on{background:#1D2847;color:#fff;border-color:#1D2847}
+#tabBm .scroll{max-height:400px;overflow-y:auto;overflow-x:hidden;border:.5px solid #EBEBEF;border-radius:3px}
+#tabBm .gauge{height:10px;background:#EBEBEF;border-radius:20px;position:relative;overflow:hidden}
+#tabBm .gauge>i{display:block;height:100%;border-radius:20px}
+#tabBm .mark{position:absolute;top:-3px;bottom:-3px;width:2px;background:#c8102e}
+#tabBm .legend{display:flex;gap:11px;flex-wrap:wrap;font-size:9px;color:#666;align-items:center}
+#tabBm .legend i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:3px;vertical-align:-1px}
+#bmTip{position:fixed;pointer-events:none;background:rgba(29,40,71,.97);color:#fff;font-size:10px;padding:6px 9px;border-radius:3px;line-height:1.6;z-index:99;display:none;white-space:nowrap;font-variant-numeric:tabular-nums}
+#tabBm .tierrow{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:3px;cursor:pointer;font-size:10.5px}
+#tabBm .tierrow:hover{background:#F5F5F8}
+#tabBm .tierrow.on{background:#EEF2F9}
+#tabBm .tierbar{height:11px;border-radius:1px}
+#tabBm .sig{display:flex;gap:10px;padding:8px 11px;border-bottom:.5px solid #EBEBEF;font-size:10.5px;align-items:flex-start}
+#tabBm .sig:last-child{border-bottom:none}
+#tabBm .grade{font-size:8.5px;font-weight:700;padding:2px 7px;border-radius:9px;white-space:nowrap;flex:none;margin-top:1px}
+#tabBm .g-crit{background:#FBEAEC;color:#c8102e}
+#tabBm .g-warn{background:#FDF3E0;color:#B27A00}
+#tabBm .g-ok{background:#E8F3EC;color:#1E7C43}
+#tabBm .gloss{background:#fff;border:.5px solid #EBEBEF;border-radius:3px;padding:12px 15px;font-size:10px;color:#666;line-height:1.95}
+#tabBm .gloss b{color:#1D2847}
+#tabBm .disc{font-size:9px;color:#bbb;line-height:1.8;margin-top:12px;padding:10px 14px;background:#FAFAFC;border:.5px solid #F0F0F4;border-radius:3px}
+
+</style>
+<script>
+(function(){
+  var D=null, _bmDone=false;
+  var _root=null;
+  function BMROOT(){ return _root || (_root=document.getElementById("tabBm")); }
+  function BMQ(id){ return (id==="bmTip") ? document.getElementById("bmTip") : (BMROOT()?BMROOT().querySelector("#"+id):null); }
+  function BMQ1(sel){ return BMROOT()?BMROOT().querySelector(sel):null; }
+  function BMQA(sel){ return BMROOT()?BMROOT().querySelectorAll(sel):[]; }
+  window.refreshBM=function(){
+    if(_bmDone) return;
+    D = window.BMDATA;
+    if(!D || !D.weeks){ var r=BMROOT(); if(r) r.innerHTML='<div style="padding:40px;text-align:center;color:#9ca3af">B&amp;M · 재고 데이터를 불러오지 못했습니다.</div>'; return; }
+    try{
+
+const CW=D.weeks[D.weeks.length-1],PW=D.weeks[D.weeks.length-2];
+const NAVY='#1D2847',RED='#c8102e',ROSE='#D9A89A',SPEND='#F4B942',CLICKS='#3D85C6',VISITS='#6aadd5',
+      PINK='#d97070',GRID='rgba(0,0,0,0.07)',MUTED='#9ca3af',GREEN='#1E7C43',NS='http://www.w3.org/2000/svg',KRW=1500;
+const usd=v=>'$'+Math.round(v).toLocaleString();
+const won=v=>'₩'+(v*KRW/1e8).toFixed(2)+'억';
+const bmTip=BMQ('bmTip');
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function txt(x,y,s,o){const t=el('text',Object.assign({x:x,y:y,fill:MUTED,'font-size':9},o||{}));t.textContent=s;return t;}
+function ST(ev,h){bmTip.innerHTML=h;bmTip.style.display='block';const w=bmTip.offsetWidth,ht=bmTip.offsetHeight;
+  let x=ev.clientX+14,y=ev.clientY-ht-10;if(x+w>innerWidth-8)x=ev.clientX-w-14;if(y<8)y=ev.clientY+16;
+  bmTip.style.left=x+'px';bmTip.style.top=y+'px';}
+function HT(){bmTip.style.display='none';}
+
+(function(){const k=D.kpi;
+ const it=[{l:'전체 매출',v:usd(k.ttl[0]),s:won(k.ttl[0]),d:(k.ttl[0]/k.ttl[1]-1)*100,x:PW+' '+usd(k.ttl[1]),c:RED},
+  {l:'B&M 매출',v:usd(k.bm[0]),s:won(k.bm[0])+' · 비중 '+(k.bm[0]/k.ttl[0]*100).toFixed(0)+'%',d:(k.bm[0]/k.bm[1]-1)*100,x:PW+' '+usd(k.bm[1]),c:NAVY},
+  {l:'.COM 매출',v:usd(k.com[0]),s:won(k.com[0])+' · 비중 '+(k.com[0]/k.ttl[0]*100).toFixed(0)+'%',d:(k.com[0]/k.com[1]-1)*100,x:PW+' '+usd(k.com[1]),c:ROSE},
+  {l:'재고보유율',v:k.instock[0].toFixed(1)+'%',s:'매출 가중 · 경보선 80%',d:k.instock[0]-k.instock[1],pp:1,x:PW+' '+k.instock[1].toFixed(1)+'%',c:SPEND},
+  {l:'매장당 주간매출',v:'$'+k.spd[0].toFixed(1),s:'B&M ÷ 판매매장 '+k.stores[0]+'개',d:(k.spd[0]/k.spd[1]-1)*100,x:PW+' $'+k.spd[1],c:CLICKS},
+  {l:'.COM 재고',v:k.comoh[0].toLocaleString(),s:'units · 입고대기 '+k.comoo.toLocaleString(),d:(k.comoh[0]/k.comoh[1]-1)*100,x:PW+' '+k.comoh[1].toLocaleString(),c:VISITS}];
+ BMQ('kpiRow').innerHTML=it.map(i=>'<div class="kpi" style="border-left-color:'+i.c+'">'
+  +'<div class="kpi-header"><div class="kpi-label">'+i.l+'</div><div class="kpi-badge '+(i.d>=0?'up':'dn')+'">'
+  +(i.d>=0?'▲ ':'▼ ')+Math.abs(i.d).toFixed(1)+(i.pp?'pp':'%')+'</div></div>'
+  +'<div class="kpi-value">'+i.v+'</div><div class="kpi-sub">'+i.s+'</div><div class="kpi-vs">'+i.x+'</div></div>').join('');})();
+
+function chart(host,o){
+  const W=o.W||820,H=o.H||250,pl=46,pr=o.pr||44,pt=12,pb=24;
+  const n=o.labels.length,iw=W-pl-pr,ih=H-pt-pb;
+  const tot=o.labels.map((_,i)=>o.stacks.reduce((s,st)=>s+Math.max(0,st.data[i]||0),0));
+  const ymax=Math.max(...tot,o.ref||0,...(o.refPerBar||[0]))*1.14||1;
+  const bw=Math.max(1.5,Math.min(28,iw/n*0.68));
+  const X=i=>pl+iw*((i+0.5)/n),Y=v=>pt+ih*(1-v/ymax);
+  const svg=el('svg',{viewBox:'0 0 '+W+' '+H,width:'100%',height:H,style:'display:block'});
+  for(let t=0;t<=4;t++){const v=ymax*t/4;
+    svg.appendChild(el('line',{x1:pl,x2:W-pr,y1:Y(v),y2:Y(v),stroke:GRID}));
+    svg.appendChild(txt(pl-5,Y(v)+3,o.yFmt(v),{'text-anchor':'end'}));}
+  let LY=null;
+  if(o.line){const l=o.line,lo=l.min!=null?l.min:0,hi=l.max!=null?l.max:Math.max(...l.data)*1.25;
+    LY=v=>pt+ih*(1-(v-lo)/(hi-lo));
+    for(let t=0;t<=4;t++){const v=lo+(hi-lo)*t/4;svg.appendChild(txt(W-pr+5,LY(v)+3,l.fmt(v),{'text-anchor':'start',fill:l.color}));}}
+  if(o.band)o.band.forEach(b=>svg.appendChild(el('rect',{x:pl+iw*b[0]/n,y:pt,width:iw*(b[1]-b[0])/n,height:ih,fill:'#1D2847',opacity:.035})));
+  o.labels.forEach((lb,i)=>{let acc=0;o.stacks.forEach(st=>{const v=st.data[i];if(!v||v<=0)return;
+    svg.appendChild(el('rect',{x:X(i)-bw/2,y:Y(acc+v),width:bw,height:Math.max(.6,Y(acc)-Y(acc+v)-1),fill:st.color,rx:1}));acc+=v;});});
+  if(o.ref){const y=Y(o.ref);svg.appendChild(el('line',{x1:pl,x2:W-pr,y1:y,y2:y,stroke:RED,'stroke-width':1.5,'stroke-dasharray':'5 3'}));
+    svg.appendChild(txt(W-pr-2,y-4,o.refLabel,{'text-anchor':'end',fill:RED,'font-size':8.5,'font-weight':700,stroke:'#fff','stroke-width':3.2,'paint-order':'stroke','stroke-linejoin':'round'}));}
+  if(o.refPerBar){o.refPerBar.forEach((rv,i)=>{if(!rv)return;const y=Y(rv);
+    svg.appendChild(el('line',{x1:X(i)-bw/2-3,x2:X(i)+bw/2+3,y1:y,y2:y,stroke:RED,'stroke-width':1.6}));});
+    const li=o.refPerBar.length-1,ly=Y(o.refPerBar[li]);
+    svg.appendChild(txt(X(li),ly-6,'월 목표',{'text-anchor':'middle',fill:RED,'font-size':8.5,'font-weight':700,stroke:'#fff','stroke-width':3.2,'paint-order':'stroke','stroke-linejoin':'round'}));}
+  if(o.line){const l=o.line;svg.appendChild(el('polyline',{points:l.data.map((v,i)=>X(i)+','+LY(v)).join(' '),fill:'none',stroke:l.color,'stroke-width':1.7}));
+    if(n<=30)l.data.forEach((v,i)=>svg.appendChild(el('circle',{cx:X(i),cy:LY(v),r:2.2,fill:l.color})));}
+  const step=Math.ceil(n/(o.xTicks||12));let last=-99;
+  o.labels.forEach((lb,i)=>{const isL=i===n-1;if(!(i%step===0||isL))return;
+    if(isL&&(i-last)<Math.max(1,Math.round(step*.8)))return;last=i;
+    svg.appendChild(txt(X(i),H-7,lb,{'text-anchor':'middle','font-size':8.5}));});
+  o.labels.forEach((lb,i)=>{const r=el('rect',{x:pl+iw*i/n,y:pt,width:iw/n,height:ih,fill:'transparent'});
+    r.addEventListener('mousemove',e=>{let h='<b>'+(o.tipT?o.tipT(i):lb)+'</b>';
+      o.stacks.forEach(st=>h+='<br><span style="color:'+st.color+'">■</span> '+st.name+' '+(st.data[i]==null?'결측':o.tipF(st.data[i])));
+      if(o.stacks.length>1)h+='<br><span style="color:#9fb0d6">합계</span> '+o.tipF(tot[i]);
+      if(o.line)h+='<br><span style="color:'+o.line.color+'">━</span> '+o.line.name+' '+o.line.tipF(o.line.data[i]);
+      ST(e,h);});
+    r.addEventListener('mouseleave',HT);svg.appendChild(r);});
+  host.innerHTML='';host.appendChild(svg);}
+
+function drawTrend(g){
+  const t0=performance.now();
+  let labels,bm,com,ref=null,refL,foot,band=null,ticks=12,tipT=null,perBar=null;
+  if(g==='w'){labels=D.weeks;bm=D.wk_bm;com=D.wk_com;ref=D.goal.wk_target;refL='목표 $96,154/주';
+    band=[[0,15]];tipT=i=>D.weeks[i]+' ('+D.wend[D.weeks[i]]+' 마감)';
+    foot=(function(){var lw=D.wk_bm[D.wk_bm.length-1]+D.wk_com[D.wk_com.length-1];return '주간 · W2~'+CW+'. 회색 배경 = 주간 리포트 기반 재계산 구간(W2~W16). '+CW+' '+usd(lw)+'으로 목표선 '+(lw>=D.goal.wk_target?'<b style="color:'+GREEN+'">상회</b>':'<b style="color:'+RED+'">하회</b>')+'.';})();}
+  else if(g==='d'){labels=D.ddates.map(d=>d.slice(5).replace('-','/'));bm=D.dbm;com=D.dcom;
+    ref=Math.round(D.goal.wk_target/7);refL='목표 $13,736/일';tipT=i=>D.ddates[i];
+    foot=(function(){var t=D.dbm.map(function(v,i){return v+D.dcom[i];}),mx=Math.max.apply(null,t),mi=t.indexOf(mx);return '일별 · W14~'+CW+'('+D.ddates.length+'일). 최고일 '+D.ddates[mi].slice(5).replace('-','/')+' '+usd(mx)+' — B&M '+usd(D.dbm[mi])+'.';})();}
+  else{labels=D.months.map(m=>m.slice(2).replace('-','/'));bm=D.mon_bm;com=D.mon_com;ticks=6;
+    perBar=D.mon_wks.map(w=>w*D.goal.wk_target);
+    tipT=i=>D.months[i]+' ('+D.mon_wks[i]+'주'+(D.mon_full[i]?'':' · 부분')+')';
+    foot='월별 · 주차 마감일 기준 집계. 빨간 눈금 = 해당 월 목표($96,154 × 그 달 주수). <b>2026-02는 런칭월이라 3주만 포함</b>(부분 구간).';}
+  chart(BMQ('chTrend'),{labels:labels,H:248,W:820,pr:44,band:band,
+    stacks:[{name:'B&M',color:NAVY,data:bm},{name:'.COM',color:ROSE,data:com}],
+    line:{name:'B&M 비중',color:CLICKS,data:bm.map((v,i)=>Math.max(0,Math.min(100,v/Math.max(1,v+com[i])*100))),min:0,max:100,fmt:v=>Math.round(v)+'%',tipF:v=>v.toFixed(1)+'%'},
+    ref:ref,refLabel:refL,refPerBar:perBar,yFmt:v=>'$'+Math.round(v/1000)+'K',tipF:v=>usd(v),tipT:tipT,xTicks:ticks});
+  BMQ('trendFoot').innerHTML=foot+' <span style="color:#ddd">| 렌더 '+(performance.now()-t0).toFixed(0)+'ms</span>';}
+drawTrend('w');
+BMQA('[data-g]').forEach(b=>b.addEventListener('click',()=>{
+  BMQA('[data-g]').forEach(x=>x.classList.remove('on'));b.classList.add('on');drawTrend(b.dataset.g);}));
+
+(function(){const g=D.goal,vel=g.wk_cur/g.wk_target*100,ach=g.cum/g.target*100,ideal=g.pace_ideal/g.target*100;
+ BMQ('goalCard').innerHTML=
+  '<div class="chart-sec-title"><span>$5M 목표 진척</span><span style="font-size:9px;color:#9ca3af">'+g.weeks_done+'주 경과 / 남은 '+g.weeks_left+'주</span></div>'
+ +'<div style="display:flex;align-items:baseline;gap:7px"><div style="font-size:24px;font-weight:700;color:#111827">'+vel.toFixed(1)+'%</div>'
+ +'<div style="font-size:8.5px;letter-spacing:.9px;text-transform:uppercase;color:#9ca3af">목표 속도 대비 현재</div></div>'
+ +'<div class="gauge" style="margin-top:7px"><i style="width:'+Math.min(100,vel)+'%;background:'+SPEND+'"></i><div class="mark" style="left:100%"></div></div>'
+ +'<div style="display:flex;justify-content:space-between;font-size:8.5px;color:#9ca3af;margin-top:4px"><span>현재 주당 '+usd(g.wk_cur)+'</span><span style="color:'+RED+';font-weight:700">목표 '+usd(g.wk_target)+'/주</span></div>'
+ +'<div style="height:1px;background:#EBEBEF;margin:12px 0"></div>'
+ +'<div style="display:flex;align-items:baseline;gap:7px"><div style="font-size:24px;font-weight:700;color:#111827">'+ach.toFixed(1)+'%</div>'
+ +'<div style="font-size:8.5px;letter-spacing:.9px;text-transform:uppercase;color:#9ca3af">누계 달성률</div></div>'
+ +'<div class="gauge" style="margin-top:7px"><i style="width:'+ach+'%;background:'+NAVY+'"></i><div class="mark" style="left:'+ideal+'%"></div></div>'
+ +'<div style="display:flex;justify-content:space-between;font-size:8.5px;color:#9ca3af;margin-top:4px"><span>누계 '+usd(g.cum)+' ('+won(g.cum)+')</span><span style="color:'+RED+';font-weight:700">▲ 기간 이상치 '+ideal.toFixed(1)+'%</span></div>'
+ +'<div style="background:#F5F5F8;border-radius:3px;padding:8px 10px;margin-top:11px;font-size:9.5px;color:#444;line-height:1.85">'
+ +'잔여 <b>'+usd(g.target-g.cum)+'</b> · 남은 '+g.weeks_left+'주<br>필요 주당 <b style="color:'+RED+'">'+usd(g.need)+'</b> '
+ +'<span style="color:#9ca3af">('+CW+' '+usd(D.kpi.ttl[0])+' = 필요치의 '+(D.kpi.ttl[0]/g.need*100).toFixed(0)+'%)</span></div>'
+ +'<div style="display:flex;gap:4px;margin-top:9px">'
+ +'<span style="flex:'+g.ytd_bm+';background:'+NAVY+';height:7px;border-radius:1px"></span>'
+ +'<span style="flex:'+g.ytd_com+';background:'+ROSE+';height:7px;border-radius:1px"></span></div>'
+ +'<div style="display:flex;justify-content:space-between;font-size:9px;color:#9ca3af;margin-top:3px">'
+ +'<span>누계 B&M '+usd(g.ytd_bm)+' ('+(g.ytd_bm/g.cum*100).toFixed(1)+'%)</span>'
+ +'<span>.COM '+usd(g.ytd_com)+' ('+(g.ytd_com/g.cum*100).toFixed(1)+'%)</span></div>'
+ +'<div class="foot">누계는 세포라 주간 리포트의 YTD 값(회계연도 W1부터)을 그대로 사용합니다. 좌측 주간 차트는 원본이 보관된 W2부터 표시하므로 첫 주(W1, 약 $11.9K) 차이가 있습니다.</div>';})();
+
+/* inventory */
+(function(){const host=BMQ('chInstock'),v=D.wk_instock,n=v.length,
+  W=520,H=200,pl=36,pr=12,pt=12,pb=24,iw=W-pl-pr,ih=H-pt-pb,lo=65,hi=100;
+ const X=i=>pl+iw*i/(n-1),Y=x=>pt+ih*(1-(x-lo)/(hi-lo));
+ const svg=el('svg',{viewBox:'0 0 '+W+' '+H,width:'100%',height:H,style:'display:block'});
+ const nb=D.inv_src.filter(s=>s==='bf').length;
+ svg.appendChild(el('rect',{x:pl,y:pt,width:iw*(nb-0.5)/(n-1),height:ih,fill:NAVY,opacity:.035}));
+ [65,75,85,95,100].forEach(g=>{svg.appendChild(el('line',{x1:pl,x2:W-pr,y1:Y(g),y2:Y(g),stroke:GRID}));
+   svg.appendChild(txt(pl-5,Y(g)+3,g+'%',{'text-anchor':'end'}));});
+ svg.appendChild(el('line',{x1:pl,x2:W-pr,y1:Y(80),y2:Y(80),stroke:RED,'stroke-width':1.4,'stroke-dasharray':'4 3'}));
+ svg.appendChild(txt(W-pr-2,Y(80)+11,'경보선 80%',{'text-anchor':'end',fill:RED,'font-size':8.5,'font-weight':700,stroke:'#fff','stroke-width':3,'paint-order':'stroke'}));
+ svg.appendChild(el('polyline',{points:v.map((x,i)=>X(i)+','+Y(x)).join(' '),fill:'none',stroke:SPEND,'stroke-width':2}));
+ v.forEach((x,i)=>{const c=el('circle',{cx:X(i),cy:Y(x),r:2.6,fill:x<80?RED:GREEN});
+   c.addEventListener('mousemove',e=>ST(e,'<b>'+D.inv_weeks[i]+'</b><br>가중 In-Stock% '+x.toFixed(1)+'%'
+     +(x<80?'<br><span style="color:#ff9a9a">경보선 80% 하회</span>':'')
+     +(D.inv_src[i]==='bf'?'<br><span style="color:#9fb0d6">주간 리포트 기반 재계산</span>':'')));
+   c.addEventListener('mouseleave',HT);svg.appendChild(c);});
+ D.inv_weeks.forEach((w,i)=>{if(i%2===0||i===n-1)svg.appendChild(txt(X(i),H-7,w,{'text-anchor':'middle','font-size':8.5}));});
+ host.innerHTML='';host.appendChild(svg);})();
+chart(BMQ('chComInv'),{labels:D.inv_weeks,H:200,W:520,pr:40,
+ stacks:[{name:'.COM 재고',color:VISITS,data:D.wk_comoh}],
+ line:{name:'.COM 매출',color:ROSE,data:D.wk_com_inv,fmt:v=>'$'+Math.round(v/1000)+'K',tipF:v=>usd(v)},
+ yFmt:v=>Math.round(v/1000)+'K',tipF:v=>Math.round(v).toLocaleString()+' units',xTicks:8});
+
+/* SKU table */
+function renderSku(all){
+  const rows=all?D.skus:D.skus.filter(s=>!s.co).slice(0,6);
+  const dash='<span style="color:#ccc">—</span>';
+  BMQ1('#skuTbl tbody').innerHTML=rows.map(s=>{
+    const lowIS=s.isp!=null&&s.isp<80,lowW=s.wos!=null&&s.wos<4,lowCW=s.cw!=null&&s.cw<4;
+    return '<tr><td class="l skuname"><a class="sku" href="https://www.sephora.com/search?keyword='+s.id+'" target="_blank" rel="noopener">'+s.n+'</a>'
+     +(s.co?' <span style="color:#9ca3af;font-size:9px">🌐</span>':'')+'</td>'
+     +'<td class="l" style="color:#9ca3af;font-size:9.5px">'+s.id+'</td>'
+     +'<td style="color:#1D2847;font-weight:700">$'+s.p+'</td>'
+     +'<td'+(lowIS?' class="alert"':'')+'>'+(s.isp==null?dash:(lowIS?'⚠ ':'')+s.isp.toFixed(1)+'%')+'</td>'
+     +'<td'+(lowIS?' class="alert"':'')+'>'+(s.isp==null?dash:s.oos)+'</td>'
+     +'<td>'+(s.si?s.si.toLocaleString():dash)+'</td><td>'+(s.dc?s.dc.toLocaleString():dash)+'</td>'
+     +'<td'+(lowW?' class="alert"':'')+'>'+(s.wos==null?dash:s.wos)+'</td>'
+     +'<td>'+(s.coh?s.coh.toLocaleString():dash)+'</td><td>'+(s.coo?s.coo.toLocaleString():dash)+'</td>'
+     +'<td'+(lowCW?' class="alert"':'')+'>'+(s.cw==null?dash:s.cw)+'</td>'
+     +'<td'+(s.bm<0?' style="color:#bbb"':'')+'>'+usd(s.bm)+'</td><td>'+usd(s.com)+'</td></tr>';}).join('')
+   +'<tr class="sumrow"><td class="l">합계 '+rows.length+'개</td><td></td><td></td><td></td><td></td>'
+   +'<td>'+rows.reduce((a,b)=>a+b.si,0).toLocaleString()+'</td><td>'+rows.reduce((a,b)=>a+b.dc,0).toLocaleString()+'</td><td></td>'
+   +'<td>'+rows.reduce((a,b)=>a+b.coh,0).toLocaleString()+'</td><td>'+rows.reduce((a,b)=>a+b.coo,0).toLocaleString()+'</td><td></td>'
+   +'<td>'+usd(rows.reduce((a,b)=>a+b.bm,0))+'</td><td>'+usd(rows.reduce((a,b)=>a+b.com,0))+'</td></tr>';}
+renderSku(false);
+BMQ('btnTop').onclick=function(){this.classList.add('on');BMQ('btnAll').classList.remove('on');renderSku(false);};
+BMQ('btnAll').onclick=function(){this.classList.add('on');BMQ('btnTop').classList.remove('on');renderSku(true);};
+
+/* 이상 징후 */
+(function(){
+  const sig=[];
+  D.skus.forEach(s=>{if(s.isp!=null&&s.isp<80)sig.push({g:'crit',t:'재고 부족 경보 — '+s.n,
+    d:'In-Stock '+s.isp.toFixed(1)+'% (경보선 80% 하회) · 품절 '+s.oos+'개 매장 · 물류센터 재고(AFS) '+s.dc.toLocaleString()+'개',
+    a:s.dc>s.oos*3?'물류센터에 재고가 있어 세포라 내부 재배분 요청 대상':'물류센터 재고도 부족 — 입고 일정 확인 필요',v:s.isp});});
+  D.skus.forEach(s=>{if(s.wos!=null&&s.wos<4)sig.push({g:'warn',t:'B&M 보충 신호 — '+s.n,d:'WOS '+s.wos+'주 (4주 미만)',a:'차주 보충 우선순위',v:100+s.wos});});
+  D.skus.forEach(s=>{if(s.cw!=null&&s.cw<4)sig.push({g:'warn',t:'.COM 보충 신호 — '+s.n,
+    d:'.COM WOS '+s.cw+'주 (4주 미만) · 현재고 '+s.coh.toLocaleString()+' / 입고예정 '+s.coo.toLocaleString(),a:'닷컴 보충 계획 점검',v:200+s.cw});});
+  const low=D.stores.filter(s=>s[8]!=null&&s[8]<4);
+  if(low.length)sig.push({g:'warn',t:'매장 재고 소진 — '+low.length+'개 매장',
+    d:'WOS 4주 미만. 상위: '+low.slice(0,4).map(s=>s[0]+'('+s[8]+'주)').join(' · '),a:'매장 보충 요청 대상',v:300});
+  const k=D.kpi,dt=(k.ttl[0]/k.ttl[1]-1)*100;
+  if(Math.abs(dt)>=30)sig.push({g:dt>0?'ok':'crit',t:'전체 매출 '+(dt>0?'급증':'급감')+' — '+(dt>0?'▲':'▼')+Math.abs(dt).toFixed(1)+'%',
+    d:PW+' '+usd(k.ttl[1])+' → '+CW+' '+usd(k.ttl[0])+' · B&M ▲'+((k.bm[0]/k.bm[1]-1)*100).toFixed(1)+'% / .COM ▲'+((k.com[0]/k.com[1]-1)*100).toFixed(1)+'%',
+    a:'단주 급등 여부 차주 확인 · 재고 회전 가속 대비',v:-1});
+  D.regions.forEach(r=>{const d=(r.spd25/r.spd24-1)*100;if(Math.abs(d)>=30)
+    sig.push({g:d>0?'ok':'warn',t:'권역 매장 생산성 '+(d>0?'급등':'급락')+' — '+r.region,
+      d:'매장당 주간 매출 $'+r.spd24.toFixed(0)+' → $'+r.spd25.toFixed(0)+' ('+(d>0?'▲':'▼')+Math.abs(d).toFixed(0)+'%) · 판매매장 '+r.stores+'개',
+      a:d>0?'상승 요인 확인 후 타 권역 적용 검토':'하락 요인 점검',v:-0.5});});
+  sig.sort((a,b)=>({crit:0,warn:1,ok:2})[a.g]-({crit:0,warn:1,ok:2})[b.g]||a.v-b.v);
+  const LB={crit:'경보',warn:'주의',ok:'호조'};
+  BMQ('signals').innerHTML=sig.map(s=>'<div class="sig">'
+    +'<span class="grade g-'+s.g+'">'+LB[s.g]+'</span>'
+    +'<span style="flex:1;min-width:0"><b style="color:#333">'+s.t+'</b><br><span style="color:#9ca3af;font-size:10px">'+s.d+'</span></span>'
+    +'<span style="width:230px;flex:none;color:#666;font-size:10px;text-align:right">'+s.a+'</span></div>').join('')
+   +'<div class="foot" style="padding:8px 11px;margin:0">판정 규칙: In-Stock 80% 미만 = 경보 · WOS 4주 미만 = 주의 · 전주 대비 ±30% = 급변. 규칙에 걸린 항목만 자동 표시되며, 해당 없으면 비어 있는 것이 정상입니다.</div>';})();
+
+/* region */
+(function(){const R=D.regions,W=560,H=228,pl=38,pr=8,pt=12,pb=42,n=R.length,iw=W-pl-pr,ih=H-pt-pb;
+ const max=Math.max(...R.map(r=>r.spd25))*1.2,gw=iw/n,bw=Math.min(17,gw*0.34);
+ const svg=el('svg',{viewBox:'0 0 '+W+' '+H,width:'100%',height:H,style:'display:block'});
+ const Y=v=>pt+ih*(1-v/max);
+ for(let t=0;t<=4;t++){const v=max*t/4;svg.appendChild(el('line',{x1:pl,x2:W-pr,y1:Y(v),y2:Y(v),stroke:GRID}));
+   svg.appendChild(txt(pl-5,Y(v)+3,'$'+Math.round(v),{'text-anchor':'end'}));}
+ R.forEach((r,i)=>{const cx=pl+gw*(i+0.5),d=(r.spd25/r.spd24-1)*100;
+  const est24=Math.round(r.spd24*r.stores);
+  const b24=el('rect',{x:cx-bw-1,y:Y(r.spd24),width:bw,height:pt+ih-Y(r.spd24),fill:'#D8D8DC',rx:1});
+  b24.addEventListener('mousemove',e=>ST(e,'<b>'+r.region+' · '+PW+' (전주)</b><br>매장당 주간매출 $'+r.spd24.toFixed(1)
+    +'<br>'+CW+' 대비 '+(d>=0?'▼':'▲')+Math.abs(d).toFixed(1)+'%<br><span style="color:#9fb0d6">전주 대비 증감은 '+CW+' 막대 기준</span>'));
+  b24.addEventListener('mouseleave',HT);svg.appendChild(b24);
+  const b=el('rect',{x:cx+1,y:Y(r.spd25),width:bw,height:pt+ih-Y(r.spd25),fill:NAVY,rx:1});
+  b.addEventListener('mousemove',e=>ST(e,'<b>'+r.region+' · '+CW+'</b><br>매장당 주간매출 $'+r.spd25.toFixed(1)+' ('+PW+' $'+r.spd24.toFixed(1)+', ▲'+d.toFixed(1)+'%)'
+    +'<br>권역 매출 '+usd(r.sales25)+' · 판매매장 '+r.stores+'개<br>권역 매장 재고 '+usd(r.inv)));
+  b.addEventListener('mouseleave',HT);svg.appendChild(b);
+  svg.appendChild(txt(cx,Y(r.spd25)-4,'$'+r.spd25.toFixed(0),{'text-anchor':'middle',fill:'#333','font-size':9,'font-weight':700}));
+  r.region.replace(' ','\n').split('\n').forEach((p,k)=>svg.appendChild(txt(cx,H-30+k*10,p,{'text-anchor':'middle',fill:'#333','font-size':8.5})));
+  svg.appendChild(txt(cx,H-8,'▲'+d.toFixed(0)+'%',{'text-anchor':'middle',fill:GREEN,'font-size':8}));});
+ BMQ('chRegion').innerHTML='';BMQ('chRegion').appendChild(svg);})();
+
+const ORDER=['Tier 1','Tier 2','Tier 3','Tier 4'],TCOL=[PINK,NAVY,'#B9C4D6','#E4E4E9'],TC={'Tier 1':'t1','Tier 2':'t2','Tier 3':'t3','Tier 4':'t4'};
+(function(){const T=D.tiers,tot=ORDER.reduce((a,k)=>a+(T[k]||0),0),bmT=D.stores.reduce((a,s)=>a+s[5],0);
+ const host=BMQ('chTier');
+ host.innerHTML=ORDER.map((k,i)=>{const n=T[k]||0,pct=n/tot*100,
+   sh=D.stores.filter(s=>s[2]===k).reduce((a,s)=>a+s[5],0)/bmT*100;
+   return '<div class="tierrow" data-tier="'+k+'"><span style="width:44px;flex:none"><span class="tier '+TC[k]+'">'+k+'</span></span>'
+    +'<span style="flex:1;min-width:0"><span class="tierbar" style="display:block;width:'+Math.max(2,pct)+'%;background:'+TCOL[i]+'"></span></span>'
+    +'<span style="width:38px;text-align:right;font-weight:700;color:#333;flex:none">'+n+'개</span>'
+    +'<span style="width:70px;text-align:right;color:#9ca3af;font-size:9.5px;flex:none">매출 '+sh.toFixed(0)+'%</span></div>';}).join('')
+  +'<div style="border-top:.5px solid #EBEBEF;margin-top:6px;padding-top:6px;display:flex;justify-content:space-between;font-size:9.5px;color:#9ca3af">'
+  +'<span>판매 발생 매장</span><b style="color:'+NAVY+'">'+D.kpi.stores[0]+'개</b></div>'
+  +'<div style="display:flex;justify-content:space-between;font-size:9.5px;color:#9ca3af"><span>'+CW+' B&M 매출</span><b style="color:'+NAVY+'">'+usd(D.kpi.bm[0])+'</b></div>'
+  +'<div class="foot">표의 '+D.kpi.stores[0]+'개 매장 합계 '+usd(bmT)+' — 차액 '+usd(bmT-D.kpi.bm[0])+'는 판매 없이 반품만 발생한 매장의 음수분(목록 제외).</div>';
+ host.querySelectorAll('.tierrow').forEach(r=>r.addEventListener('click',()=>{
+   const k=r.dataset.tier,was=r.classList.contains('on');
+   host.querySelectorAll('.tierrow').forEach(x=>x.classList.remove('on'));
+   const p=BMQ('tierPanel');
+   if(was){p.innerHTML='';return;}
+   r.classList.add('on');
+   const top=D.stores.filter(s=>s[2]===k).sort((a,b)=>b[4]-a[4]).slice(0,10);
+   p.innerHTML='<div style="border:.5px solid #EBEBEF;border-radius:3px;overflow:hidden">'
+    +'<div style="background:#EEF2F9;padding:5px 9px;font-size:9.5px;font-weight:700;color:'+NAVY+'">'+k+' 상위 10개 매장 <span style="color:#9ca3af;font-weight:500">(최근 4주 주당 매출)</span></div>'
+    +top.map((s,i)=>'<div style="display:flex;gap:7px;padding:4px 9px;font-size:10px;border-top:.5px solid #F3F3F6">'
+      +'<span style="width:14px;color:#9ca3af;flex:none">'+(i+1)+'</span>'
+      +'<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#333;font-weight:600">'+s[0]+'</span>'
+      +'<span style="width:74px;color:#9ca3af;flex:none;font-size:9px">'+s[1]+'</span>'
+      +'<span style="width:44px;text-align:right;flex:none;font-variant-numeric:tabular-nums">$'+s[4]+'</span></div>').join('')+'</div>';}));})();
+
+function spark(v){const w=98,h=20,fv=v.filter(x=>x!=null),lo=Math.min(0,...fv),hi=Math.max(...fv);
+ const X=i=>2+(w-4)*i/(v.length-1),Y=x=>h-2-(h-6)*((x-lo)/((hi-lo)||1));
+ return '<svg width="'+w+'" height="'+h+'" style="vertical-align:middle"><polyline points="'
+  +v.map((x,i)=>x==null?null:(X(i)+','+Y(x))).filter(Boolean).join(' ')+'" fill="none" stroke="'+CLICKS+'" stroke-width="1.2"/>'
+  +'<circle cx="'+X(v.length-1)+'" cy="'+Y(v[v.length-1])+'" r="2" fill="'+NAVY+'"/></svg>';}
+function renderStores(f){
+  let rows=D.stores.slice();
+  if(f==='LOW')rows=rows.filter(s=>s[8]!=null&&s[8]<4);
+  else if(f!=='ALL')rows=rows.filter(s=>s[2]===f);
+  const shown=rows.slice(0,50),tb=BMQ1('#stTbl tbody');
+  tb.innerHTML=shown.map((s,idx)=>{const wow=s[6]>0?(s[5]/s[6]-1)*100:null,low=s[8]!=null&&s[8]<4;
+    return '<tr data-i="'+idx+'"><td class="l" title="'+s[0]+'">'+s[0]+'</td>'
+     +'<td class="l" style="color:#9ca3af;font-weight:500;font-size:9.5px">'+s[1]+'</td>'
+     +'<td class="l"><span class="tier '+TC[s[2]]+'">'+s[2].replace('Tier ','T')+'</span> '
+     +(s[9]==='▲'?'<span style="color:'+GREEN+'">▲</span>':(s[9]==='▼'?'<span style="color:'+RED+'">▼</span>':'<span style="color:#ccc">→</span>'))+'</td>'
+     +'<td class="l">'+spark(s[3])+'</td><td>$'+s[4]+'</td><td style="font-weight:700;color:#333">$'+s[5]+'</td>'
+     +'<td>'+(wow==null?'—':'<span style="color:'+(wow>=0?GREEN:RED)+'">'+(wow>=0?'▲':'▼')+Math.abs(wow).toFixed(0)+'%</span>')+'</td>'
+     +'<td>$'+s[7].toLocaleString()+'</td><td'+(low?' class="alert"':'')+'>'+(s[8]==null?'—':s[8])+'</td></tr>';}).join('');
+  tb.querySelectorAll('tr').forEach(tr=>{const s=shown[+tr.dataset.i];
+    tr.addEventListener('mousemove',e=>{
+      const _wl=D.weeks.slice(-6);
+      const last6=s[3].slice(-6).map((v,i)=>_wl[i]+' $'+v).join(' · ');
+      const wow=s[6]>0?(s[5]/s[6]-1)*100:null;
+      ST(e,'<b>'+s[0]+'</b>'+(s[10]?' <span style="color:#9fb0d6">'+s[10]+'</span>':'')
+        +'<br>'+s[1]+' · '+s[2]
+        +'<br><span style="color:#9fb0d6">전주('+PW+')</span> $'+s[6]+' → <span style="color:#9fb0d6">금주('+CW+')</span> $'+s[5]
+        +(wow==null?'':' ('+(wow>=0?'▲':'▼')+Math.abs(wow).toFixed(0)+'%)')
+        +'<br>최근 4주 주당 $'+s[4]+' · 매장 재고 $'+s[7].toLocaleString()+(s[8]!=null?' · WOS '+s[8]+'주':'')
+        +'<br><span style="color:#9fb0d6">'+last6+'</span>');});
+    tr.addEventListener('mouseleave',HT);});
+  BMQ('stFoot').innerHTML='표시 '+shown.length+'개 / 해당 조건 '+rows.length+'개 (전체 판매 발생 매장 '+D.kpi.stores[0]+'개) · 행에 마우스를 올리면 전주 대비·최근 6주 상세 표시 · 추이 = W2~'+CW+' · WOS = '+CW+' 매장 재고 ÷ 최근 4주 주당 매출 · <span class="alert">4주 미만 = 보충 신호</span>';}
+renderStores('ALL');
+BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  BMQA('#stBtns button').forEach(x=>x.classList.remove('on'));b.classList.add('on');renderStores(b.dataset.t);});
+
+    _bmDone=true;
+    }catch(e){ console.error("[BM] 렌더 실패", e); }
+  };
+})();
+</script>
 
 <!-- ═══════════ SETTINGS TAB ═══════════ -->
 <div id="tabSettings" style="display:none;">
@@ -2993,17 +3451,18 @@ let selChChans = new Set();
 let chVisitsChart, chSalesChart, chCvrChart;
 function switchTab(tab) {
   document.querySelectorAll('.sb-item').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  const tabs = {main:'tabMain',channel:'tabChannel',ads:'tabAds',settings:'tabSettings',events:'tabEvents',onsite:'tabOnsite'};
+  const tabs = {main:'tabMain',channel:'tabChannel',ads:'tabAds',settings:'tabSettings',events:'tabEvents',onsite:'tabOnsite',bm:'tabBm'};
   Object.entries(tabs).forEach(([k,id]) => {
     const el = document.getElementById(id);
     if (el) el.style.display = k === tab ? '' : 'none';
   });
-  const titles = {main:'통합 대시보드',channel:'유입 채널별',ads:'퍼포먼스 광고',events:'이벤트 관리',settings:'Settings',onsite:'온사이트 광고'};
+  const titles = {main:'통합 대시보드',channel:'유입 채널별',ads:'퍼포먼스 광고',events:'이벤트 관리',settings:'Settings',onsite:'온사이트 광고',bm:'B&M · 재고'};
   const pt = document.getElementById('pageTitle');
   if (pt) pt.textContent = titles[tab] || '';
   if (tab === 'channel') { try { refreshChannel(); } catch(e){} }
   if (tab === 'ads')     { try { refreshAds();     } catch(e){} }
   if (tab === 'onsite')  { try { refreshOnsite(); } catch(e){} }
+  if (tab === 'bm')      { try { refreshBM();     } catch(e){} }
   if (tab === 'events')  { try { renderTypeLegend(); renderEventListFull(); } catch(e){} }
 }
 // ── KOL Table ─────────────────────────────────────────────────────────────────
@@ -3792,6 +4251,8 @@ function onAuthSuccess(user) {
           DM_COST.weekly  = (c.dmCost && c.dmCost.weekly)  || {};
           window.DEMAND = (c.demand) || {};
           window.ONSITE = (c.onsite) || null;
+          window.BMDATA = (c.bm) || null;
+          try { var _bt=document.querySelector('.sb-item.active'); if (_bt && _bt.getAttribute('data-tab')==='bm' && typeof refreshBM==='function') refreshBM(); } catch(e){}
           try { var _at=document.querySelector('.sb-item.active'); if (_at && _at.getAttribute('data-tab')==='onsite' && typeof refreshOnsite==='function') refreshOnsite(); } catch(e){}
           Object.keys(SALES_BY_DATE).forEach(k => delete SALES_BY_DATE[k]);
           RAW_SALES.forEach(r => { SALES_BY_DATE[r.date] = { total: r.total||0, com: r.com||0, bam: r.bam||0 }; });
@@ -3897,6 +4358,8 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     const newSales = Array.isArray(data.sales)    ? data.sales    : [];
     const newCh    = Array.isArray(data.channel)  ? data.channel  : [];
     window.ONSITE = data.onsite || null;
+    window.BMDATA = data.bm || null;
+    try { var _bt2=document.querySelector('.sb-item.active'); if (_bt2 && _bt2.getAttribute('data-tab')==='bm' && typeof refreshBM==='function') refreshBM(); } catch(e){}
     try { var _at2=document.querySelector('.sb-item.active'); if (_at2 && _at2.getAttribute('data-tab')==='onsite' && typeof refreshOnsite==='function') refreshOnsite(); } catch(e){}
     if (!newSku.length)   throw new Error('RAW_commerce 데이터가 비어 있습니다.');
     if (!newSales.length) throw new Error('Raw_실매출 데이터가 비어 있습니다.');
