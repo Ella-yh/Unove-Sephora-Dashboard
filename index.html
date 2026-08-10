@@ -1194,6 +1194,16 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     D = window.BMDATA;
     if(!D || !D.weeks){ BMMSG("B&amp;M · 재고 데이터를 불러오는 중입니다. 잠시 후 자동으로 표시됩니다."); return; }
     BMMSG("");
+    // SKU 이름을 친숙명으로 바꾼다 — 세포라 원본은 코드명(UNV DMG RPR MSK FS)이라 알아보기 어렵다.
+    // 기준은 SKU 실매출 탭과 같은 [구분자] F열. 매칭 안 되는 신규 SKU 는 코드명을 그대로 둔다.
+    try{
+      var _MT=(window.SKUDATA && window.SKUDATA.meta) || null;
+      if(!_MT && typeof loadTabCache_==='function'){ var _c=loadTabCache_('sephora_cache_sku'); _MT=_c && _c.meta; }
+      if(_MT) D.skus.forEach(function(s){
+        var m=_MT[String(s.id)];
+        if(m && m.nm && String(m.nm).charAt(0)!=='\u26a0') s.n=m.nm;
+      });
+    }catch(e){}
     try{
 
 const CW=D.weeks[D.weeks.length-1],PW=D.weeks[D.weeks.length-2];
@@ -4166,7 +4176,9 @@ function switchTab(tab) {
   if (tab === 'channel') { try { refreshChannel(); } catch(e){} }
   if (tab === 'ads')     { try { refreshAds();     } catch(e){} }
   if (tab === 'onsite')  { try { refreshOnsite(); } catch(e){} }
-  if (tab === 'bm')      { try { if (!window.BMDATA)  window.BMDATA  = loadTabCache_('sephora_cache_bm');  refreshBM();  } catch(e){} }
+  if (tab === 'bm')      { try { if (!window.BMDATA)  window.BMDATA  = loadTabCache_('sephora_cache_bm');
+                                 if (!window.SKUDATA) window.SKUDATA = loadTabCache_('sephora_cache_sku');   // SKU 친숙명용
+                                 refreshBM();  } catch(e){} }
   if (tab === 'sku')     { try { if (!window.SKUDATA) window.SKUDATA = loadTabCache_('sephora_cache_sku'); refreshSKU(); } catch(e){} }
   if (tab === 'events')  { try { renderTypeLegend(); renderEventListFull(); } catch(e){} }
 }
