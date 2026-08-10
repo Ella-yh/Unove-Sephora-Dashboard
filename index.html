@@ -1096,10 +1096,10 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 </div>
 
 <div class="disc">
-  데이터 출처 — 매출·재고·매장 실적: 세포라 주간 리포트(Best Seller / Weekly Sales by Location) · 권역 매핑: 세포라 브랜드포털 Net Sales by Door(2026-07-27 추출본, 이후 접근 불가) · W2~W16 매출 및 W9~W13 재고: 웨스턴사업팀 주간 리포트 기반 재계산(겹치는 구간 원본과 일치 확인).<br>
+  데이터 출처 — 매출·재고·매장 실적: 세포라 주간 리포트(Best Seller / Weekly Sales by Location) · 권역 매핑: 세포라 브랜드포털 Net Sales by Door(2026-07-27 추출본, 이후 접근 불가) · 전 구간(W1~) 세포라 원본 기준.<br>
   산출 기준 안내 — In-Stock% 가중평균은 <b>B&amp;M 상시 배치 10개 SKU 기준</b>으로 계산하며, 신규 입고 중인 SKU(현재 Hydracoat Hair Mist, 홀리데이 세트)는 주차 간 비교 일관성을 위해 평균에서 제외합니다. 신규 SKU의 평균 편입 시점에 대한 확정된 기준은 아직 없으며, 기존 운영 방식을 그대로 따르고 있습니다. 이 기준이 변경되면 과거 주차 수치도 함께 재계산이 필요합니다.<br>
-  W25에 판매가 없어 직전 회차 표에 없던 매장 33곳 중 27곳은 웨스턴사업팀 주간 리포트(W25)의 매장 성과 시트에서 W2~W16 추이를 보완했습니다. 나머지 6곳(CAPITOL HILL · CHESTNUT MALL · DEDHAM · HUNTSVILLE · MAUI · MOHEGAN SUN)은 그 시트에도 없어 W17부터만 표시합니다.<br>
-  누계·달성률·목표 속도는 세포라 주간 리포트의 YTD 값(회계연도 W1 시작 · <span id="bmWksDone"></span>주 경과)을 기준으로 합니다. 주간·월간 차트는 원본이 보관된 W2부터 표시하므로 첫 주(W1) 약 $11.9K가 차트에는 나타나지 않습니다. W2~W13 구간은 세포라 원본 파일이 보관돼 있지 않아 주간 리포트에서 재계산한 값이며, 그중 W7은 채널 합계와 전체 합계가 $5,744 차이가 있어 검증되지 않았습니다. W2~W8 재고 및 W2~W13 일별 수치는 확보된 자료가 없어 표시하지 않습니다. 캐나다는 현재 매출이 발생하지 않아 미국 실적만 집계합니다.
+  매장별 실적은 전 주차 세포라 원본(Weekly Sales by Location) 기준이며, 매장번호·판매수량·매장 재고·AFS가 모든 주차에 채워져 있습니다.<br>
+  누계·달성률·목표 속도는 세포라 주간 리포트의 YTD 값(회계연도 W1 시작 · <span id="bmWksDone"></span>주 경과)을 기준으로 합니다. 모든 차트가 첫 주(W1, 2/1~2/7)부터 전 구간을 표시합니다. W1은 매장 배치 전이라 B&M 매출 $105 · 활성 매장 4곳입니다. 캐나다는 현재 매출이 발생하지 않아 미국 실적만 집계합니다.
 </div>
 </div>
 <div id="bmTip" class="tip"></div>
@@ -1302,10 +1302,10 @@ function drawTrend(g){
   let labels,bm,com,ref=null,refL,foot,band=null,ticks=12,tipT=null,perBar=null;
   if(g==='w'){labels=D.weeks;bm=D.wk_bm;com=D.wk_com;ref=D.goal.wk_target;refL='목표 $96,154/주';
     band=[[0,15]];tipT=i=>D.weeks[i]+' ('+D.wend[D.weeks[i]]+' 마감)';
-    foot=(function(){var lw=D.wk_bm[D.wk_bm.length-1]+D.wk_com[D.wk_com.length-1];return '주간 · W2~'+CW+'. 회색 배경 = 주간 리포트 기반 재계산 구간(W2~W16). '+CW+' '+usd(lw)+'으로 목표선 '+(lw>=D.goal.wk_target?'<b style="color:'+GREEN+'">상회</b>':'<b style="color:'+RED+'">하회</b>')+'.';})();}
+    foot=(function(){var lw=D.wk_bm[D.wk_bm.length-1]+D.wk_com[D.wk_com.length-1];return '주간 · '+D.weeks[0]+'~'+CW+'. '+CW+' '+usd(lw)+'으로 목표선 '+(lw>=D.goal.wk_target?'<b style="color:'+GREEN+'">상회</b>':'<b style="color:'+RED+'">하회</b>')+'.';})();}
   else if(g==='d'){labels=D.ddates.map(d=>d.slice(5).replace('-','/'));bm=D.dbm;com=D.dcom;
     ref=Math.round(D.goal.wk_target/7);refL='목표 $13,736/일';tipT=i=>D.ddates[i];
-    foot=(function(){var t=D.dbm.map(function(v,i){return v+D.dcom[i];}),mx=Math.max.apply(null,t),mi=t.indexOf(mx);return '일별 · W14~'+CW+'('+D.ddates.length+'일). 최고일 '+D.ddates[mi].slice(5).replace('-','/')+' '+usd(mx)+' — B&M '+usd(D.dbm[mi])+'.';})();}
+    foot=(function(){var t=D.dbm.map(function(v,i){return v+D.dcom[i];}),mx=Math.max.apply(null,t),mi=t.indexOf(mx);return '일별 · '+D.ddates[0].slice(5).replace('-','/')+'~'+D.ddates[D.ddates.length-1].slice(5).replace('-','/')+'('+D.ddates.length+'일). 최고일 '+D.ddates[mi].slice(5).replace('-','/')+' '+usd(mx)+' — B&M '+usd(D.dbm[mi])+'.';})();}
   else{labels=D.months.map(m=>m.slice(2).replace('-','/'));bm=D.mon_bm;com=D.mon_com;ticks=6;
     perBar=D.mon_wks.map(w=>w*D.goal.wk_target);
     tipT=i=>D.months[i]+' ('+D.mon_wks[i]+'주'+(D.mon_full[i]?'':' · 부분')+')';
@@ -1340,7 +1340,7 @@ BMQA('[data-g]').forEach(b=>b.addEventListener('click',()=>{
  +'<div style="display:flex;justify-content:space-between;font-size:9px;color:#9ca3af;margin-top:3px">'
  +'<span>누계 B&M '+usd(g.ytd_bm)+' ('+(g.ytd_bm/g.cum*100).toFixed(1)+'%)</span>'
  +'<span>.COM '+usd(g.ytd_com)+' ('+(g.ytd_com/g.cum*100).toFixed(1)+'%)</span></div>'
- +'<div class="foot">누계는 세포라 주간 리포트의 YTD 값(회계연도 W1부터)을 그대로 사용합니다. 좌측 주간 차트는 원본이 보관된 W2부터 표시하므로 첫 주(W1, 약 $11.9K) 차이가 있습니다.</div>';})();
+ +'<div class="foot">누계는 세포라 주간 리포트의 YTD 값(회계연도 W1부터)을 그대로 사용합니다. 세포라 사후 소급 조정 때문에 주간 합산과 완전히 같지 않을 수 있습니다.</div>';})();
 
 /* inventory */
 (function(){const host=BMQ('chInstock'),v=D.wk_instock,n=v.length,
@@ -1348,7 +1348,7 @@ BMQA('[data-g]').forEach(b=>b.addEventListener('click',()=>{
  const X=i=>pl+iw*i/(n-1),Y=x=>pt+ih*(1-(x-lo)/(hi-lo));
  const svg=el('svg',{viewBox:'0 0 '+W+' '+H,width:'100%',height:H,style:'display:block'});
  const nb=D.inv_src.filter(s=>s==='bf').length;
- svg.appendChild(el('rect',{x:pl,y:pt,width:iw*(nb-0.5)/(n-1),height:ih,fill:NAVY,opacity:.035}));
+ if(nb>0) svg.appendChild(el('rect',{x:pl,y:pt,width:iw*(nb-0.5)/(n-1),height:ih,fill:NAVY,opacity:.035}));
  [65,75,85,95,100].forEach(g=>{svg.appendChild(el('line',{x1:pl,x2:W-pr,y1:Y(g),y2:Y(g),stroke:GRID}));
    svg.appendChild(txt(pl-5,Y(g)+3,g+'%',{'text-anchor':'end'}));});
  svg.appendChild(el('line',{x1:pl,x2:W-pr,y1:Y(80),y2:Y(80),stroke:RED,'stroke-width':1.4,'stroke-dasharray':'4 3'}));
@@ -1499,7 +1499,7 @@ function renderStores(f){
         +'<br>최근 4주 주당 $'+s[4]+' · 매장 재고 $'+s[7].toLocaleString()+(s[8]!=null?' · WOS '+s[8]+'주':'')
         +'<br><span style="color:#9fb0d6">'+last6+'</span>');});
     tr.addEventListener('mouseleave',HT);});
-  BMQ('stFoot').innerHTML='표시 '+shown.length+'개 / 해당 조건 '+rows.length+'개 (전체 판매 발생 매장 '+D.kpi.stores[0]+'개) · 행에 마우스를 올리면 전주 대비·최근 6주 상세 표시 · 추이 = W2~'+CW+' · WOS = '+CW+' 매장 재고 ÷ 최근 4주 주당 매출 · <span class="alert">4주 미만 = 보충 신호</span>';}
+  BMQ('stFoot').innerHTML='표시 '+shown.length+'개 / 해당 조건 '+rows.length+'개 (전체 판매 발생 매장 '+D.kpi.stores[0]+'개) · 행에 마우스를 올리면 전주 대비·최근 6주 상세 표시 · 추이 = '+D.weeks[0]+'~'+CW+' · WOS = '+CW+' 매장 재고 ÷ 최근 4주 주당 매출 · <span class="alert">4주 미만 = 보충 신호</span>';}
 renderStores('ALL');
 BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   BMQA('#stBtns button').forEach(x=>x.classList.remove('on'));b.classList.add('on');renderStores(b.dataset.t);});
@@ -1890,7 +1890,7 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
      ['합계',M==='s'?eok(DK.reduce((x,k)=>x+sum(k),0)):nf(DK.reduce((x,k)=>x+sum(k),0))+'개',
        (M==='s'?'$'+nf(DK.reduce((x,k)=>x+sum(k),0))+'   ·   ':'')+DK[0]+' ~ '+nmk(DK[DK.length-1])+(OPEN.length?' (진행 중 포함)':'')]];
     document.getElementById('sk_kpiRow').innerHTML=K.map(k=>'<div class="kpi"><div class="kpi-label">'+k[0]+'</div><div class="kpi-value">'+k[1]+'</div><div class="kpi-sub">'+k[2]+'</div></div>').join('');
-    document.getElementById('sk_kpiNote').textContent=[OPEN.length?'진행 중인 '+(MLB[OPEN[0]]||OPEN[0])+'이 요약·순위·차트·평균에 모두 포함돼 있음':'',(M==='u'&&P!=='d')?'판매수량은 5/3 이후만 존재':''].filter(Boolean).join(' · ');
+    document.getElementById('sk_kpiNote').textContent=[OPEN.length?'진행 중인 '+(MLB[OPEN[0]]||OPEN[0])+'이 요약·순위·차트·평균에 모두 포함돼 있음':'',''].filter(Boolean).join(' · ');
     const tot={};act.forEach(s=>tot[s]=keys.reduce((x,k)=>x+((per[s]&&per[s][k])||0),0));
     const top=act.slice().sort((x,y)=>tot[y]-tot[x]).filter(s=>tot[s]!==0).slice(0,8);
     const ds=top.map((s,i)=>({label:nmOf(s),color:PAL[i],data:keys.map(k=>(per[s]&&per[s][k])||0)}));
@@ -2035,13 +2035,13 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
         '<li>기존 주간 엑셀리포트와 ±1% 일치 검증 완료</li></ul></span></div>'+
       '<div class="fn"><b>④</b><span>금액 단위: 세포라 원본 USD × 1,500원 환율 적용하여 KRW 계산</span></div>'+
       '<div class="fn"><b>⑤</b><span>「—」는 0이 아니라 원천 자체가 없음을 뜻함<ul>'+
-        '<li>예시: 수량 W2~W13, 판매가 0이던 날은 0으로 표시</li></ul></span></div>'+
+        '<li>예시: 판매가 0이던 날은 0으로 표시</li></ul></span></div>'+
       '<div class="fn"><b>⑥</b><span>평균 = 표시 기간 합계 ÷ 표시 기간 수. <b>진행 중인 기간도 포함</b>해 계산하므로, 진행 중 구간이 있으면 평균이 낮게 나온다</span></div>'+
       '<div class="fn"><b>⑦</b><span>닷컴 전용 SKU는 매장 반품만 발생해 B&M 누계가 음수(붉은 숫자). 이 경우 비중은 미산출</span></div>'+
       '<div class="fn"><b>⑧</b><span>프로모션<ul>'+
         '<li>\'주\' 단위 기간 선택 시, 마우스 오버하면 이벤트명/기간 표시 (*출처: <code>Raw_이벤트</code> 시트)</li></ul></span></div>'+
       '<div class="fn"><b>⑨</b><span>W24(7/12~18)는 세포라 원본 내 주간 시트와 일별 시트가 $19.60 차이(B&M만). 주·일 합계 불일치는 정상</span></div>';
-    const w=['「W2~W13(02/08~05/02)은 주간 리포트」 원본 파일 수급 후, 데이터 교체 예정입니다.'];
+    const w=PROV_W.length?['「'+PROV_W.join('·')+'는 주간 리포트」 원본 파일 수급 후, 데이터 교체 예정입니다.']:[];
     document.getElementById('sk_warnBox').innerHTML=w.join('<br><br>');
   }
   // SKU 선택 패널
