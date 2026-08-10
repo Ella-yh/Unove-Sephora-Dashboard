@@ -1223,7 +1223,7 @@ function HT(){bmTip.style.display='none';}
   {l:'재고보유율',v:k.instock[0].toFixed(1)+'%',s:'매출 가중 · 경보선 80%',d:k.instock[0]-k.instock[1],pp:1,x:PW+' '+k.instock[1].toFixed(1)+'%',c:SPEND},
   {l:'매장당 주간매출',v:'$'+k.spd[0].toFixed(1),s:'B&M ÷ 판매매장 '+k.stores[0]+'개',d:(k.spd[0]/k.spd[1]-1)*100,x:PW+' $'+k.spd[1],c:CLICKS},
   {l:'.COM 재고',v:k.comoh[0].toLocaleString(),s:'units · 입고대기 '+k.comoo.toLocaleString(),d:(k.comoh[0]/k.comoh[1]-1)*100,x:PW+' '+k.comoh[1].toLocaleString(),c:VISITS}];
- BMQ('bmKpiRow').innerHTML=it.map(i=>'<div class="kpi" style="border-left-color:'+i.c+'">'
+ BMQ('bmKpiRow').innerHTML=it.map(i=>'<div class="kpi">'
   +'<div class="kpi-header"><div class="kpi-label">'+i.l+'</div><div class="kpi-badge '+(i.d>=0?'up':'dn')+'">'
   +(i.d>=0?'▲ ':'▼ ')+Math.abs(i.d).toFixed(1)+(i.pp?'pp':'%')+'</div></div>'
   +'<div class="kpi-value">'+i.v+'</div><div class="kpi-sub">'+i.s+'</div><div class="kpi-vs">'+i.x+'</div></div>').join('');})();
@@ -4985,7 +4985,7 @@ window.manualRefresh = function() {
   const url = localStorage.getItem('sephora_apps_script_url') || DEFAULT_APPS_SCRIPT_URL;
   if (!url) { switchTab('settings'); return; }
   const btn = document.getElementById('btnRefresh');
-  if (btn) { btn.disabled = true; btn.textContent = '↻ 시트 다시 읽는 중… (최대 1분)'; }
+  if (btn) { btn.disabled = true; btn.textContent = '↻ 읽는 중…'; }
   window._forceFresh = true;   // 서버 캐시를 건너뛰고 시트를 다시 읽는다
   loadFromAppsScript(url, true).finally(() => {
     window._forceFresh = false;
