@@ -1189,8 +1189,8 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
     if(!m){ m=document.createElement("div"); m.id="bmMsg"; m.style.cssText="padding:48px 20px;text-align:center;color:#9ca3af;font-size:12px"; r.insertBefore(m, r.firstChild); }
     m.innerHTML=t; m.style.display=t?"":"none";
     for(var i=0;i<r.children.length;i++){ var c=r.children[i]; if(c.id!=="bmMsg") c.style.display=t?"none":""; } }
-  window.refreshBM=function(){
-    if(_bmDone) return;
+  window.refreshBM=function(force){
+    if(_bmDone && !force) return;   // force=true → 새 데이터로 다시 그린다
     D = window.BMDATA;
     if(!D || !D.weeks){ BMMSG("B&amp;M · 재고 데이터를 불러오는 중입니다. 잠시 후 자동으로 표시됩니다."); return; }
     BMMSG("");
@@ -1681,8 +1681,8 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
       if (c.id !== 'sk_msg' && c.tagName !== 'STYLE' && c.tagName !== 'SCRIPT') c.style.display = m ? 'none' : '';
     }
   }
-  window.refreshSKU = function(){
-    if (_booted) return;
+  window.refreshSKU = function(force){
+    if (_booted && !force) return;   // force=true → 새 데이터로 다시 그린다
     var DT = window.SKUDATA;
     if (!DT || DT.skuSalesError || !DT.skus || !DT.skus.length){
       SKUMSG('SKU 실매출 데이터를 불러오는 중입니다. 잠시 후 자동으로 표시됩니다.');
@@ -1857,7 +1857,14 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
   function draw(){
     const a=agg(),per=a.per;
     const keys=RSEL?a.keys.filter(k=>RSEL.has(k)):a.keys;
-    if(!keys.length){RSEL=null;return draw();}
+    if(!keys.length){                                      // MONTH·WEEK 를 모두 해제한 상태
+      document.getElementById('sk_rangeLb').textContent='';
+      document.getElementById('sk_kpiRow').innerHTML='<div class="kpi" style="grid-column:1/-1;text-align:center;color:#9ca3af;font-weight:600">표시할 기간이 없습니다 — MONTH 또는 WEEK 에서 하나 이상 선택해 주세요</div>';
+      document.getElementById('sk_kpiNote').textContent='';
+      ['sk_chTrend','sk_chRank','sk_chMix','sk_tbl','sk_trendLeg','sk_tblFoot','sk_trendFoot','sk_warnBox'].forEach(function(id){
+        var el=document.getElementById(id); if(el) el.innerHTML='';});
+      syncRng();return;
+    }
     let DK=doneKeys(keys); if(!DK.length)DK=keys.slice();      // 선택 구간이 전부 진행 중이면 그대로 사용
     const OPEN=openKeys(keys);   // 표시용 — 집계에서 빼지 않는다
     const act=SKA.filter(s=>SEL.has(s));
@@ -2058,9 +2065,11 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
     document.querySelectorAll('#tabSku .dd-panel.show').forEach(x=>x.classList.remove('show'));
     document.querySelectorAll('#tabSku .dd-btn.open').forEach(x=>x.classList.remove('open'));
     if(!was){p.classList.add('show');b.classList.add('open');}};
-  document.addEventListener('click',e=>{if(!e.target.closest('.dd-wrap')){
+  if(window.__skDocClick) document.removeEventListener('click',window.__skDocClick);
+  window.__skDocClick=e=>{if(!e.target.closest('.dd-wrap')){
     document.querySelectorAll('#tabSku .dd-panel.show').forEach(x=>x.classList.remove('show'));
-    document.querySelectorAll('#tabSku .dd-btn.open').forEach(x=>x.classList.remove('open'));}});
+    document.querySelectorAll('#tabSku .dd-btn.open').forEach(x=>x.classList.remove('open'));}};
+  document.addEventListener('click',window.__skDocClick);
   document.getElementById('sk_curK').onclick=()=>{CUR='K';document.getElementById('sk_curK').classList.add('on');document.getElementById('sk_curU').classList.remove('on');draw();};
   document.getElementById('sk_curU').onclick=()=>{CUR='U';document.getElementById('sk_curU').classList.add('on');document.getElementById('sk_curK').classList.remove('on');draw();};
   document.getElementById('sk_allOn').onclick=e=>{e.stopPropagation();SEL=new Set(SKA);buildPick();syncPick();draw();};
@@ -2104,8 +2113,7 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
   }
   function applyMW(){                                      // MONTH·WEEK → 표시 키 집합
     if(!MSEL&&!WSEL){RSEL=null;return;}
-    const sel=agg().keys.filter(keyPass);
-    RSEL=sel.length?new Set(sel):null;                     // 교집합이 비면 전체로 되돌린다
+    RSEL=new Set(agg().keys.filter(keyPass));              // 비면 빈 집합 그대로 (전체로 되돌리지 않는다)
   }
   function ddList(listId,items,selSet,label,onToggle){
     document.getElementById(listId).innerHTML=items.slice().reverse().map(k=>
@@ -2117,13 +2125,11 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
     ddList('sk_mList',MONTHS,MSEL,mLb,(inp,all)=>{
       if(!MSEL)MSEL=new Set(all);
       inp.checked?MSEL.add(inp.dataset.k):MSEL.delete(inp.dataset.k);
-      if(MSEL.size===0){MSEL.add(inp.dataset.k);inp.checked=true;return;}
       if(MSEL.size===all.length)MSEL=null;
       applyMW();syncRng();draw();});
     ddList('sk_wList',WEEKS,WSEL,wLb,(inp,all)=>{
       if(!WSEL)WSEL=new Set(all);
       inp.checked?WSEL.add(inp.dataset.k):WSEL.delete(inp.dataset.k);
-      if(WSEL.size===0){WSEL.add(inp.dataset.k);inp.checked=true;return;}
       if(WSEL.size===all.length)WSEL=null;
       applyMW();syncRng();draw();});
   }
@@ -2146,8 +2152,13 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
       if(!was){p.classList.add('show');b.classList.add('open');}};
   }
   ddOpen('sk_mBtn','sk_mPanel'); ddOpen('sk_wBtn','sk_wPanel');
-  document.getElementById('sk_mAll').onclick=e=>{e.stopPropagation();MSEL=null;applyMW();buildRng();syncRng();draw();};
-  document.getElementById('sk_wAll').onclick=e=>{e.stopPropagation();WSEL=null;applyMW();buildRng();syncRng();draw();};
+  // ALL 은 토글 — 체크하면 전체 선택, 해제하면 전체 해제 (MJ 260810)
+  document.getElementById('sk_mAll').onclick=e=>{e.stopPropagation();
+    MSEL = (MSEL===null) ? new Set() : null;   // 전체 선택 상태에서 누르면 전체 해제, 아니면 전체 선택
+    applyMW();buildRng();syncRng();draw();};
+  document.getElementById('sk_wAll').onclick=e=>{e.stopPropagation();
+    WSEL = (WSEL===null) ? new Set() : null;
+    applyMW();buildRng();syncRng();draw();};
   const QUICK={m:[[3,'최근 3개월'],[6,'최근 6개월'],[12,'최근 12개월']],
                w:[[4,'최근 4주'],[8,'최근 8주'],[13,'최근 13주']],
                d:[[7,'최근 7일'],[14,'최근 14일'],[28,'최근 28일']]};
@@ -2158,13 +2169,15 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
     MSEL=null;WSEL=null;                                   // 빠른 구간은 MONTH·WEEK 선택을 지운다
     RSEL=new Set(agg().keys.slice(-n));buildRng();syncRng();draw();};});
   const TIP=document.getElementById('sk_tip');
-  document.addEventListener('mousemove',e=>{
+  if(window.__skDocMove) document.removeEventListener('mousemove',window.__skDocMove);
+  window.__skDocMove=e=>{
     const t=e.target.closest&&e.target.closest('#tabSku [data-tip]');
     if(t){TIP.innerHTML=decodeURIComponent(t.getAttribute('data-tip'));TIP.style.display='block';
       const w=TIP.offsetWidth,h=TIP.offsetHeight;
       TIP.style.left=Math.min(e.clientX+14,innerWidth-w-10)+'px';
       TIP.style.top=Math.max(8,Math.min(e.clientY+14,innerHeight-h-10))+'px';}
-    else TIP.style.display='none';});
+    else TIP.style.display='none';};
+  document.addEventListener('mousemove',window.__skDocMove);
   buildPick();syncPick();syncRng();draw();
 
   }
@@ -5082,8 +5095,9 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     window.ONSITE = data.onsite || null;
     window.BMDATA = data.bm || null;
     window.SKUDATA = data.skuSales || null;
-    try { var _bt2=document.querySelector('.sb-item.active'); if (_bt2 && _bt2.getAttribute('data-tab')==='bm' && typeof refreshBM==='function') refreshBM(); } catch(e){}
-    try { var _st2=document.querySelector('.sb-item.active'); if (_st2 && _st2.getAttribute('data-tab')==='sku' && typeof refreshSKU==='function') refreshSKU(); } catch(e){}
+    // 캐시로 먼저 그린 화면을 새 데이터로 다시 그린다 (안 그리면 W27 재고처럼 옛 값이 남는다)
+    try { var _bt2=document.querySelector('.sb-item.active'); if (_bt2 && _bt2.getAttribute('data-tab')==='bm' && typeof refreshBM==='function') refreshBM(true); } catch(e){}
+    try { var _st2=document.querySelector('.sb-item.active'); if (_st2 && _st2.getAttribute('data-tab')==='sku' && typeof refreshSKU==='function') refreshSKU(true); } catch(e){}
     try { var _at2=document.querySelector('.sb-item.active'); if (_at2 && _at2.getAttribute('data-tab')==='onsite' && typeof refreshOnsite==='function') refreshOnsite(); } catch(e){}
     if (!newSku.length)   throw new Error('RAW_commerce 데이터가 비어 있습니다.');
     if (!newSales.length) throw new Error('Raw_실매출 데이터가 비어 있습니다.');
