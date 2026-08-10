@@ -299,7 +299,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .sidebar.collapsed .sb-user-info{opacity:0;width:0;overflow:hidden;}
 .sb-user-nm{font-size:10.5px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sb-user-em{font-size:8.5px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sb-refresh{display:flex;align-items:center;gap:6px;transition:opacity .2s;}
+.sb-refresh{display:flex;flex-direction:column;align-items:flex-start;gap:6px;transition:opacity .2s;}
 .sidebar.collapsed .sb-refresh{opacity:0;pointer-events:none;}
 .sb-upd{font-size:8.5px;color:#666;white-space:nowrap;}
 /* Main area */
@@ -5005,7 +5005,7 @@ window.manualRefresh = function() {
   const url = localStorage.getItem('sephora_apps_script_url') || DEFAULT_APPS_SCRIPT_URL;
   if (!url) { switchTab('settings'); return; }
   const btn = document.getElementById('btnRefresh');
-  if (btn) { btn.disabled = true; btn.textContent = '↻ 읽는 중…'; }
+  if (btn) { btn.disabled = true; btn.textContent = '↻ 읽는 중… (최대 1분)'; }
   window._forceFresh = true;   // 서버 캐시를 건너뛰고 시트를 다시 읽는다
   loadFromAppsScript(url, true).finally(() => {
     window._forceFresh = false;
