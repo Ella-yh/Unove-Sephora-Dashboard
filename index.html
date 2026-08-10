@@ -1121,7 +1121,9 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 @media(max-width:1150px){#tabBm .kpi-row{grid-template-columns:repeat(3,1fr)}}
 #tabBm .kpi{background:#fff;border:.5px solid #E8E8EC;border-radius:14px;box-shadow:0 1px 6px rgba(0,0,0,.05);padding:18px 20px 16px}
 #tabBm .kpi-header{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-bottom:6px}
-#tabBm .kpi-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#9ca3af;line-height:1.4}
+#tabBm .kpi-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#9ca3af;line-height:1.4;display:flex;align-items:center;gap:6px}
+#tabBm .kpi-sig{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none;cursor:help}
+#tabBm .kpi-sig.ok{background:#16a34a}#tabBm .kpi-sig.bad{background:#dc2626}#tabBm .kpi-sig.na{background:#D8D8DC}
 #tabBm .kpi-badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0}
 #tabBm .kpi-badge.up{background:#dcfce7;color:#16a34a}
 #tabBm .kpi-badge.dn{background:#fee2e2;color:#dc2626}
@@ -1217,14 +1219,32 @@ function HT(){bmTip.style.display='none';}
  T('btnAll','전체 SKU ('+D.skus.length+'개)');})();
 
 (function(){const k=D.kpi;
- const it=[{l:'전체 매출',v:usd(k.ttl[0]),s:won(k.ttl[0]),d:(k.ttl[0]/k.ttl[1]-1)*100,x:PW+' '+usd(k.ttl[1]),c:RED},
-  {l:'B&M 매출',v:usd(k.bm[0]),s:won(k.bm[0])+' · 비중 '+(k.bm[0]/k.ttl[0]*100).toFixed(0)+'%',d:(k.bm[0]/k.bm[1]-1)*100,x:PW+' '+usd(k.bm[1]),c:NAVY},
-  {l:'.COM 매출',v:usd(k.com[0]),s:won(k.com[0])+' · 비중 '+(k.com[0]/k.ttl[0]*100).toFixed(0)+'%',d:(k.com[0]/k.com[1]-1)*100,x:PW+' '+usd(k.com[1]),c:ROSE},
-  {l:'재고보유율',v:k.instock[0].toFixed(1)+'%',s:'매출 가중 · 경보선 80%',d:k.instock[0]-k.instock[1],pp:1,x:PW+' '+k.instock[1].toFixed(1)+'%',c:SPEND},
-  {l:'매장당 주간매출',v:'$'+k.spd[0].toFixed(1),s:'B&M ÷ 판매매장 '+k.stores[0]+'개',d:(k.spd[0]/k.spd[1]-1)*100,x:PW+' $'+k.spd[1],c:CLICKS},
-  {l:'.COM 재고',v:k.comoh[0].toLocaleString(),s:'units · 입고대기 '+k.comoo.toLocaleString(),d:(k.comoh[0]/k.comoh[1]-1)*100,x:PW+' '+k.comoh[1].toLocaleString(),c:VISITS}];
- BMQ('bmKpiRow').innerHTML=it.map(i=>'<div class="kpi" style="border-left-color:'+i.c+'">'
-  +'<div class="kpi-header"><div class="kpi-label">'+i.l+'</div><div class="kpi-badge '+(i.d>=0?'up':'dn')+'">'
+ // ── 카드 신호등 (MJ 260810) — 화면에 이미 있는 기준만 쓴다 ──
+ //   전체 매출 = 주 목표 $96,154 / 재고보유율 = In-Stock 경보선 80% / .COM 재고 = WOS 4주
+ //   B&M·.COM 매출·매장당 주간매출은 기준값이 자체가 없어 판정하지 않는다(회색).
+ const GT=D.goal.wk_target;
+ const critISP=D.skus.filter(s=>s.isp!=null&&s.isp<80);
+ const critCW =D.skus.filter(s=>s.cw!=null&&s.cw>=0&&s.cw<4);
+ const critOH =D.skus.filter(s=>s.coh===0&&s.com>0);   // 판매 중인데 재고 0 (판매 전 SKU는 제외)
+ const sgTtl = k.ttl[0]>=GT
+   ? ['ok','주 목표 '+usd(GT)+' 대비 '+(k.ttl[0]/GT*100).toFixed(1)+'% — 달성']
+   : ['bad','주 목표 '+usd(GT)+' 대비 '+(k.ttl[0]/GT*100).toFixed(1)+'% — 하회'];
+ const sgIsp = k.instock[0]>=80
+   ? ['ok','경보선 80% 대비 +'+(k.instock[0]-80).toFixed(1)+'pp — 정상'+(critISP.length?' (개별 SKU 중 80% 미만 '+critISP.length+'종)':'')]
+   : ['bad','경보선 80% 하회 ('+k.instock[0].toFixed(1)+'%) — 재고 부족 경보'];
+ const nCom=critCW.length+critOH.length;
+ const sgCom = nCom===0
+   ? ['ok','.COM WOS 4주 미만 0종 · 판매 중 재고 0 0종 — 정상']
+   : ['bad','.COM 보충 필요 '+nCom+'종 (WOS 4주 미만 '+critCW.length+' · 판매 중 재고 0 '+critOH.length+')'];
+ const NA=['na','판정 기준이 없어 표시하지 않습니다'];
+ const it=[{l:'전체 매출',v:usd(k.ttl[0]),s:won(k.ttl[0]),d:(k.ttl[0]/k.ttl[1]-1)*100,x:PW+' '+usd(k.ttl[1]),g:sgTtl},
+  {l:'B&M 매출',v:usd(k.bm[0]),s:won(k.bm[0])+' · 비중 '+(k.bm[0]/k.ttl[0]*100).toFixed(0)+'%',d:(k.bm[0]/k.bm[1]-1)*100,x:PW+' '+usd(k.bm[1]),g:NA},
+  {l:'.COM 매출',v:usd(k.com[0]),s:won(k.com[0])+' · 비중 '+(k.com[0]/k.ttl[0]*100).toFixed(0)+'%',d:(k.com[0]/k.com[1]-1)*100,x:PW+' '+usd(k.com[1]),g:NA},
+  {l:'재고보유율',v:k.instock[0].toFixed(1)+'%',s:'매출 가중 · 경보선 80%',d:k.instock[0]-k.instock[1],pp:1,x:PW+' '+k.instock[1].toFixed(1)+'%',g:sgIsp},
+  {l:'매장당 주간매출',v:'$'+k.spd[0].toFixed(1),s:'B&M ÷ 판매매장 '+k.stores[0]+'개',d:(k.spd[0]/k.spd[1]-1)*100,x:PW+' $'+k.spd[1],g:NA},
+  {l:'.COM 재고',v:k.comoh[0].toLocaleString(),s:'units · 입고대기 '+k.comoo.toLocaleString(),d:(k.comoh[0]/k.comoh[1]-1)*100,x:PW+' '+k.comoh[1].toLocaleString(),g:sgCom}];
+ BMQ('bmKpiRow').innerHTML=it.map(i=>'<div class="kpi">'
+  +'<div class="kpi-header"><div class="kpi-label"><span class="kpi-sig '+i.g[0]+'" title="'+i.g[1].replace(/"/g,'&quot;')+'"></span>'+i.l+'</div><div class="kpi-badge '+(i.d>=0?'up':'dn')+'">'
   +(i.d>=0?'▲ ':'▼ ')+Math.abs(i.d).toFixed(1)+(i.pp?'pp':'%')+'</div></div>'
   +'<div class="kpi-value">'+i.v+'</div><div class="kpi-sub">'+i.s+'</div><div class="kpi-vs">'+i.x+'</div></div>').join('');})();
 
@@ -4985,7 +5005,7 @@ window.manualRefresh = function() {
   const url = localStorage.getItem('sephora_apps_script_url') || DEFAULT_APPS_SCRIPT_URL;
   if (!url) { switchTab('settings'); return; }
   const btn = document.getElementById('btnRefresh');
-  if (btn) { btn.disabled = true; btn.textContent = '↻ 시트 다시 읽는 중… (최대 1분)'; }
+  if (btn) { btn.disabled = true; btn.textContent = '↻ 읽는 중…'; }
   window._forceFresh = true;   // 서버 캐시를 건너뛰고 시트를 다시 읽는다
   loadFromAppsScript(url, true).finally(() => {
     window._forceFresh = false;
