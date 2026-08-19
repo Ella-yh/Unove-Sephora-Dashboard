@@ -1259,7 +1259,8 @@ function HT(){bmTip.style.display='none';}
   +'<div class="kpi-value">'+i.v+'</div><div class="kpi-sub">'+i.s+'</div><div class="kpi-vs">'+i.x+'</div></div>').join('');})();
 
 function chart(host,o){
-  const W=o.W||820,H=o.H||250,pl=46,pr=o.pr||44,pt=12,pb=24;
+  const H=o.H||250,pl=46,pr=o.pr||44,pt=12,pb=24;
+  const W=Math.max(o.minW||360,Math.round(host.getBoundingClientRect().width)||o.W||820);
   const n=o.labels.length,iw=W-pl-pr,ih=H-pt-pb;
   const tot=o.labels.map((_,i)=>o.stacks.reduce((s,st)=>s+Math.max(0,st.data[i]||0),0));
   const ymax=Math.max(...tot,o.ref||0,...(o.refPerBar||[0]))*1.14||1;
@@ -1344,7 +1345,7 @@ BMQA('[data-g]').forEach(b=>b.addEventListener('click',()=>{
 
 /* inventory */
 (function(){const host=BMQ('chInstock'),v=D.wk_instock,n=v.length,
-  W=520,H=200,pl=36,pr=12,pt=12,pb=24,iw=W-pl-pr,ih=H-pt-pb,lo=65,hi=100;
+  H=200,pl=36,pr=12,pt=12,pb=24,W=Math.max(360,Math.round(host.getBoundingClientRect().width)||520),iw=W-pl-pr,ih=H-pt-pb,lo=65,hi=100;
  const X=i=>pl+iw*i/(n-1),Y=x=>pt+ih*(1-(x-lo)/(hi-lo));
  const svg=el('svg',{viewBox:'0 0 '+W+' '+H,width:'100%',height:H,style:'display:block'});
  const nb=D.inv_src.filter(s=>s==='bf').length;
