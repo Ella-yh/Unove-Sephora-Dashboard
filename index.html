@@ -478,6 +478,9 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <button class="mkr-btn" id="btnTotalCostToggle" onclick="toggleTotalCost(this)" style="display:flex;align-items:center;gap:4px;">
         <span style="font-size:12px;font-weight:700;line-height:1;color:#4a6fa5;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4a6fa5;"></span>광고비(총계)
       </button>
+      <button class="mkr-btn" id="btnRoasTotalToggle" onclick="toggleRoasTotal(this)" style="display:flex;align-items:center;gap:4px;">
+        <span style="font-size:12px;font-weight:700;line-height:1;color:#1b6e63;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#1b6e63;"></span>ROAS(전체)
+      </button>
       <button class="mkr-btn" id="btnRoasToggle" onclick="toggleRoas(this)" style="display:flex;align-items:center;gap:4px;">
         <span style="font-size:12px;font-weight:700;line-height:1;color:#4bc8a0;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4bc8a0;"></span>ROAS(닷컴)
       </button>
@@ -502,6 +505,11 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <span style="color:#d97070;">— —</span> Sales KPI: ₩3,900,000&nbsp;&nbsp;
       <span style="color:#4bc8a0;">— —</span> ROAS KPI: 263%
     </div>
+  </div>
+  <div class="chart-card" style="margin-top:10px;">
+    <div class="chart-sec-sub" style="margin-bottom:8px;">지표 확인용 표 (12개 지표 · 현재 필터·주기 기준)</div>
+    <div class="ads-tbl-wrap"><table class="ads-metric-tbl" id="mainDataTable"></table></div>
+    <div class="chart-note" style="text-align:left;color:#999;margin-top:6px;">단위: 방문·수량은 K(천) 이상 축약, 매출·비용은 K(천)/M(백만) 축약, CVR·ROAS는 %. 페이드 외 4개 비용 지표와 ROAS(전체)는 일 단위에서 데이터가 없어 '-'로 표시됩니다.</div>
   </div>
 </div>
 <div style="padding:0 28px 20px;">
@@ -554,6 +562,12 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
         <tbody id="kolTbody"><tr><td colspan="11" class="kol-empty">—</td></tr></tbody>
       </table>
     </div>
+  </div>
+</div>
+<div style="padding:0 28px 24px;">
+  <div class="ev-card">
+    <div class="ev-list-hdr"><div class="ttl">지표 설명</div></div>
+    <div id="metricNotesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px 20px;font-size:10.5px;color:#888;line-height:1.6;margin-top:4px;"></div>
   </div>
 </div>
 </div><!-- /tabMain -->
@@ -2723,7 +2737,8 @@ let showVisits   = true;
 let showAdSpend  = false;
 let showBrandCost = false, showKolCost = false; // 비용 칩 토글 (월/주 단위 전용, DEMAND.cost 기반)
 let showChannelCost = false, showTotalCost = false;
-let showRoas     = false;
+let showRoas     = false; // ROAS(닷컴) — 일 단위도 지원(ADS_RAW 기준)
+let showRoasTotal = false; // ROAS(전체) — 월/주 단위 전용(DEMAND.cost 필요)
 let showCvr      = false;
 let mainPeriod   = 'weekly';
 window.toggleMarkers = function(btn) {
@@ -2790,7 +2805,14 @@ function toggleRoas(btn) {
   btn.classList.toggle('active', showRoas);
   renderChart();
 }
+function toggleRoasTotal(btn) {
+  if (mainPeriod === 'daily') return;
+  showRoasTotal = !showRoasTotal;
+  btn.classList.toggle('active', showRoasTotal);
+  renderChart();
+}
 window.toggleRoas = toggleRoas;
+window.toggleRoasTotal = toggleRoasTotal;
 window.setMainPeriod = function(btn, period) {
   document.querySelectorAll('[data-main-period]').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
@@ -3084,6 +3106,27 @@ const KPI_NOTES = {
   roas_total: '전체 매출 ÷ 전체 광고비(페이드 + 브랜딩 + KOL + 채널마케팅). 월/주 단위로 집계되며, 기간을 일부만 선택해도 해당 월·주의 광고비 전액이 반영됩니다.',
   roas_com:   '닷컴 매출 ÷ (페이드 + 세포라 온사이트). 월/주 단위로 집계되며, 기간을 일부만 선택해도 해당 월·주의 광고비 전액이 반영됩니다.'
 };
+// 통합 대시보드 탭 하단 「지표 설명」 — 위 KPI_NOTES와 비용 칩·데이터 표 지표를 함께 정리
+const MAIN_METRIC_NOTES = [
+  {label:'TOTAL VISITS',  desc: KPI_NOTES.visits},
+  {label:'Sales (.COM/B&M/TTL)', desc: KPI_NOTES.sales + '. .COM=닷컴 · B&M=오프라인 매장 · TTL=전체 합계.'},
+  {label:'CVR',           desc: KPI_NOTES.cvr},
+  {label:'전체 ROAS',      desc: KPI_NOTES.roas_total},
+  {label:'닷컴 ROAS',      desc: KPI_NOTES.roas_com},
+  {label:'페이드 비용',     desc: '세포라 페이드(퍼포먼스) 광고 집행액. 일 단위는 매체 raw 집계, 월·주 단위는 시트 확정치(퍼포먼스 비용).'},
+  {label:'채널마케팅',      desc: '세포라 온사이트 + Co-op 등 채널마케팅 비용 합계(시트 확정치). 월 라벨은 「채널마케팅 합계」, 주 라벨은 「채널마케팅 비용」.'},
+  {label:'광고비(총계)',    desc: '시트가 산정한 전체 광고비. 페이드+브랜딩+KOL+채널마케팅 합계와 다를 수 있습니다 — 온사이트 비용은 세포라 정산 대금에서 공제 처리되어 총계에 별도로 한 번 더 반영되기 때문(정상).'},
+  {label:'브랜딩 비용',     desc: '시트 [비용] 블록 확정치.'},
+  {label:'KOL 비용',       desc: '시트 [비용] 블록 확정치.'},
+  {label:'월/주 단위 전용', desc: '브랜딩·KOL·채널마케팅·광고비(총계)·ROAS(전체)는 일 단위 데이터가 없어 일 모드에서 비활성 처리되며, 표에서는 \'-\'로 표시됩니다.'},
+];
+function renderMetricNotes() {
+  const el = document.getElementById('metricNotesGrid');
+  if (!el) return;
+  el.innerHTML = MAIN_METRIC_NOTES.map(function(n){
+    return '<div><b style="color:#555;">' + n.label + '</b> — ' + n.desc + '</div>';
+  }).join('');
+}
 function fmtWeekRangeLabel(w1, w2) {
   // 주 번호를 실제 일~토 날짜 구간으로 변환 (_refTime = W1 일요일 기준)
   if (!_refTime) return 'W' + w1 + (w2 > w1 ? '-W' + w2 : '');
@@ -3265,7 +3308,8 @@ function getMainChartData() {
     return raw.map(function(d) {
       var sb = SALES_BY_DATE[d.date] || {};
       var spend = ADS_RAW.filter(function(r){return r.date===d.date;}).reduce(function(s,r){return s+r.spend;},0);
-      return Object.assign({},d,{label:d.date.slice(5),sales_com:sb.com||0,sales_bam:sb.bam||0,spend:spend>0?spend:null,roas_com:spend>0?(sb.com||0)/spend:null});
+      // 일 단위: 광고비 총계(월/주 단위 시트값)가 없어 ROAS(전체)는 계산 불가 → null
+      return Object.assign({},d,{label:d.date.slice(5),sales_com:sb.com||0,sales_bam:sb.bam||0,spend:spend>0?spend:null,roas_com:spend>0?(sb.com||0)/spend:null,roas_total:null});
     });
   }
   var filteredDateSet = new Set(raw.map(function(d){return d.date;}));
@@ -3289,14 +3333,17 @@ function getMainChartData() {
     .sort(function(a,b){return a[0].localeCompare(b[0]);})
     .map(function(entry) {
       var k = entry[0], v = entry[1];
-      return {date:k,label:v.label,visits:v.visits,orders:v.orders,sales:v.sales_total,sales_com:v.sales_com,sales_bam:v.sales_bam,cvr:v.visits>0?v.orders/v.visits*100:0,spend:v.spend>0?v.spend:null,roas_com:v.spend>0?v.sales_com/v.spend:null};
+      // ROAS는 상단 KPI와 동일 기준(DEMAND.cost 버킷 합산)으로 통일 — ADS_RAW 단독 분모(구버전)는 쓰지 않는다
+      var totalCost = costVal(mainPeriod, '광고비 총계', k);
+      var comCost = costVal(mainPeriod, '퍼포먼스 비용', k) + costVal(mainPeriod, '온사이트 비용', k);
+      return {date:k,label:v.label,visits:v.visits,orders:v.orders,sales:v.sales_total,sales_com:v.sales_com,sales_bam:v.sales_bam,cvr:v.visits>0?v.orders/v.visits*100:0,spend:v.spend>0?v.spend:null,roas_com:comCost>0?v.sales_com/comCost:null,roas_total:totalCost>0?v.sales_total/totalCost:null};
     });
 }
 // ─── CHART ────────────────────────────────────────────────────────────────────
 function renderChart() {
   const data = getMainChartData();
   // 비용 버튼(브랜딩·KOL·채널마케팅·총계)은 월/주 단위에서만 활성 (일 단위 데이터 없음). 페이드는 일 단위도 지원하므로 제외
-  ['btnBrandCostToggle','btnKolCostToggle','btnChannelCostToggle','btnTotalCostToggle'].forEach(function(id) {
+  ['btnBrandCostToggle','btnKolCostToggle','btnChannelCostToggle','btnTotalCostToggle','btnRoasTotalToggle'].forEach(function(id) {
     var b = document.getElementById(id);
     if (b) { b.disabled = (mainPeriod === 'daily'); b.title = b.disabled ? '월/주 단위에서만 표시됩니다' : ''; }
   });
@@ -3435,6 +3482,22 @@ function renderChart() {
           pointBackgroundColor: '#1a7a4a', spanGaps: false, fill: false,
           yAxisID: 'yA', order: 0, tension: 0.25,
         });
+        // ROAS(전체) → 토글 ON일 때만 (월/주 단위 전용)
+        if (showRoasTotal && mainPeriod !== 'daily') ds.push({
+          label: 'ROAS(전체)',
+          data: data.map(d => d.roas_total != null ? Math.round((d.roas_total||0)*100) : null),
+          type: 'line',
+          borderColor: '#1b6e63',
+          backgroundColor: 'rgba(27,110,99,0.08)',
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: '#1b6e63',
+          spanGaps: false,
+          fill: false,
+          yAxisID: 'yR', order: -1,
+          tension: 0.25,
+        });
         // ROAS(닷컴) → 토글 ON일 때만
         if (showRoas) ds.push({
           label: 'ROAS(닷컴)',
@@ -3478,6 +3541,7 @@ function renderChart() {
               if (ctx.dataset.label === '페이드 비용') return v != null ? `  페이드 비용: ₩${Math.round(v).toLocaleString('ko-KR')}` : null;
               if (ctx.dataset.label === '브랜딩 비용' || ctx.dataset.label === 'KOL 비용' || ctx.dataset.label === '채널마케팅' || ctx.dataset.label === '광고비(총계)') return v != null ? '  ' + ctx.dataset.label + ': ₩' + Math.round(v).toLocaleString('ko-KR') : null;
               if (ctx.dataset.label === 'ROAS(닷컴)') return v != null ? `  ROAS(닷컴): ${v}%` : null;
+              if (ctx.dataset.label === 'ROAS(전체)') return v != null ? `  ROAS(전체): ${v}%` : null;
               return ctx.dataset.label + ': ' + v;
             }
           }
@@ -3526,7 +3590,7 @@ function renderChart() {
           title: { display:true, text: showAdSpend ? '페이드 비용(₩)' : '비용(₩)', font:{size:9}, color:'#e8c84a' }
         },
         yR: {
-          type: 'linear', position: 'left', display: showRoas,
+          type: 'linear', position: 'left', display: showRoas || showRoasTotal,
           grid: { drawOnChartArea: false },
           ticks: { font:{size:9}, color:'#4bc8a0', callback: v => v+'%' },
           title: { display:true, text:'ROAS(%)', font:{size:9}, color:'#4bc8a0' }
@@ -3539,6 +3603,51 @@ function renderChart() {
   chart = new Chart(ctx, cfg);
   // Position external markers after chart renders
   requestAnimationFrame(() => { positionMarkers(); });
+  renderMainDataTable(data);
+}
+// ─── MAIN CHART DATA TABLE (지표 확인용 표, 퍼포먼스 광고 탭 표와 동일 패턴) ───────
+function mtblMoney(v) {
+  if (v == null) return '-';
+  return v>=1000000 ? '₩'+(v/1000000).toFixed(1)+'M' : v>=1000 ? '₩'+(v/1000).toFixed(0)+'K' : '₩'+Math.round(v);
+}
+function mtblCount(v) {
+  if (v == null) return '-';
+  return v>=1000 ? (v/1000).toFixed(1)+'K' : Math.round(v).toLocaleString();
+}
+function mtblPct(v, isRatio) {
+  if (v == null) return '-';
+  return (isRatio ? v*100 : v).toFixed(2)+'%';
+}
+const MAIN_TABLE_METRICS = [
+  {label:'Visits',       fmt:mtblCount, get:function(d){ return d.visits; }},
+  {label:'Sales .COM',   fmt:mtblMoney, get:function(d){ return d.sales_com; }},
+  {label:'Sales B&M',    fmt:mtblMoney, get:function(d){ return d.sales_bam; }},
+  {label:'Sales TTL',    fmt:mtblMoney, get:function(d){ return d.sales; }},
+  {label:'CVR',          fmt:function(v){ return mtblPct(v, false); }, get:function(d){ return d.cvr; }},
+  {label:'페이드 비용',   fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? d.spend : costVal(mainPeriod, '퍼포먼스 비용', d.date); }},
+  {label:'채널마케팅',    fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? null : costVal(mainPeriod, mainPeriod==='monthly' ? '채널마케팅 합계' : '채널마케팅 비용', d.date); }},
+  {label:'광고비(총계)',  fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? null : costVal(mainPeriod, '광고비 총계', d.date); }},
+  {label:'브랜딩 비용',   fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? null : costVal(mainPeriod, '브랜딩 비용', d.date); }},
+  {label:'KOL 비용',     fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? null : costVal(mainPeriod, 'KOL 비용', d.date); }},
+  {label:'ROAS(전체)',   fmt:function(v){ return mtblPct(v, true); }, get:function(d){ return d.roas_total; }},
+  {label:'ROAS(닷컴)',   fmt:function(v){ return mtblPct(v, true); }, get:function(d){ return d.roas_com; }},
+];
+function renderMainDataTable(data) {
+  const el = document.getElementById('mainDataTable');
+  if (!el) return;
+  let html = '<thead><tr><th>지표</th>';
+  data.forEach(function(d){ html += '<th>' + (d.label || d.date.slice(5)) + '</th>'; });
+  html += '</tr></thead><tbody>';
+  MAIN_TABLE_METRICS.forEach(function(m){
+    html += '<tr><td class="ads-metric-lbl">' + m.label + '</td>';
+    data.forEach(function(d){
+      const v = m.get(d);
+      html += '<td>' + m.fmt(typeof v === 'number' ? v : null) + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  el.innerHTML = html;
 }
 // Reposition on resize
 let _roTimer;
@@ -5897,6 +6006,7 @@ function rebuildDerivedData() {
 }
 // ── Dashboard init ───────────────────────────────────────────────────────────
 function initDashboard() {
+  try { renderMetricNotes(); } catch(e) {}
   try { selChMonths.clear(); selChWeeks.clear(); selChChans.clear(); } catch(e) {}
   try { buildChMonthOptions(); buildChWeekOptions(); buildChChanOptions(); buildChSecOptions(); } catch(e) {}
   // Week 옵션 재빌드 (데이터 로드 후 week 번호가 확정되므로)
