@@ -31,6 +31,10 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .kpi-info-btn:hover{background:#e8e8ec;color:#555;}
 .kpi-tooltip{display:none;position:absolute;top:32px;right:0;z-index:500;background:#fff;border:0.5px solid #D8D8DC;border-radius:8px;padding:9px 12px;font-size:9px;color:#666;line-height:1.7;width:220px;box-shadow:0 4px 16px rgba(0,0,0,.12);white-space:normal;pointer-events:none;}
 .kpi-info-btn:hover + .kpi-tooltip,.kpi-info-btn:focus + .kpi-tooltip{display:block;}
+.chip-wrap{position:relative;display:inline-flex;}
+.chip-tip{display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:500;background:#fff;border:0.5px solid #D8D8DC;border-radius:8px;padding:9px 12px;font-size:9px;color:#666;line-height:1.7;width:240px;box-shadow:0 4px 16px rgba(0,0,0,.12);white-space:normal;pointer-events:auto;}
+.chip-tip a{color:#2f6fb0;}
+.chip-wrap:hover .chip-tip{display:block;}
 /* Filters */
 .filter-row{padding:12px 28px 0;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;}
 .filter-block{display:flex;flex-direction:column;gap:4px;}
@@ -469,27 +473,48 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <button class="mkr-btn active" id="btnVisitsToggle" onclick="toggleVisits(this)" style="display:flex;align-items:center;gap:4px;">
         <span style="font-size:12px;font-weight:700;line-height:1;color:#6aadd5;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#6aadd5;"></span>Visits
       </button>
-      <button class="mkr-btn" id="btnAdSpendToggle" onclick="toggleAdSpend(this)" style="display:flex;align-items:center;gap:4px;">
-        <span style="font-size:12px;font-weight:700;line-height:1;color:#e8c84a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e8c84a;"></span>페이드 비용
-      </button>
-      <button class="mkr-btn" id="btnChannelCostToggle" onclick="toggleChannelCost(this)" style="display:flex;align-items:center;gap:4px;">
-        <span style="font-size:12px;font-weight:700;line-height:1;color:#c2578a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#c2578a;"></span>채널마케팅
-      </button>
-      <button class="mkr-btn" id="btnTotalCostToggle" onclick="toggleTotalCost(this)" style="display:flex;align-items:center;gap:4px;">
-        <span style="font-size:12px;font-weight:700;line-height:1;color:#4a6fa5;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4a6fa5;"></span>광고비(총계)
-      </button>
-      <button class="mkr-btn" id="btnRoasTotalToggle" onclick="toggleRoasTotal(this)" style="display:flex;align-items:center;gap:4px;">
-        <span style="font-size:12px;font-weight:700;line-height:1;color:#1b6e63;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#1b6e63;"></span>ROAS(전체)
-      </button>
-      <button class="mkr-btn" id="btnRoasToggle" onclick="toggleRoas(this)" style="display:flex;align-items:center;gap:4px;">
-        <span style="font-size:12px;font-weight:700;line-height:1;color:#4bc8a0;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4bc8a0;"></span>ROAS(닷컴)
-      </button>
-      <button class="mkr-btn" id="btnBrandCostToggle" onclick="toggleBrandCost(this)" style="display:flex;align-items:center;gap:4px;">
-        <span style="font-size:12px;font-weight:700;line-height:1;color:#e07b39;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e07b39;"></span>브랜딩 비용
-      </button>
-      <button class="mkr-btn" id="btnKolCostToggle" onclick="toggleKolCost(this)" style="display:flex;align-items:center;gap:4px;">
-        <span style="font-size:12px;font-weight:700;line-height:1;color:#1a7a4a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#1a7a4a;"></span>KOL 비용
-      </button>
+      <span class="chip-wrap">
+        <button class="mkr-btn" id="btnAdSpendToggle" onclick="toggleAdSpend(this)" style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;line-height:1;color:#e8c84a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e8c84a;"></span>페이드 비용
+        </button>
+        <div class="chip-tip" id="tip-btnAdSpendToggle"></div>
+      </span>
+      <span class="chip-wrap">
+        <button class="mkr-btn" id="btnChannelCostToggle" onclick="toggleChannelCost(this)" style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;line-height:1;color:#c2578a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#c2578a;"></span>채널마케팅
+        </button>
+        <div class="chip-tip" id="tip-btnChannelCostToggle"></div>
+      </span>
+      <span class="chip-wrap">
+        <button class="mkr-btn" id="btnTotalCostToggle" onclick="toggleTotalCost(this)" style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;line-height:1;color:#4a6fa5;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4a6fa5;"></span>광고비(총계)
+        </button>
+        <div class="chip-tip" id="tip-btnTotalCostToggle"></div>
+      </span>
+      <span class="chip-wrap">
+        <button class="mkr-btn" id="btnRoasTotalToggle" onclick="toggleRoasTotal(this)" style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;line-height:1;color:#1b6e63;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#1b6e63;"></span>ROAS(전체)
+        </button>
+        <div class="chip-tip" id="tip-btnRoasTotalToggle"></div>
+      </span>
+      <span class="chip-wrap">
+        <button class="mkr-btn" id="btnRoasToggle" onclick="toggleRoas(this)" style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;line-height:1;color:#4bc8a0;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4bc8a0;"></span>ROAS(닷컴)
+        </button>
+        <div class="chip-tip" id="tip-btnRoasToggle"></div>
+      </span>
+      <span class="chip-wrap">
+        <button class="mkr-btn" id="btnBrandCostToggle" onclick="toggleBrandCost(this)" style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;line-height:1;color:#e07b39;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e07b39;"></span>브랜딩 비용
+        </button>
+        <div class="chip-tip" id="tip-btnBrandCostToggle"></div>
+      </span>
+      <span class="chip-wrap">
+        <button class="mkr-btn" id="btnKolCostToggle" onclick="toggleKolCost(this)" style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;line-height:1;color:#1a7a4a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#1a7a4a;"></span>KOL 비용
+        </button>
+        <div class="chip-tip" id="tip-btnKolCostToggle"></div>
+      </span>
       <div style="display:flex;gap:4px;align-items:center;margin-left:auto;">
         <div class="sales-toggle" style="margin-left:0;">
           <button class="stgl active" data-type="com" onclick="setSalesType(this)">COM</button>
@@ -2795,6 +2820,14 @@ function sumCost(p, label, keySet) {
   keySet.forEach(function(k) { s += costVal(p, label, k); });
   return s;
 }
+// 채널마케팅 행 라벨 — 260824 이전 시트는 월='채널마케팅 합계'/주='채널마케팅 비용'로 갈렸으나
+// MJ가 양쪽을 '채널마케팅 비용'로 통일(Apps Script 캐시 반영에 최대 30분 소요) → 실제 존재하는 라벨을 우선한다
+function channelLabel(p) {
+  var block = ((window.DEMAND||{}).cost||{})[p] || {};
+  if (Object.prototype.hasOwnProperty.call(block, '채널마케팅 비용')) return '채널마케팅 비용';
+  if (Object.prototype.hasOwnProperty.call(block, '채널마케팅 합계')) return '채널마케팅 합계';
+  return '채널마케팅 비용';
+}
 function toggleCvr(btn) {
   showCvr = !showCvr;
   btn.classList.toggle('active', showCvr);
@@ -3107,17 +3140,22 @@ const KPI_NOTES = {
   roas_com:   '닷컴 매출 ÷ (페이드 + 세포라 온사이트). 월/주 단위로 집계되며, 기간을 일부만 선택해도 해당 월·주의 광고비 전액이 반영됩니다.'
 };
 // 통합 대시보드 탭 하단 「지표 설명」 — 위 KPI_NOTES와 비용 칩·데이터 표 지표를 함께 정리
+// 출처 링크 — MJ 지정(260824). 월=UN_Western_사업실적관리, 주=[팀용]수요전환_UN_US_2026 SUMMARY(주차)_DM
+const SRC_MONTHLY_AD = '<a href="https://docs.google.com/spreadsheets/d/1NGvWIoT-OObZkm52s8WCqB7mrsjhuUVVHqso1BqXsP8/edit?gid=1303078367#gid=1303078367" target="_blank" rel="noopener">UN_Western_사업실적관리 [★작성]광고선전비]</a>';
+const SRC_WEEKLY_AD = '<a href="https://docs.google.com/spreadsheets/d/1YwWbnxNil83GD03Lqtmffaw_MH3loJ88w6_SL56VcYw/edit?gid=162973930#gid=162973930" target="_blank" rel="noopener">[팀용]수요전환_UN_US_2026 [SUMMARY(주차)_DM]</a>';
+const SRC_ANGLO_SUMMARY = '<a href="https://docs.google.com/spreadsheets/d/1XxvK_y3aOaLDzZjZnZS6xLJrjvweicnU4lzsnjOM4Q8/edit?gid=301928249#gid=301928249" target="_blank" rel="noopener">UN_Anglo_summary (fin) [사업실적_Summary]</a>';
 const MAIN_METRIC_NOTES = [
   {label:'TOTAL VISITS',  desc: KPI_NOTES.visits},
   {label:'Sales (.COM/B&M/TTL)', desc: KPI_NOTES.sales + '. .COM=닷컴 · B&M=오프라인 매장 · TTL=전체 합계.'},
   {label:'CVR',           desc: KPI_NOTES.cvr},
   {label:'전체 ROAS',      desc: KPI_NOTES.roas_total},
   {label:'닷컴 ROAS',      desc: KPI_NOTES.roas_com},
-  {label:'페이드 비용',     desc: '세포라 페이드(퍼포먼스) 광고 집행액. 일 단위는 매체 raw 집계, 월·주 단위는 시트 확정치(퍼포먼스 비용).'},
-  {label:'채널마케팅',      desc: '세포라 온사이트 + Co-op 등 채널마케팅 비용 합계(시트 확정치). 월 라벨은 「채널마케팅 합계」, 주 라벨은 「채널마케팅 비용」.'},
-  {label:'광고비(총계)',    desc: '시트가 산정한 전체 광고비. 페이드+브랜딩+KOL+채널마케팅 합계와 다를 수 있습니다 — 온사이트 비용은 세포라 정산 대금에서 공제 처리되어 총계에 별도로 한 번 더 반영되기 때문(정상).'},
-  {label:'브랜딩 비용',     desc: '시트 [비용] 블록 확정치.'},
-  {label:'KOL 비용',       desc: '시트 [비용] 블록 확정치.'},
+  {label:'브랜딩 비용',     desc: '콘텐츠 제작비, PR/앰블럼, 옥외, 팝업/오프라인행사, 브랜딩 기타의 합계. (월 출처: ' + SRC_MONTHLY_AD + ' · 주 출처: ' + SRC_WEEKLY_AD + ')'},
+  {label:'KOL 비용',       desc: 'KOL 시딩, 유가 협업, 2차 활용 라이선스의 합계. (월 출처: ' + SRC_MONTHLY_AD + ' · 주 출처: ' + SRC_WEEKLY_AD + ')'},
+  {label:'채널마케팅',      desc: '세포라 온사이트 + Co-op 등 채널마케팅 비용 합계. 온사이트 비용은 채널마케팅 비용에 포함되며, 시트에는 확인용으로 별도 행에도 표시됩니다.'},
+  {label:'페이드 비용',     desc: '세포라 페이드(퍼포먼스) 외부광고 집행액. 일 단위는 매체 raw 집계'},
+  {label:'광고비(총계)',    desc: '브랜딩, KOL, 채널마케팅, 페이드(퍼포먼스) 비용의 합계'},
+  {label:'온사이트 비용',   desc: '세포라 온사이트 비용은 월 정산 대금에서 공제하는 방식으로 진행되어 ' + SRC_ANGLO_SUMMARY + ' 50행 「MBC, 팝업 등 채널 마케팅」에는 명시되지 않는 금액이나, 대시보드에서는 표기.'},
   {label:'월/주 단위 전용', desc: '브랜딩·KOL·채널마케팅·광고비(총계)·ROAS(전체)는 일 단위 데이터가 없어 일 모드에서 비활성 처리되며, 표에서는 \'-\'로 표시됩니다.'},
 ];
 function renderMetricNotes() {
@@ -3126,6 +3164,23 @@ function renderMetricNotes() {
   el.innerHTML = MAIN_METRIC_NOTES.map(function(n){
     return '<div><b style="color:#555;">' + n.label + '</b> — ' + n.desc + '</div>';
   }).join('');
+}
+// 통합 성과 그래프 비용·ROAS 칩 호버 툴팁 — MAIN_METRIC_NOTES와 같은 문구를 재사용(이중 정의 방지)
+const CHIP_TIP_MAP = {
+  btnAdSpendToggle:    '페이드 비용',
+  btnChannelCostToggle:'채널마케팅',
+  btnTotalCostToggle:  '광고비(총계)',
+  btnRoasTotalToggle:  '전체 ROAS',
+  btnRoasToggle:       '닷컴 ROAS',
+  btnBrandCostToggle:  '브랜딩 비용',
+  btnKolCostToggle:    'KOL 비용',
+};
+function renderChipTips() {
+  Object.keys(CHIP_TIP_MAP).forEach(function(btnId) {
+    const note = MAIN_METRIC_NOTES.find(function(n){ return n.label === CHIP_TIP_MAP[btnId]; });
+    const el = document.getElementById('tip-' + btnId);
+    if (el && note) el.innerHTML = note.desc;
+  });
 }
 function fmtWeekRangeLabel(w1, w2) {
   // 주 번호를 실제 일~토 날짜 구간으로 변환 (_refTime = W1 일요일 기준)
@@ -3451,7 +3506,7 @@ function renderChart() {
         // 채널마케팅·광고비(총계) (DEMAND.cost, 월/주 단위 전용) → 토글 ON일 때만
         if (showChannelCost && mainPeriod !== 'daily') ds.push({
           label: '채널마케팅',
-          data: data.map(d => costVal(mainPeriod, mainPeriod === 'monthly' ? '채널마케팅 합계' : '채널마케팅 비용', d.date)),
+          data: data.map(d => costVal(mainPeriod, channelLabel(mainPeriod), d.date)),
           type: 'line', borderColor: '#c2578a', backgroundColor: 'rgba(194,87,138,0.08)',
           borderWidth: 1.8, pointRadius: 2, pointHoverRadius: 4,
           pointBackgroundColor: '#c2578a', spanGaps: false, fill: false,
@@ -3625,7 +3680,7 @@ const MAIN_TABLE_METRICS = [
   {label:'Sales TTL',    fmt:mtblMoney, get:function(d){ return d.sales; }},
   {label:'CVR',          fmt:function(v){ return mtblPct(v, false); }, get:function(d){ return d.cvr; }},
   {label:'페이드 비용',   fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? d.spend : costVal(mainPeriod, '퍼포먼스 비용', d.date); }},
-  {label:'채널마케팅',    fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? null : costVal(mainPeriod, mainPeriod==='monthly' ? '채널마케팅 합계' : '채널마케팅 비용', d.date); }},
+  {label:'채널마케팅',    fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? null : costVal(mainPeriod, channelLabel(mainPeriod), d.date); }},
   {label:'광고비(총계)',  fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? null : costVal(mainPeriod, '광고비 총계', d.date); }},
   {label:'브랜딩 비용',   fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? null : costVal(mainPeriod, '브랜딩 비용', d.date); }},
   {label:'KOL 비용',     fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? null : costVal(mainPeriod, 'KOL 비용', d.date); }},
@@ -6007,6 +6062,7 @@ function rebuildDerivedData() {
 // ── Dashboard init ───────────────────────────────────────────────────────────
 function initDashboard() {
   try { renderMetricNotes(); } catch(e) {}
+  try { renderChipTips(); } catch(e) {}
   try { selChMonths.clear(); selChWeeks.clear(); selChChans.clear(); } catch(e) {}
   try { buildChMonthOptions(); buildChWeekOptions(); buildChChanOptions(); buildChSecOptions(); } catch(e) {}
   // Week 옵션 재빌드 (데이터 로드 후 week 번호가 확정되므로)
