@@ -470,7 +470,13 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
         <span style="font-size:12px;font-weight:700;line-height:1;color:#6aadd5;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#6aadd5;"></span>Visits
       </button>
       <button class="mkr-btn" id="btnAdSpendToggle" onclick="toggleAdSpend(this)" style="display:flex;align-items:center;gap:4px;">
-        <span style="font-size:12px;font-weight:700;line-height:1;color:#e8c84a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e8c84a;"></span>광고비
+        <span style="font-size:12px;font-weight:700;line-height:1;color:#e8c84a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e8c84a;"></span>페이드 비용
+      </button>
+      <button class="mkr-btn" id="btnChannelCostToggle" onclick="toggleChannelCost(this)" style="display:flex;align-items:center;gap:4px;">
+        <span style="font-size:12px;font-weight:700;line-height:1;color:#c2578a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#c2578a;"></span>채널마케팅
+      </button>
+      <button class="mkr-btn" id="btnTotalCostToggle" onclick="toggleTotalCost(this)" style="display:flex;align-items:center;gap:4px;">
+        <span style="font-size:12px;font-weight:700;line-height:1;color:#4a6fa5;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4a6fa5;"></span>광고비(총계)
       </button>
       <button class="mkr-btn" id="btnRoasToggle" onclick="toggleRoas(this)" style="display:flex;align-items:center;gap:4px;">
         <span style="font-size:12px;font-weight:700;line-height:1;color:#4bc8a0;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4bc8a0;"></span>ROAS(닷컴)
@@ -2715,8 +2721,8 @@ let selSalesTypes = new Set(['com']); // multi-select set
 let showMarkers = false;
 let showVisits   = true;
 let showAdSpend  = false;
-let showBrandCost = false, showKolCost = false; // DM 비용 토글 (월/주 단위 전용)
-const DM_COST = { monthly: {}, weekly: {} };    // SUMMARY(월/주차)_DM 비용 데이터
+let showBrandCost = false, showKolCost = false; // 비용 칩 토글 (월/주 단위 전용, DEMAND.cost 기반)
+let showChannelCost = false, showTotalCost = false;
 let showRoas     = false;
 let showCvr      = false;
 let mainPeriod   = 'weekly';
@@ -2751,10 +2757,28 @@ function toggleKolCost(btn) {
   btn.classList.toggle('active', showKolCost);
   renderChart();
 }
-function dmCostVal(periodKey, field) {
-  const src = mainPeriod === 'monthly' ? DM_COST.monthly : DM_COST.weekly;
-  const v = src[periodKey] ? src[periodKey][field] : null;
-  return (v || v === 0) ? v : null;
+function toggleChannelCost(btn) {
+  if (mainPeriod === 'daily') return;
+  showChannelCost = !showChannelCost;
+  btn.classList.toggle('active', showChannelCost);
+  renderChart();
+}
+function toggleTotalCost(btn) {
+  if (mainPeriod === 'daily') return;
+  showTotalCost = !showTotalCost;
+  btn.classList.toggle('active', showTotalCost);
+  renderChart();
+}
+// DEMAND.cost[p][label][key] 방어적 조회 — 빈칸·키 없음은 0 (선을 끊지 않음)
+function costVal(p, label, key) {
+  var v = ((window.DEMAND||{}).cost||{})[p];
+  v = v && v[label] ? v[label][key] : undefined;
+  return typeof v === 'number' ? v : 0;
+}
+function sumCost(p, label, keySet) {
+  let s = 0;
+  keySet.forEach(function(k) { s += costVal(p, label, k); });
+  return s;
 }
 function toggleCvr(btn) {
   showCvr = !showCvr;
@@ -3057,8 +3081,8 @@ const KPI_NOTES = {
   visits:     '세포라 웹사이트/앱에서 특정 제품(SKU)과 상호작용한 세션. (제품 페이지 또는 퀵룩 보기, 장바구니에 담기, 상품이 포함된 장바구니 보기, 주문 확인, 좋아하는 목록 보기)',
   sales:      'Sephora 실매출 기준 (환율 1,500원)',
   cvr:        '주문 수량 / Visits TY × 100',
-  roas_total: '전체 매출 / 전체 광고비(net)',
-  roas_com:   '닷컴 매출 / 전체 광고비(net)'
+  roas_total: '전체 매출 ÷ 전체 광고비(페이드 + 브랜딩 + KOL + 채널마케팅). 월/주 단위로 집계되며, 기간을 일부만 선택해도 해당 월·주의 광고비 전액이 반영됩니다.',
+  roas_com:   '닷컴 매출 ÷ (페이드 + 세포라 온사이트). 월/주 단위로 집계되며, 기간을 일부만 선택해도 해당 월·주의 광고비 전액이 반영됩니다.'
 };
 function fmtWeekRangeLabel(w1, w2) {
   // 주 번호를 실제 일~토 날짜 구간으로 변환 (_refTime = W1 일요일 기준)
@@ -3119,20 +3143,24 @@ function renderKPI() {
     + '<span><span style="color:#888;font-weight:700;">.COM</span> ' + (cur.com/1000000).toFixed(1) + ' <span style="color:#ccc;">(' + comPct + '%)</span></span>'
     + '<span><span style="color:#888;font-weight:700;">B&M</span> ' + (cur.bam/1000000).toFixed(1) + ' <span style="color:#ccc;">(' + bamPct + '%)</span></span>'
     + '</div>';
-  // ROAS: 필터된 날짜 범위의 광고비 합산
+  // ROAS: 필터된 날짜를 월/주 버킷으로 환산해 DEMAND.cost에서 광고비 합산 (버킷 단위 = 주 선택 시 주, 아니면 월)
   const filteredDates = new Set(data.map(d => d.date));
-  const totalAdSpend = ADS_RAW
-    .filter(r => filteredDates.has(r.date))
-    .reduce((sum, r) => sum + r.spend, 0);
+  const useWeekly = selWeeks.size > 0;
+  const roasP = useWeekly ? 'weekly' : 'monthly';
+  const bucketKeys = new Set([...filteredDates].map(d => useWeekly ? getWeekKey(d) : getMonthKey(d)));
+  const totalAdSpend = sumCost(roasP, '광고비 총계', bucketKeys);
+  const comAdSpend    = sumCost(roasP, '퍼포먼스 비용', bucketKeys) + sumCost(roasP, '온사이트 비용', bucketKeys);
   const roasTotal = totalAdSpend > 0 ? cur.sales / totalAdSpend : null;
-  const roasCom   = totalAdSpend > 0 ? cur.com   / totalAdSpend : null;
+  const roasCom   = comAdSpend   > 0 ? cur.com   / comAdSpend   : null;
   const fmtRoas   = v => v === null ? '—' : Math.round(v * 100) + '%';
-  // 이전 기간 ROAS 계산 (MoM/WoW delta 표시용)
-  const prevAdSpend = prevDates
-    ? ADS_RAW.filter(r => prevDates.has(r.date)).reduce((s,r) => s + r.spend, 0)
-    : 0;
+  // 이전 기간 ROAS 계산 (MoM/WoW delta 표시용) — 동일 버킷 방식
+  const prevBucketKeys = prevDates
+    ? new Set([...prevDates].map(d => useWeekly ? getWeekKey(d) : getMonthKey(d)))
+    : new Set();
+  const prevAdSpend    = sumCost(roasP, '광고비 총계', prevBucketKeys);
+  const prevComAdSpend = sumCost(roasP, '퍼포먼스 비용', prevBucketKeys) + sumCost(roasP, '온사이트 비용', prevBucketKeys);
   const prevRoasTotal = (prevAdSpend > 0 && prev) ? prev.sales / prevAdSpend : null;
-  const prevRoasCom   = (prevAdSpend > 0 && prev) ? prev.com   / prevAdSpend : null;
+  const prevRoasCom   = (prevComAdSpend > 0 && prev) ? prev.com   / prevComAdSpend : null;
   const _dV  = dHtml(cur.visits,  prev?.visits,  v => Math.abs(Math.round(v)).toLocaleString(), v => Math.round(v).toLocaleString());
   const _dS  = dHtml(cur.sales,   prev?.sales,   v => (Math.abs(v)/1000000).toFixed(1)+'M',     v => (v/1000000).toFixed(1)+'M');
   const _dC  = dHtml(cur.cvr,     prev?.cvr,     v => Math.abs(v).toFixed(2)+'%',               v => v.toFixed(2)+'%');
@@ -3267,8 +3295,8 @@ function getMainChartData() {
 // ─── CHART ────────────────────────────────────────────────────────────────────
 function renderChart() {
   const data = getMainChartData();
-  // DM 비용 버튼은 월/주 단위에서만 활성 (일 단위 데이터 없음)
-  ['btnBrandCostToggle','btnKolCostToggle'].forEach(function(id) {
+  // 비용 버튼(브랜딩·KOL·채널마케팅·총계)은 월/주 단위에서만 활성 (일 단위 데이터 없음). 페이드는 일 단위도 지원하므로 제외
+  ['btnBrandCostToggle','btnKolCostToggle','btnChannelCostToggle','btnTotalCostToggle'].forEach(function(id) {
     var b = document.getElementById(id);
     if (b) { b.disabled = (mainPeriod === 'daily'); b.title = b.disabled ? '월/주 단위에서만 표시됩니다' : ''; }
   });
@@ -3357,10 +3385,10 @@ function renderChart() {
           yAxisID: 'yC', order: 1,
           tension: 0.3,
         });
-        // 광고비(net) → 토글 ON일 때만
+        // 페이드 비용 → 토글 ON일 때만. 일 단위는 ADS_RAW 유지, 월·주는 시트 「퍼포먼스 비용」
         if (showAdSpend) ds.push({
-          label: '광고비(net)',
-          data: data.map(d => d.spend || null),
+          label: '페이드 비용',
+          data: data.map(d => mainPeriod === 'daily' ? (d.spend || null) : costVal(mainPeriod, '퍼포먼스 비용', d.date)),
           type: 'line',
           borderColor: '#e8c84a',
           backgroundColor: makeGrad('mainChart','#e8c84a',0.12,0.0),
@@ -3373,10 +3401,27 @@ function renderChart() {
           yAxisID: 'yA', order: 0,
           tension: 0.25,
         });
-        // 브랜딩/KOL 비용 (DM 시트, 월/주 단위 전용) → 토글 ON일 때만
+        // 채널마케팅·광고비(총계) (DEMAND.cost, 월/주 단위 전용) → 토글 ON일 때만
+        if (showChannelCost && mainPeriod !== 'daily') ds.push({
+          label: '채널마케팅',
+          data: data.map(d => costVal(mainPeriod, mainPeriod === 'monthly' ? '채널마케팅 합계' : '채널마케팅 비용', d.date)),
+          type: 'line', borderColor: '#c2578a', backgroundColor: 'rgba(194,87,138,0.08)',
+          borderWidth: 1.8, pointRadius: 2, pointHoverRadius: 4,
+          pointBackgroundColor: '#c2578a', spanGaps: false, fill: false,
+          yAxisID: 'yA', order: 0, tension: 0.25,
+        });
+        if (showTotalCost && mainPeriod !== 'daily') ds.push({
+          label: '광고비(총계)',
+          data: data.map(d => costVal(mainPeriod, '광고비 총계', d.date)),
+          type: 'line', borderColor: '#4a6fa5', backgroundColor: 'rgba(74,111,165,0.08)',
+          borderWidth: 1.8, pointRadius: 2, pointHoverRadius: 4,
+          pointBackgroundColor: '#4a6fa5', spanGaps: false, fill: false,
+          yAxisID: 'yA', order: 0, tension: 0.25,
+        });
+        // 브랜딩/KOL 비용 (DEMAND.cost, 월/주 단위 전용) → 토글 ON일 때만
         if (showBrandCost && mainPeriod !== 'daily') ds.push({
           label: '브랜딩 비용',
-          data: data.map(d => dmCostVal(d.date, 'branding')),
+          data: data.map(d => costVal(mainPeriod, '브랜딩 비용', d.date)),
           type: 'line', borderColor: '#e07b39', backgroundColor: 'rgba(224,123,57,0.08)',
           borderWidth: 1.8, pointRadius: 2, pointHoverRadius: 4,
           pointBackgroundColor: '#e07b39', spanGaps: false, fill: false,
@@ -3384,7 +3429,7 @@ function renderChart() {
         });
         if (showKolCost && mainPeriod !== 'daily') ds.push({
           label: 'KOL 비용',
-          data: data.map(d => dmCostVal(d.date, 'kol')),
+          data: data.map(d => costVal(mainPeriod, 'KOL 비용', d.date)),
           type: 'line', borderColor: '#1a7a4a', backgroundColor: 'rgba(26,122,74,0.08)',
           borderWidth: 1.8, pointRadius: 2, pointHoverRadius: 4,
           pointBackgroundColor: '#1a7a4a', spanGaps: false, fill: false,
@@ -3430,8 +3475,8 @@ function renderChart() {
               if (ctx.dataset.label === 'Visits') return `  Visits: ${v.toLocaleString()}`;
               if (ctx.dataset.label.startsWith('Sales')) return '  ' + ctx.dataset.label + ': ₩' + Math.round(Math.abs(v)).toLocaleString('ko-KR');
               if (ctx.dataset.label === 'CVR') return `  CVR: ${v.toFixed(2)}%`;
-              if (ctx.dataset.label === '광고비(net)') return v != null ? `  광고비: ₩${Math.round(v).toLocaleString('ko-KR')}` : null;
-              if (ctx.dataset.label === '브랜딩 비용' || ctx.dataset.label === 'KOL 비용') return v != null ? '  ' + ctx.dataset.label + ': ₩' + Math.round(v).toLocaleString('ko-KR') : null;
+              if (ctx.dataset.label === '페이드 비용') return v != null ? `  페이드 비용: ₩${Math.round(v).toLocaleString('ko-KR')}` : null;
+              if (ctx.dataset.label === '브랜딩 비용' || ctx.dataset.label === 'KOL 비용' || ctx.dataset.label === '채널마케팅' || ctx.dataset.label === '광고비(총계)') return v != null ? '  ' + ctx.dataset.label + ': ₩' + Math.round(v).toLocaleString('ko-KR') : null;
               if (ctx.dataset.label === 'ROAS(닷컴)') return v != null ? `  ROAS(닷컴): ${v}%` : null;
               return ctx.dataset.label + ': ' + v;
             }
@@ -3473,10 +3518,12 @@ function renderChart() {
           title: { display:true, text:'CVR(%)', font:{size:9}, color:'#8878d0' }
         },
         yA: {
-          type: 'linear', position: 'right', display: showAdSpend || ((showBrandCost || showKolCost) && mainPeriod !== 'daily'),
+          type: 'linear', position: 'right',
+          display: showAdSpend || ((showBrandCost || showKolCost || showChannelCost || showTotalCost) && mainPeriod !== 'daily'),
           grid: { drawOnChartArea: false },
+          min: 0, beginAtZero: true,
           ticks: { font:{size:9}, color:'#e8c84a', callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v },
-          title: { display:true, text: showAdSpend ? '광고비(₩)' : '비용(₩)', font:{size:9}, color:'#e8c84a' }
+          title: { display:true, text: showAdSpend ? '페이드 비용(₩)' : '비용(₩)', font:{size:9}, color:'#e8c84a' }
         },
         yR: {
           type: 'linear', position: 'left', display: showRoas,
@@ -4978,8 +5025,6 @@ function onAuthSuccess(user) {
           CH_RAW.length = 0;    c.channel.forEach(r => CH_RAW.push(r));
           ADS_RAW.length = 0;   (c.ads || []).forEach(r => ADS_RAW.push(r));
           KOL_RAW.length = 0;   (c.kol || []).filter(r => r.date && r.date.startsWith('2026')).forEach(r => KOL_RAW.push(r));
-          DM_COST.monthly = (c.dmCost && c.dmCost.monthly) || {};
-          DM_COST.weekly  = (c.dmCost && c.dmCost.weekly)  || {};
           window.DEMAND = (c.demand) || {};
           window.ONSITE = (c.onsite) || null;
           window.BMDATA  = (c.bm) || null;        // 구버전 캐시 호환
@@ -5127,8 +5172,6 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     })();
     KOL_RAW.length = 0;
     if (Array.isArray(data.kol)) data.kol.filter(r => r.date && r.date.startsWith('2026')).forEach(r => KOL_RAW.push(r));
-    DM_COST.monthly = (data.dmCost && data.dmCost.monthly) || {};
-    DM_COST.weekly  = (data.dmCost && data.dmCost.weekly)  || {};
     window.DEMAND = (data.demand) || {};
     rebuildDerivedData();
     const ts = data.updatedAt ? new Date(data.updatedAt).toLocaleString('ko-KR') : '—';
@@ -5140,7 +5183,7 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
         ts: Date.now(),
         commerce: newSku, sales: newSales, channel: newCh, onsite: (data.onsite || null), demand: (data.demand || null),
         ads: Array.from(ADS_RAW), kol: Array.from(KOL_RAW),
-        dmCost: { monthly: DM_COST.monthly, weekly: DM_COST.weekly }, updatedAt: data.updatedAt
+        updatedAt: data.updatedAt
       }));
     } catch(e) { console.warn('[cache] localStorage 저장 실패 — 다음 로딩은 풀 페치:', e.message); }
     // B&M·SKU는 별도 키. 용량이 모자라면 이 둘만 조용히 버려지고 위 캐시는 무사하다.
@@ -5880,7 +5923,8 @@ setTimeout(function() {
   var fns = {addEvent:addEvent, clearChFilter:clearChFilter, clearFilter:clearFilter,
              editEvent:editEvent, removeEvent:removeEvent, removeEventFull:removeEventFull,
              renderEventList:renderEventList, saveEvent:saveEvent, switchTab:switchTab,
-             toggleAdSpend:toggleAdSpend, toggleBrandCost:toggleBrandCost, toggleKolCost:toggleKolCost, toggleChDD:toggleChDD, toggleDD:toggleDD,
+             toggleAdSpend:toggleAdSpend, toggleBrandCost:toggleBrandCost, toggleKolCost:toggleKolCost,
+             toggleChannelCost:toggleChannelCost, toggleTotalCost:toggleTotalCost, toggleChDD:toggleChDD, toggleDD:toggleDD,
              toggleSidebar:toggleSidebar, toggleVisits:toggleVisits};
   Object.assign(window, fns);
 }, 0);
