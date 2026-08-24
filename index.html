@@ -31,6 +31,9 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .kpi-info-btn:hover{background:#e8e8ec;color:#555;}
 .kpi-tooltip{display:none;position:absolute;top:32px;right:0;z-index:500;background:#fff;border:0.5px solid #D8D8DC;border-radius:8px;padding:9px 12px;font-size:9px;color:#666;line-height:1.7;width:220px;box-shadow:0 4px 16px rgba(0,0,0,.12);white-space:normal;pointer-events:none;}
 .kpi-info-btn:hover + .kpi-tooltip,.kpi-info-btn:focus + .kpi-tooltip{display:block;}
+.chip-wrap{position:relative;display:inline-flex;}
+.chip-tip{display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:500;background:#fff;border:0.5px solid #D8D8DC;border-radius:8px;padding:9px 12px;font-size:9px;color:#666;line-height:1.7;width:220px;box-shadow:0 4px 16px rgba(0,0,0,.12);white-space:normal;pointer-events:none;}
+.chip-wrap .mkr-btn:hover + .chip-tip{display:block;}
 /* Filters */
 .filter-row{padding:12px 28px 0;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;}
 .filter-block{display:flex;flex-direction:column;gap:4px;}
@@ -469,27 +472,48 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
       <button class="mkr-btn active" id="btnVisitsToggle" onclick="toggleVisits(this)" style="display:flex;align-items:center;gap:4px;">
         <span style="font-size:12px;font-weight:700;line-height:1;color:#6aadd5;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#6aadd5;"></span>Visits
       </button>
-      <button class="mkr-btn" id="btnAdSpendToggle" onclick="toggleAdSpend(this)" style="display:flex;align-items:center;gap:4px;">
-        <span style="font-size:12px;font-weight:700;line-height:1;color:#e8c84a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e8c84a;"></span>페이드 비용
-      </button>
-      <button class="mkr-btn" id="btnChannelCostToggle" onclick="toggleChannelCost(this)" style="display:flex;align-items:center;gap:4px;">
-        <span style="font-size:12px;font-weight:700;line-height:1;color:#c2578a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#c2578a;"></span>채널마케팅
-      </button>
-      <button class="mkr-btn" id="btnTotalCostToggle" onclick="toggleTotalCost(this)" style="display:flex;align-items:center;gap:4px;">
-        <span style="font-size:12px;font-weight:700;line-height:1;color:#4a6fa5;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4a6fa5;"></span>광고비(총계)
-      </button>
-      <button class="mkr-btn" id="btnRoasTotalToggle" onclick="toggleRoasTotal(this)" style="display:flex;align-items:center;gap:4px;">
-        <span style="font-size:12px;font-weight:700;line-height:1;color:#1b6e63;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#1b6e63;"></span>ROAS(전체)
-      </button>
-      <button class="mkr-btn" id="btnRoasToggle" onclick="toggleRoas(this)" style="display:flex;align-items:center;gap:4px;">
-        <span style="font-size:12px;font-weight:700;line-height:1;color:#4bc8a0;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4bc8a0;"></span>ROAS(닷컴)
-      </button>
-      <button class="mkr-btn" id="btnBrandCostToggle" onclick="toggleBrandCost(this)" style="display:flex;align-items:center;gap:4px;">
-        <span style="font-size:12px;font-weight:700;line-height:1;color:#e07b39;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e07b39;"></span>브랜딩 비용
-      </button>
-      <button class="mkr-btn" id="btnKolCostToggle" onclick="toggleKolCost(this)" style="display:flex;align-items:center;gap:4px;">
-        <span style="font-size:12px;font-weight:700;line-height:1;color:#1a7a4a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#1a7a4a;"></span>KOL 비용
-      </button>
+      <span class="chip-wrap">
+        <button class="mkr-btn" id="btnAdSpendToggle" onclick="toggleAdSpend(this)" style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;line-height:1;color:#e8c84a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e8c84a;"></span>페이드 비용
+        </button>
+        <div class="chip-tip" id="tip-btnAdSpendToggle"></div>
+      </span>
+      <span class="chip-wrap">
+        <button class="mkr-btn" id="btnChannelCostToggle" onclick="toggleChannelCost(this)" style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;line-height:1;color:#c2578a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#c2578a;"></span>채널마케팅
+        </button>
+        <div class="chip-tip" id="tip-btnChannelCostToggle"></div>
+      </span>
+      <span class="chip-wrap">
+        <button class="mkr-btn" id="btnTotalCostToggle" onclick="toggleTotalCost(this)" style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;line-height:1;color:#4a6fa5;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4a6fa5;"></span>광고비(총계)
+        </button>
+        <div class="chip-tip" id="tip-btnTotalCostToggle"></div>
+      </span>
+      <span class="chip-wrap">
+        <button class="mkr-btn" id="btnRoasTotalToggle" onclick="toggleRoasTotal(this)" style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;line-height:1;color:#1b6e63;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#1b6e63;"></span>ROAS(전체)
+        </button>
+        <div class="chip-tip" id="tip-btnRoasTotalToggle"></div>
+      </span>
+      <span class="chip-wrap">
+        <button class="mkr-btn" id="btnRoasToggle" onclick="toggleRoas(this)" style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;line-height:1;color:#4bc8a0;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4bc8a0;"></span>ROAS(닷컴)
+        </button>
+        <div class="chip-tip" id="tip-btnRoasToggle"></div>
+      </span>
+      <span class="chip-wrap">
+        <button class="mkr-btn" id="btnBrandCostToggle" onclick="toggleBrandCost(this)" style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;line-height:1;color:#e07b39;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e07b39;"></span>브랜딩 비용
+        </button>
+        <div class="chip-tip" id="tip-btnBrandCostToggle"></div>
+      </span>
+      <span class="chip-wrap">
+        <button class="mkr-btn" id="btnKolCostToggle" onclick="toggleKolCost(this)" style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;line-height:1;color:#1a7a4a;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#1a7a4a;"></span>KOL 비용
+        </button>
+        <div class="chip-tip" id="tip-btnKolCostToggle"></div>
+      </span>
       <div style="display:flex;gap:4px;align-items:center;margin-left:auto;">
         <div class="sales-toggle" style="margin-left:0;">
           <button class="stgl active" data-type="com" onclick="setSalesType(this)">COM</button>
@@ -3126,6 +3150,23 @@ function renderMetricNotes() {
   el.innerHTML = MAIN_METRIC_NOTES.map(function(n){
     return '<div><b style="color:#555;">' + n.label + '</b> — ' + n.desc + '</div>';
   }).join('');
+}
+// 통합 성과 그래프 비용·ROAS 칩 호버 툴팁 — MAIN_METRIC_NOTES와 같은 문구를 재사용(이중 정의 방지)
+const CHIP_TIP_MAP = {
+  btnAdSpendToggle:    '페이드 비용',
+  btnChannelCostToggle:'채널마케팅',
+  btnTotalCostToggle:  '광고비(총계)',
+  btnRoasTotalToggle:  '전체 ROAS',
+  btnRoasToggle:       '닷컴 ROAS',
+  btnBrandCostToggle:  '브랜딩 비용',
+  btnKolCostToggle:    'KOL 비용',
+};
+function renderChipTips() {
+  Object.keys(CHIP_TIP_MAP).forEach(function(btnId) {
+    const note = MAIN_METRIC_NOTES.find(function(n){ return n.label === CHIP_TIP_MAP[btnId]; });
+    const el = document.getElementById('tip-' + btnId);
+    if (el && note) el.innerHTML = note.desc;
+  });
 }
 function fmtWeekRangeLabel(w1, w2) {
   // 주 번호를 실제 일~토 날짜 구간으로 변환 (_refTime = W1 일요일 기준)
@@ -6007,6 +6048,7 @@ function rebuildDerivedData() {
 // ── Dashboard init ───────────────────────────────────────────────────────────
 function initDashboard() {
   try { renderMetricNotes(); } catch(e) {}
+  try { renderChipTips(); } catch(e) {}
   try { selChMonths.clear(); selChWeeks.clear(); selChChans.clear(); } catch(e) {}
   try { buildChMonthOptions(); buildChWeekOptions(); buildChChanOptions(); buildChSecOptions(); } catch(e) {}
   // Week 옵션 재빌드 (데이터 로드 후 week 번호가 확정되므로)
