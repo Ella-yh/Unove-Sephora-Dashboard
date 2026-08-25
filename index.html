@@ -3150,8 +3150,8 @@ const MAIN_METRIC_NOTES = [
   {label:'CVR',           desc: KPI_NOTES.cvr},
   {label:'전체 ROAS',      desc: KPI_NOTES.roas_total},
   {label:'닷컴 ROAS',      desc: KPI_NOTES.roas_com},
-  {label:'브랜딩 비용',     desc: '콘텐츠 제작비, PR/앰블럼, 옥외, 팝업/오프라인행사, 브랜딩 기타의 합계. (월 출처: ' + SRC_MONTHLY_AD + ' · 주 출처: ' + SRC_WEEKLY_AD + ')'},
-  {label:'KOL 비용',       desc: 'KOL 시딩, 유가 협업, 2차 활용 라이선스의 합계. (월 출처: ' + SRC_MONTHLY_AD + ' · 주 출처: ' + SRC_WEEKLY_AD + ')'},
+  {label:'브랜딩 비용',     desc: '콘텐츠 제작비, PR/앰블럼, 옥외, 팝업/오프라인행사, 브랜딩 기타의 합계.', src: ' (월 출처: ' + SRC_MONTHLY_AD + ' · 주 출처: ' + SRC_WEEKLY_AD + ')'},
+  {label:'KOL 비용',       desc: 'KOL 시딩, 유가 협업, 2차 활용 라이선스의 합계.', src: ' (월 출처: ' + SRC_MONTHLY_AD + ' · 주 출처: ' + SRC_WEEKLY_AD + ')'},
   {label:'채널마케팅',      desc: '세포라 온사이트 + Co-op 등 채널마케팅 비용 합계. 온사이트 비용은 채널마케팅 비용에 포함되며, 시트에는 확인용으로 별도 행에도 표시됩니다.'},
   {label:'페이드 비용',     desc: '세포라 페이드(퍼포먼스) 외부광고 집행액. 일 단위는 매체 raw 집계'},
   {label:'광고비(총계)',    desc: '브랜딩, KOL, 채널마케팅, 페이드(퍼포먼스) 비용의 합계'},
@@ -3162,10 +3162,11 @@ function renderMetricNotes() {
   const el = document.getElementById('metricNotesGrid');
   if (!el) return;
   el.innerHTML = MAIN_METRIC_NOTES.map(function(n){
-    return '<div><b style="color:#555;">' + n.label + '</b> — ' + n.desc + '</div>';
+    return '<div><b style="color:#555;">' + n.label + '</b> — ' + n.desc + (n.src || '') + '</div>';
   }).join('');
 }
-// 통합 성과 그래프 비용·ROAS 칩 호버 툴팁 — MAIN_METRIC_NOTES와 같은 문구를 재사용(이중 정의 방지)
+// 통합 성과 그래프 비용·ROAS 칩 호버 툴팁 — MAIN_METRIC_NOTES의 desc(정의)만 재사용, src(출처 링크)는 제외
+// (MJ 지시 260825: 그래프 툴팁엔 비용 정의만, 상세 출처는 하단 지표 설명에서만 확인)
 const CHIP_TIP_MAP = {
   btnAdSpendToggle:    '페이드 비용',
   btnChannelCostToggle:'채널마케팅',
