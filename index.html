@@ -6247,7 +6247,6 @@ function initDemandControls(){
   var tg=document.getElementById('dmdToggle');
   if(tg)tg.onclick=function(){
     st.collapsed=!st.collapsed;
-    if(st.collapsed&&window._demandChart){try{window._demandChart.destroy();}catch(e){}window._demandChart=null;}
     var b=document.getElementById('dmdBody');if(b)b.style.display=st.collapsed?'none':'block';
     var cr=document.getElementById('dmdCaret');if(cr)cr.textContent=st.collapsed?'▸':'▾';
     if(!st.collapsed){try{buildMoPanel();buildWkPanel();updFilterLabels();syncWkEnable();}catch(e){}renderDemand();}
