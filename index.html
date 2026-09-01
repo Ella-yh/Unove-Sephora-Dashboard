@@ -112,6 +112,8 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .subtab.on{color:#1D2847;font-weight:700;border-bottom-color:#c8102e;}
 .cr-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
 @media(max-width:1150px){.cr-kpis{grid-template-columns:repeat(2,1fr);}}
+/* 페이지 필터 스트립 고정(sticky) — #tabSku .ctl과 동일한 top:0/z-index:40 값을 그대로 맞춤 */
+#crPageFilter{position:sticky;top:0;z-index:40;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.05);}
 #stCreative .ads-metric-tbl td,#stCreative .ddx td{vertical-align:top;}
 .cstack{display:grid;grid-template-rows:15px 12px 12px;align-content:start;}
 .cstack.one{grid-template-rows:15px;}
@@ -1070,7 +1072,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 </div><!-- /stMedia -->
   <div id="stCreative" style="display:none;">
     <!-- ① 페이지 필터 스트립 -->
-    <div class="chart-filter-strip" style="padding:14px 28px 0;margin-bottom:0;">
+    <div class="chart-filter-strip" id="crPageFilter" style="padding:14px 28px 12px;margin-bottom:0;">
       <div class="cfd">
         <span class="cfd-lbl">매체</span>
         <div class="cfd-wrap">
@@ -6458,22 +6460,34 @@ function crTipHide() {
 }
 
 // ── 상단 필터 드롭다운 렌더 (.cfd 계열 재사용) ────────────────────────────────
+// 🛑 매체·캠페인 체크박스 패널은 refreshAdsCreative()가 필터 클릭마다 재호출하는
+// crRenderFilterOptions()에서 매번 innerHTML을 다시 그리면 안 된다 — 그리면
+// checked 속성이 하드코딩값으로 리셋되어 방금 사용자가 누른 상태를 덮어써버리고,
+// 캠페인은 "비어있으면 전체 채우기" 로직까지 겹쳐 ALL(전체 해제)이 그 자리에서
+// 원복된다(실사용 중 발견). 목록 자체가 바뀔 때만(최초 로드 등) 다시 그린다.
 function crRenderFilterOptions() {
   const pnlMedia = document.getElementById('cfdPanel-crMedia');
-  if (pnlMedia) pnlMedia.innerHTML =
-    '<div class="cfd-all" onclick="crClearMedia()"><input type="checkbox" id="chk-crMedia-all" checked> ALL</div>' +
-    ['meta', 'tiktok'].map(m => '<label class="cfd-opt"><input type="checkbox" value="' + m + '" checked onchange="crOnMedia(this,\'' + m + '\')"> ' + (m === 'meta' ? 'Meta' : 'TikTok') + '</label>').join('');
+  if (pnlMedia && !pnlMedia.__crBuilt) {
+    pnlMedia.__crBuilt = true;
+    pnlMedia.innerHTML =
+      '<div class="cfd-all" onclick="crClearMedia()"><input type="checkbox" id="chk-crMedia-all" checked> ALL</div>' +
+      ['meta', 'tiktok'].map(m => '<label class="cfd-opt"><input type="checkbox" value="' + m + '"' + (crMedia.has(m) ? ' checked' : '') + ' onchange="crOnMedia(this,\'' + m + '\')"> ' + (m === 'meta' ? 'Meta' : 'TikTok') + '</label>').join('');
+  }
 
   const pnlCamp = document.getElementById('cfdPanel-crCamp');
   if (pnlCamp) {
     const list = crCampaignList();
-    pnlCamp.innerHTML =
-      '<div class="cfd-all" onclick="crClearCamp()"><input type="checkbox" id="chk-crCamp-all" checked> ALL</div>' +
-      list.map(c => '<label class="cfd-opt"><input type="checkbox" value="' + c.idx + '" checked onchange="crOnCamp(this,' + c.idx + ')">'
-        + '<b style="color:' + (c.mode === 'test' ? '#c8102e' : '#1D2847') + '">' + (c.objective || '') + '</b>'
-        + (c.mode === 'test' ? ' <b style="color:#c8102e">TEST</b>' : '')
-        + ' <span style="color:#aaa">· ' + crShort(crCampName(c.idx)) + '</span></label>').join('');
-    if (crCampaigns.size === 0) list.forEach(c => crCampaigns.add(c.idx));
+    const sig = list.map(c => c.idx).join(',');
+    if (pnlCamp.__crBuiltSig !== sig) {
+      pnlCamp.__crBuiltSig = sig;
+      if (crCampaigns.size === 0) list.forEach(c => crCampaigns.add(c.idx)); // 최초 빌드에서만 기본값 = 전체
+      pnlCamp.innerHTML =
+        '<div class="cfd-all" onclick="crClearCamp()"><input type="checkbox" id="chk-crCamp-all"' + (crCampaigns.size === list.length ? ' checked' : '') + '> ALL</div>' +
+        list.map(c => '<label class="cfd-opt"><input type="checkbox" value="' + c.idx + '"' + (crCampaigns.has(c.idx) ? ' checked' : '') + ' onchange="crOnCamp(this,' + c.idx + ')">'
+          + '<b style="color:' + (c.mode === 'test' ? '#c8102e' : '#1D2847') + '">' + (c.objective || '') + '</b>'
+          + (c.mode === 'test' ? ' <b style="color:#c8102e">TEST</b>' : '')
+          + ' <span style="color:#aaa">· ' + crShort(crCampName(c.idx)) + '</span></label>').join('');
+    }
   }
 
   const pnlChartMin = document.getElementById('cfdPanel-crChartMin');
