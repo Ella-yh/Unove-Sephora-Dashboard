@@ -152,6 +152,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .cr-mtrack{flex:1;height:7px;background:#F2F2F5;border-radius:4px;overflow:hidden;min-width:40px;}
 .cr-mfill{height:100%;border-radius:4px;}
 .cr-mval{font-size:10px;font-variant-numeric:tabular-nums;color:#333;font-weight:600;white-space:nowrap;text-align:right;min-width:52px;}
+#crSegSort{display:grid;grid-template-columns:auto 1fr;gap:4px 9px;align-items:center;}
 .cr-sortgrp{font-size:9px;font-weight:700;color:#9ca3af;text-align:right;letter-spacing:.3px;white-space:nowrap;}
 .cr-sortrow{display:flex;gap:3px;flex-wrap:wrap;}
 .cr-panels{display:flex;gap:14px;flex-wrap:wrap;}
@@ -1083,8 +1084,8 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
       <div class="cfd">
         <span class="cfd-lbl">기간 단위</span>
         <div style="display:flex;gap:3px" id="crSegUnit">
-          <button class="ads-p-btn" data-u="m" onclick="crSetUnit(this,'m')">월</button>
-          <button class="ads-p-btn active" data-u="w" onclick="crSetUnit(this,'w')">주</button>
+          <button class="ads-p-btn active" data-u="m" onclick="crSetUnit(this,'m')">월</button>
+          <button class="ads-p-btn" data-u="w" onclick="crSetUnit(this,'w')">주</button>
           <button class="ads-p-btn" data-u="d" onclick="crSetUnit(this,'d')">일</button>
         </div>
       </div>
@@ -6278,10 +6279,10 @@ function refreshAds() {
 window.ADS_DICT = window.ADS_DICT || { campaign: [], adgroup: [], creative: [] };
 
 let crMedia = new Set(['meta', 'tiktok']);
-let crUnit = 'w'; // m|w|d
+let crUnit = 'm'; // m|w|d — 기본 월(260902 MJ 확정, 최신 데이터의 월이 자동 선택됨)
 let crCur = null;
 let crCmp = null;
-let crNoCmp = false;
+let crNoCmp = true; // 260902 MJ 확정 — 기본 비교 끄기
 let crCampaigns = new Set(); // 선택된 campaign dict index. empty = 전체
 let crMode = 'all'; // all|ongoing|test
 let crChartMin = 500000;   // 그래프 전용 최소 광고비
@@ -6300,9 +6301,9 @@ const CR_MODE_LABEL = { ongoing: '상시', test: 'TEST', loyalty: '로열티' };
 // key, label, group — 22종 (work order §4-1). VTR은 시안 시점 누락분, 신규 추가.
 const CR_SGRP = [
   ['광고', [['spend', '광고비'], ['impr', '노출수'], ['clk', '클릭수'], ['view', '조회수'], ['ctr', 'CTR'], ['vtr', 'VTR'], ['cpc', 'CPC']]],
-  ['전환', [['atc', '장바구니담기'], ['pur', '구매수'], ['atcr', '장바구니 전환율'], ['purr', '구매 전환율']]],
+  ['전환', [['atc', '장바구니담기'], ['pur', '구매수'], ['atcr', '장바구니 전환율'], ['purr', '구매 전환율'], ['roas', 'ROAS']]],
   ['참여', [['lik', '좋아요'], ['likr', '좋아요ER'], ['sav', '저장'], ['savr', '저장ER'], ['shr', '공유'], ['shrr', '공유ER'],
-            ['cmt', '댓글'], ['cmtr', '댓글ER'], ['eng', '인게이지먼트'], ['er', 'ER'], ['roas', 'ROAS']]]
+            ['cmt', '댓글'], ['cmtr', '댓글ER'], ['eng', '전체 참여'], ['er', '전체ER']]]
 ];
 const CR_SORTS = CR_SGRP.flatMap(g => g[1]);
 const CR_COLS = CR_SORTS; // 드릴다운/매체표 22열
