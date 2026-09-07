@@ -599,8 +599,8 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
     <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
     <div class="chart-note" style="line-height:1.7;">
       * CVR = 주문 수량 / Visits TY × 100<br>
-      <span style="color:#d97070;">— —</span> Sales KPI: ₩3,900,000&nbsp;&nbsp;
-      <span style="color:#4bc8a0;">— —</span> ROAS KPI: 263%
+      <span style="color:#d97070;">— —</span> Sales KPI/일: ₩3,900,000&nbsp;&nbsp;
+      <span style="color:#4bc8a0;">— —</span> ROAS KPI/일: 263%
     </div>
   </div>
   <div class="chart-card" style="margin-top:10px;">
@@ -3631,32 +3631,30 @@ function renderChart() {
   });
   const labels = data.map(d => d.label || d.date.slice(5));
   const annotations = buildAnnotations(labels);
-  // Sales(.COM) KPI 기준선 — 390만원 고정
-  annotations['salesBaseline'] = {
-    type: 'line',
-    value: 3900000,
-    scaleID: 'yS',
-    borderColor: '#d97070',
-    borderWidth: 1.5,
-    borderDash: [5, 4],
-    label: { display: false }
-  };
-  // 닷컴 ROAS 기준선 점선 annotation
-  if (showRoas) {
-    const totalCom   = data.reduce((s,d) => s + (d.sales_com||0), 0);
-    const totalSpend = data.reduce((s,d) => s + (d.spend||0), 0);
-    const roasBase   = 263;
-    if (true) {
-      annotations['roasBaseline'] = {
-        type: 'line',
-        value: roasBase,
-        scaleID: 'yR',
-        borderColor: '#4bc8a0',
-        borderWidth: 1.5,
-        borderDash: [5, 4],
-        label: { display: false }
-      };
-    }
+  // Sales(.COM) KPI 기준선 — 390만원 고정(일 목표치), 일 단위에서만 표시
+  if (mainPeriod === 'daily') {
+    annotations['salesBaseline'] = {
+      type: 'line',
+      value: 3900000,
+      scaleID: 'yS',
+      borderColor: '#d97070',
+      borderWidth: 1.5,
+      borderDash: [5, 4],
+      label: { display: false }
+    };
+  }
+  // 닷컴 ROAS 기준선 점선 annotation — 263% 고정(일 목표치), 일 단위에서만 표시
+  if (showRoas && mainPeriod === 'daily') {
+    const roasBase = 263;
+    annotations['roasBaseline'] = {
+      type: 'line',
+      value: roasBase,
+      scaleID: 'yR',
+      borderColor: '#4bc8a0',
+      borderWidth: 1.5,
+      borderDash: [5, 4],
+      label: { display: false }
+    };
   }
   const n = data.length;
   const cfg = {
