@@ -684,6 +684,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
     <div class="fgrid2">
       <div class="fel"><label>구분 <span class="req">*</span></label>
         <select id="evType"><option value="">-- 선택 --</option>
+          <option value="KOL">KOL</option>
           <option value="Email">Email</option><option value="Site">Site</option>
           <option value="Social">Social</option><option value="Mobile Messaging">Mobile Messaging</option>
           <option value="Events">Events</option><option value="Marketing Campaign">Marketing Campaign</option>
@@ -2489,6 +2490,7 @@ let RAW_SALES = [];
 let SALES_BY_DATE = {};
 // ─── EVENT TYPES ──────────────────────────────────────────────────────────────
 const TYPES = {
+  'KOL':                '#1a7a4a',
   'Email':              '#e88080',
   'Site':               '#c8a000',
   'Social':             '#7c5cbf',
@@ -2499,7 +2501,6 @@ const TYPES = {
   'PR':                 '#c06090',
   '오프라인':            '#4a90d9',
   'ETC':                '#333333',
-  'KOL':                '#1a7a4a',
 };
 // ─── PRESET EVENTS (full list) ────────────────────────────────────────────────
 let EVENTS = [
