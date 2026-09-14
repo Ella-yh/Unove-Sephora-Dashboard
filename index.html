@@ -1289,9 +1289,9 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
   <div class="chart-sec-title"><span id="bmSkuTitle"></span>
     <span><button class="btn on" id="btnTop">주요 SKU (B&amp;M 상위 6)</button><button class="btn" id="btnAll" style="margin-left:4px"></button></span></div>
   <div class="scroll"><table id="skuTbl">
-    <colgroup><col style="width:19.5%"><col style="width:6%"><col style="width:4.5%"><col style="width:7.5%"><col style="width:5.5%"><col style="width:6.5%"><col style="width:6.5%"><col style="width:5.5%"><col style="width:6.5%"><col style="width:6.5%"><col style="width:6.5%"><col style="width:9.5%"><col style="width:9.5%"></colgroup>
+    <colgroup><col style="width:18.5%"><col style="width:6%"><col style="width:4.5%"><col style="width:7.5%"><col style="width:5.5%"><col style="width:6.5%"><col style="width:3.5%"><col style="width:3.5%"><col style="width:3%"><col style="width:3%"><col style="width:6.5%"><col style="width:6.5%"><col style="width:6.5%"><col style="width:9.5%"><col style="width:9.5%"></colgroup>
     <thead><tr><th class="l">SKU</th><th class="l">SKU ID</th><th>단가</th><th>In-Stock%</th><th>OOS<br>매장</th>
-      <th>매장<br>재고</th><th>DC<br>(AFS)</th><th>WOS</th><th>.COM<br>OH</th><th>.COM<br>OO</th><th>.COM<br>WOS</th>
+      <th>매장<br>재고</th><th title="구 통합 DC재고 표기 = 실보유+발주 잔량 합계">DC<br>실보유</th><th title="세포라 발주분 중 DC 미입고. 소재·도착일 확인 불가" style="color:#9ca3af">DC<br>발주잔량</th><th title="매장재고+DC실보유 기준(구 Total WOS는 발주 잔량 포함)">WOS<br>지금</th><th title="발주 잔량 도착 시 추가되는 주수 — 현재 보유량 아님" style="color:#9ca3af">오는<br>중</th><th>.COM<br>OH</th><th>.COM<br>OO</th><th>.COM<br>WOS</th>
       <th id="bmThA"></th><th id="bmThB"></th></tr></thead><tbody></tbody></table></div>
   <div class="foot">SKU명 클릭 → 세포라닷컴 상품 페이지 · <b>🌐</b> = 닷컴 전용(B&amp;M 미배치, 음수는 반품 처리분) · <span class="alert">빨간 숫자</span> = In-Stock 80% 미만 또는 WOS 4주 미만</div>
 </div>
@@ -1327,8 +1327,9 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 <div class="sec-hdr"><span class="bar"></span>용어 · 산출 기준</div>
 <div class="gloss">
   <b>In-Stock%</b> 해당 SKU가 배치된 매장 중 재고를 보유한 매장의 비율. 매장별 편차가 매출에 미치는 영향을 반영하기 위해 <b>SKU별 B&amp;M 매출로 가중평균</b>합니다(단순평균은 판매가 적은 SKU가 지표를 왜곡). <b>80% 미만이면 재고 부족 경보</b>입니다.<br>
-  <b>OOS</b> 해당 SKU가 품절된 매장 수. &nbsp;·&nbsp; <b>AFS / DC</b> 세포라 물류센터(Distribution Center, 미국 5개소)에 있는 즉시 출고 가능 재고. AFS가 크면서 In-Stock%가 낮으면 물량 부족이 아니라 <b>세포라 내부 배분 문제</b>입니다.<br>
-  <b>OH / OO</b> OH = 현재 보유 재고(On Hand), OO = 입고 예정 물량(On Order). &nbsp;·&nbsp; <b>WOS</b> 현재 재고가 현재 판매 속도로 버티는 주수(Weeks of Supply). <b>0주 이상 4주 미만이면 보충 신호</b>입니다. 반품 등으로 그 주 매출이나 재고가 음수면 WOS가 음수가 되는데, 이 경우는 계산이 성립하지 않아 판정에서 제외합니다.<br>
+  <b>OOS</b> 해당 SKU가 품절된 매장 수.<br>
+  <b>DC 실보유 / DC 발주 잔량</b> 세포라 물류센터(미국 5개소) 재고를 두 가지로 나눈 값입니다. <b>DC 실보유</b>(On Hand)는 세포라 창고에 실제 입고되어 즉시 출고·매장 배분이 가능한 수량, <b>DC 발주 잔량</b>(On Order)은 세포라가 발주했으나 아직 DC에 들어오지 않은 수량입니다. ⚠️발주 잔량의 소재(자사 창고·운송 중·미생산)와 도착 예정일은 세포라 제공 자료로 확인할 수 없습니다 — 별도 트래킹 체계가 필요합니다. 기존에는 이 두 값이 <b>구분 없이 한 칸의 합계</b>로만 표시되어, 발주 잔량이 포함된 만큼 재고가 실제보다 여유롭게 보였습니다.<br>
+  <b>OH / OO</b> OH = 현재 보유 재고(On Hand), OO = 입고 예정 물량(On Order). &nbsp;·&nbsp; <b>WOS 지금 / 오는 중</b> 「지금」은 매장 재고+DC 실보유가 현재 판매 속도로 버티는 주수, 「오는 중」은 발주 잔량이 도착하면 추가로 버틸 주수이며 <b>현재 보유량이 아닙니다.</b> <b>지금이 0주 이상 4주 미만이면 보충 신호</b>입니다. 세포라 원본 Total WOS는 두 값을 합한 기준이라 더 큽니다. 반품 등으로 매출·재고가 음수면 계산이 성립하지 않아 판정에서 제외합니다.<br>
   <b>SpD</b> 매장당 주간 매출(Sales per Door) = 권역 주간 매출 ÷ 판매 발생 매장 수. 권역별 매장 수가 달라(61~87개) 매출 총액으로는 생산성을 비교할 수 없어 사용합니다.<br>
   <b>활성(판매 발생) 매장</b> 해당 주에 실제 판매가 발생한 매장. 판매 없이 반품만 처리된 매장은 제외합니다. &nbsp;·&nbsp; <b>매장 등급(Tier)</b> 최근 4주 주당 매출 기준 — Tier 1 $200 이상 / Tier 2 $100~200 / Tier 3 $50~100 / Tier 4 $50 미만.<br>
   <b>목표 주당 속도</b> 연 $5M 베이스라인 목표 ÷ 52주 = $96,154. <b>기간 이상치</b>는 경과 주수만큼 균등 달성했을 때의 누계 비율입니다. <b>누계</b>는 세포라 리포트의 YTD(회계연도 누계) 값을 그대로 사용합니다.
@@ -1337,7 +1338,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 <div class="disc">
   데이터 출처 — 매출·재고·매장 실적: 세포라 주간 리포트(Best Seller / Weekly Sales by Location) · 권역 매핑: 세포라 브랜드포털 Net Sales by Door(2026-07-27 추출본, 이후 접근 불가) · 전 구간(W1~) 세포라 원본 기준.<br>
   산출 기준 안내 — In-Stock% 가중평균은 <b>B&amp;M 상시 배치 10개 SKU 기준</b>으로 계산하며, 신규 입고 중인 SKU(현재 Hydracoat Hair Mist, 홀리데이 세트)는 주차 간 비교 일관성을 위해 평균에서 제외합니다. 신규 SKU의 평균 편입 시점에 대한 확정된 기준은 아직 없으며, 기존 운영 방식을 그대로 따르고 있습니다. 이 기준이 변경되면 과거 주차 수치도 함께 재계산이 필요합니다.<br>
-  매장별 실적은 전 주차 세포라 원본(Weekly Sales by Location) 기준이며, 매장번호·판매수량·매장 재고·AFS가 모든 주차에 채워져 있습니다.<br>
+  매장별 실적은 전 주차 세포라 원본(Weekly Sales by Location) 기준이며, 매장번호·판매수량·매장 재고·DC 재고가 모든 주차에 채워져 있습니다.<br>
   누계·달성률·목표 속도는 세포라 주간 리포트의 YTD 값(회계연도 W1 시작 · <span id="bmWksDone"></span>주 경과)을 기준으로 합니다. 모든 차트가 첫 주(W1, 2/1~2/7)부터 전 구간을 표시합니다. W1은 매장 배치 전이라 B&M 매출 $105 · 활성 매장 4곳입니다. 캐나다는 현재 매출이 발생하지 않아 미국 실적만 집계합니다.
 </div>
 </div>
@@ -1611,20 +1612,25 @@ function renderSku(all){
   const rows=all?D.skus:D.skus.filter(s=>!s.co).slice(0,6);
   const dash='<span style="color:#ccc">—</span>';
   BMQ1('#skuTbl tbody').innerHTML=rows.map(s=>{
-    const lowIS=s.isp!=null&&s.isp<80,lowW=s.wos!=null&&s.wos>=0&&s.wos<4,lowCW=s.cw!=null&&s.cw>=0&&s.cw<4;
+    const lowIS=s.isp!=null&&s.isp<80,lowW=s.wosNow!=null&&s.wosNow>=0&&s.wosNow<4,lowCW=s.cw!=null&&s.cw>=0&&s.cw<4;
     return '<tr><td class="l skuname"><a class="sku" href="https://www.sephora.com/search?keyword='+s.id+'" target="_blank" rel="noopener">'+s.n+'</a>'
      +(s.co?' <span style="color:#9ca3af;font-size:9px">🌐</span>':'')+'</td>'
      +'<td class="l" style="color:#9ca3af;font-size:9.5px">'+s.id+'</td>'
      +'<td style="color:#1D2847;font-weight:700">$'+s.p+'</td>'
      +'<td'+(lowIS?' class="alert"':'')+'>'+(s.isp==null?dash:(lowIS?'⚠ ':'')+s.isp.toFixed(1)+'%')+'</td>'
      +'<td'+(lowIS?' class="alert"':'')+'>'+(s.isp==null?dash:s.oos)+'</td>'
-     +'<td>'+(s.si?s.si.toLocaleString():dash)+'</td><td>'+(s.dc?s.dc.toLocaleString():dash)+'</td>'
-     +'<td'+(lowW?' class="alert"':'')+'>'+(s.wos==null?dash:s.wos)+'</td>'
+     +'<td>'+(s.si?s.si.toLocaleString():dash)+'</td>'
+     +'<td title="구 통합 DC재고 합계 '+(s.dc?s.dc.toLocaleString():'—')+'">'+(s.dcOH?s.dcOH.toLocaleString():dash)+'</td>'
+     +'<td style="color:#9ca3af">'+(s.dcOO?s.dcOO.toLocaleString():dash)+'</td>'
+     +'<td'+(lowW?' class="alert"':'')+'>'+(s.wosNow==null?dash:s.wosNow)+'</td>'
+     +'<td style="color:#9ca3af">'+(s.wosIn==null?dash:'('+s.wosIn+')')+'</td>'
      +'<td>'+(s.coh?s.coh.toLocaleString():dash)+'</td><td>'+(s.coo?s.coo.toLocaleString():dash)+'</td>'
      +'<td'+(lowCW?' class="alert"':'')+'>'+(s.cw==null?dash:s.cw)+'</td>'
      +'<td'+(s.bm<0?' style="color:#bbb"':'')+'>'+usd(s.bm)+'</td><td>'+usd(s.com)+'</td></tr>';}).join('')
    +'<tr class="sumrow"><td class="l">합계 '+rows.length+'개</td><td></td><td></td><td></td><td></td>'
-   +'<td>'+rows.reduce((a,b)=>a+b.si,0).toLocaleString()+'</td><td>'+rows.reduce((a,b)=>a+b.dc,0).toLocaleString()+'</td><td></td>'
+   +'<td>'+rows.reduce((a,b)=>a+b.si,0).toLocaleString()+'</td>'
+   +'<td title="구 통합 DC재고 합계 '+rows.reduce((a,b)=>a+b.dc,0).toLocaleString()+'">'+rows.reduce((a,b)=>a+(b.dcOH||0),0).toLocaleString()+'</td>'
+   +'<td style="color:#9ca3af">'+rows.reduce((a,b)=>a+(b.dcOO||0),0).toLocaleString()+'</td><td></td><td></td>'
    +'<td>'+rows.reduce((a,b)=>a+b.coh,0).toLocaleString()+'</td><td>'+rows.reduce((a,b)=>a+b.coo,0).toLocaleString()+'</td><td></td>'
    +'<td>'+usd(rows.reduce((a,b)=>a+b.bm,0))+'</td><td>'+usd(rows.reduce((a,b)=>a+b.com,0))+'</td></tr>';}
 renderSku(false);
@@ -1634,12 +1640,40 @@ BMQ('btnAll').onclick=function(){this.classList.add('on');BMQ('btnTop').classLis
 /* 이상 징후 */
 (function(){
   const sig=[];
-  D.skus.forEach(s=>{if(s.isp!=null&&s.isp<80)sig.push({g:'crit',t:'재고 부족 경보 — '+s.n,
-    d:'In-Stock '+s.isp.toFixed(1)+'% (경보선 80% 하회) · 품절 '+s.oos+'개 매장 · 물류센터 재고(AFS) '+s.dc.toLocaleString()+'개',
-    a:s.dc>s.oos*3?'물류센터에 재고가 있어 세포라 내부 재배분 요청 대상':'물류센터 재고도 부족 — 입고 일정 확인 필요',v:s.isp});});
+  D.skus.forEach(s=>{
+    if(s.isp!=null&&s.isp<80){
+      const perStore=s.oos>0?(s.dcOH||0)/s.oos:Infinity;
+      if(perStore>=1){
+        sig.push({g:'crit',t:'세포라 내부 배분 지연 — '+s.n,
+          d:'In-Stock '+s.isp.toFixed(1)+'% (경보선 80% 하회) · 품절 '+s.oos+'개 매장 · DC 실보유 '+(s.dcOH||0).toLocaleString()+'개 (매장당 '+perStore.toFixed(2)+'개)',
+          a:'세포라에 적극적인 매장 배분 요청',v:s.isp});
+      }else{
+        sig.push({g:'crit',t:'세포라 DC 미입고 — '+s.n,
+          d:'In-Stock '+s.isp.toFixed(1)+'% (경보선 80% 하회) · 품절 '+s.oos+'개 매장 · DC 실보유 '+(s.dcOH||0).toLocaleString()+'개 (매장당 '+perStore.toFixed(2)+'개) · 발주 잔량 '+(s.dcOO||0).toLocaleString()+'개',
+          a:'발주 잔량의 소재·도착 예정일은 세포라 제공 자료로 확인 불가 — 별도 트래킹 체계 필요',v:s.isp});
+      }
+    }else if(s.isp!=null&&s.wosDC!=null&&s.wosDC>=0&&s.wosDC<4){
+      sig.push({g:'warn',t:'미리 경보 — '+s.n,
+        d:'In-Stock '+s.isp.toFixed(1)+'% (정상) · 세포라 창고 여유 '+s.wosDC+'주 (4주 미만)',
+        a:'아직 결품 아님 — 차주 보충 우선순위',v:100+s.wosDC});
+    }
+  });
   D.skus.forEach(s=>{if(s.wos!=null&&s.wos>=0&&s.wos<4)sig.push({g:'warn',t:'B&M 보충 신호 — '+s.n,d:'WOS '+s.wos+'주 (4주 미만)',a:'차주 보충 우선순위',v:100+s.wos});});
   D.skus.forEach(s=>{if(s.cw!=null&&s.cw>=0&&s.cw<4)sig.push({g:'warn',t:'.COM 보충 신호 — '+s.n,
     d:'.COM WOS '+s.cw+'주 (4주 미만) · 현재고 '+s.coh.toLocaleString()+' / 입고예정 '+s.coo.toLocaleString(),a:'닷컴 보충 계획 점검',v:200+s.cw});});
+  D.skus.forEach(s=>{
+    if(!s.co||s.cwNow==null||s.cwNow<0)return;
+    const DOTCOM_ALERT=2, DOTCOM_WARN=4;   // 🛑 파트장님 확인 대기 — 숫자만 조정
+    if(s.cwNow<DOTCOM_ALERT){
+      sig.push({g:'crit',t:'닷컴 경보 — '+s.n,
+        d:'닷컴 실보유 주수 '+s.cwNow+'주 ('+DOTCOM_ALERT+'주 미만) · 현재고 '+s.coh.toLocaleString()+' / 발주 잔량 '+s.coo.toLocaleString(),
+        a:'닷컴 재고 소진 임박',v:400+s.cwNow});
+    }else if(s.cwNow<DOTCOM_WARN){
+      sig.push({g:'warn',t:'닷컴 주의 — '+s.n,
+        d:'닷컴 실보유 주수 '+s.cwNow+'주 ('+DOTCOM_ALERT+'~'+DOTCOM_WARN+'주) · 현재고 '+s.coh.toLocaleString()+' / 발주 잔량 '+s.coo.toLocaleString(),
+        a:'닷컴 보충 계획 점검',v:410+s.cwNow});
+    }
+  });
   const low=D.stores.filter(s=>s[8]!=null&&s[8]>=0&&s[8]<4);
   if(low.length)sig.push({g:'warn',t:'매장 재고 소진 — '+low.length+'개 매장',
     d:'WOS 4주 미만. 상위: '+low.slice(0,4).map(s=>s[0]+'('+s[8]+'주)').join(' · '),a:'매장 보충 요청 대상',v:300});
