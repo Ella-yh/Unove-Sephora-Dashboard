@@ -3733,7 +3733,9 @@ function renderChart() {
         _salesCfg.filter(c => selSalesTypes.has(c.type)).forEach(c => {
           ds.push({
             label: c.label,
-            data: data.map(d => d[c.key]||0),
+            // 🛑 SALES_BY_DATE 는 세포라 원본 USD 다. yS 축 라벨·툴팁·KPI 기준선(₩3,900,000)이
+            //    모두 원화이므로 표시 단계에서 환산한다. ROAS 계산은 USD 원값을 그대로 쓴다.
+            data: data.map(d => (d[c.key]||0) * USD_TO_KRW),
             type: 'bar',
             backgroundColor: makeGrad('mainChart',c.color,0.85,0.45),
             hoverBackgroundColor: makeGrad('mainChart',c.color,0.95,0.6),
@@ -3945,9 +3947,9 @@ function mtblPct(v, isRatio) {
 }
 const MAIN_TABLE_METRICS = [
   {label:'Visits',       fmt:mtblCount, get:function(d){ return d.visits; }},
-  {label:'Sales .COM',   fmt:mtblMoney, get:function(d){ return d.sales_com; }},
-  {label:'Sales B&M',    fmt:mtblMoney, get:function(d){ return d.sales_bam; }},
-  {label:'Sales TTL',    fmt:mtblMoney, get:function(d){ return d.sales; }},
+  {label:'Sales .COM',   fmt:mtblMoney, get:function(d){ return d.sales_com == null ? null : d.sales_com * USD_TO_KRW; }},
+  {label:'Sales B&M',    fmt:mtblMoney, get:function(d){ return d.sales_bam == null ? null : d.sales_bam * USD_TO_KRW; }},
+  {label:'Sales TTL',    fmt:mtblMoney, get:function(d){ return d.sales == null ? null : d.sales * USD_TO_KRW; }},
   {label:'CVR',          fmt:function(v){ return mtblPct(v, false); }, get:function(d){ return d.cvr; }},
   {label:'페이드 비용',   fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? d.spend : costVal(mainPeriod, '퍼포먼스 비용', d.date); }},
   {label:'채널마케팅 비용', fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? null : costVal(mainPeriod, channelLabel(mainPeriod), d.date); }},
