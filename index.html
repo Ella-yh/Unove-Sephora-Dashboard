@@ -3467,13 +3467,14 @@ function renderKPI() {
     return { badge, cls, vs: 'vs ' + vsVal + '  ' + cmpLbl };
   }
   // SALES: 백만원(M) 단위 표기
-  const fmtKRW  = v => '₩' + (Math.abs(v) / 1000000).toFixed(1) + '백만';
-  const salesVal = (cur.sales / 1000000).toFixed(1); // 숫자만: 1320.9
+  // 🛑 cur.sales/com/bam 은 SALES_BY_DATE 에서 온 세포라 원본 USD 다. 카드 라벨이 「단위:백만 원」이므로 환산한다.
+  const _mKRW = v => (v * USD_TO_KRW / 1000000);
+  const salesVal = _mKRW(cur.sales).toFixed(1); // 숫자만: 1320.9
   const comPct  = cur.sales > 0 ? (cur.com / cur.sales * 100).toFixed(1) : '0.0';
   const bamPct  = cur.sales > 0 ? (cur.bam / cur.sales * 100).toFixed(1) : '0.0';
   const salesBreakdown = '<div style="font-size:9px;color:#aaa;margin-top:6px;line-height:1.8;display:flex;gap:12px;">'
-    + '<span><span style="color:#888;font-weight:700;">.COM</span> ' + (cur.com/1000000).toFixed(1) + ' <span style="color:#ccc;">(' + comPct + '%)</span></span>'
-    + '<span><span style="color:#888;font-weight:700;">B&M</span> ' + (cur.bam/1000000).toFixed(1) + ' <span style="color:#ccc;">(' + bamPct + '%)</span></span>'
+    + '<span><span style="color:#888;font-weight:700;">.COM</span> ' + _mKRW(cur.com).toFixed(1) + ' <span style="color:#ccc;">(' + comPct + '%)</span></span>'
+    + '<span><span style="color:#888;font-weight:700;">B&M</span> ' + _mKRW(cur.bam).toFixed(1) + ' <span style="color:#ccc;">(' + bamPct + '%)</span></span>'
     + '</div>';
   // ROAS: 필터된 날짜를 월/주 버킷으로 환산해 DEMAND.cost에서 광고비 합산 (버킷 단위 = 주 선택 시 주, 아니면 월)
   // 분모(광고비)가 0인 버킷(=월 마감 전이라 [비용] 미기재)은 분자·분모 양쪽에서 제외 — 매출만 있고 광고비가 없어 ROAS가 부풀려지는 것 방지
@@ -3495,7 +3496,9 @@ function renderKPI() {
     const agg = sumData(kept);
     let denom = 0;
     costLabels.forEach(function(l) { denom += sumCost(roasP, l, keys); });
-    return { denom: denom, sales: agg.sales, com: agg.com, keys: keys };
+    // 🛑 분자는 세포라 원본 USD, 분모(DEMAND.cost = [비용] 시트)는 원화다.
+    //    환산하지 않으면 ROAS 가 1,500배 작게 나와 0% 로 표시된다.
+    return { denom: denom, sales: agg.sales * USD_TO_KRW, com: agg.com * USD_TO_KRW, keys: keys };
   }
   const RT = roasScope(data, bucketKeys, ['광고비 총계']);
   const RC = roasScope(data, bucketKeys, ['퍼포먼스 비용', '온사이트 비용']);
@@ -3526,7 +3529,7 @@ function renderKPI() {
   const prevRoasTotal = (PT.denom > 0 && prev) ? PT.sales / PT.denom : null;
   const prevRoasCom   = (PC.denom > 0 && prev) ? PC.com   / PC.denom : null;
   const _dV  = dHtml(cur.visits,  prev?.visits,  v => Math.abs(Math.round(v)).toLocaleString(), v => Math.round(v).toLocaleString());
-  const _dS  = dHtml(cur.sales,   prev?.sales,   v => (Math.abs(v)/1000000).toFixed(1)+'M',     v => (v/1000000).toFixed(1)+'M');
+  const _dS  = dHtml(cur.sales,   prev?.sales,   v => Math.abs(_mKRW(v)).toFixed(1)+'M',        v => _mKRW(v).toFixed(1)+'M');
   const _dC  = dHtml(cur.cvr,     prev?.cvr,     v => Math.abs(v).toFixed(2)+'%',               v => v.toFixed(2)+'%');
   const _dRT = (roasTotal !== null && prevRoasTotal !== null)
     ? dHtml(roasTotal*100, prevRoasTotal*100, v => Math.abs(v).toFixed(1)+'%', v => v.toFixed(1)+'%') : null;
@@ -3636,7 +3639,7 @@ function getMainChartData() {
       var sb = SALES_BY_DATE[d.date] || {};
       var spend = ADS_RAW.filter(function(r){return r.date===d.date;}).reduce(function(s,r){return s+r.spend;},0);
       // 일 단위: 광고비 총계(월/주 단위 시트값)가 없어 전체 ROAS는 계산 불가 → null
-      return Object.assign({},d,{label:d.date.slice(5),sales_com:sb.com||0,sales_bam:sb.bam||0,spend:spend>0?spend:null,roas_com:roasSafe_(sb.com||0, spend),roas_total:null});
+      return Object.assign({},d,{label:d.date.slice(5),sales_com:sb.com||0,sales_bam:sb.bam||0,spend:spend>0?spend:null,roas_com:roasSafe_((sb.com||0)*USD_TO_KRW, spend),roas_total:null});
     });
   }
   var filteredDateSet = new Set(raw.map(function(d){return d.date;}));
@@ -3663,7 +3666,7 @@ function getMainChartData() {
       // ROAS는 상단 KPI와 동일 기준(DEMAND.cost 버킷 합산)으로 통일 — ADS_RAW 단독 분모(구버전)는 쓰지 않는다
       var totalCost = costVal(mainPeriod, '광고비 총계', k);
       var comCost = costVal(mainPeriod, '퍼포먼스 비용', k) + costVal(mainPeriod, '온사이트 비용', k);
-      return {date:k,label:v.label,visits:v.visits,orders:v.orders,sales:v.sales_total,sales_com:v.sales_com,sales_bam:v.sales_bam,cvr:v.visits>0?v.orders/v.visits*100:0,spend:v.spend>0?v.spend:null,roas_com:roasSafe_(v.sales_com, comCost),roas_total:roasSafe_(v.sales_total, totalCost)};
+      return {date:k,label:v.label,visits:v.visits,orders:v.orders,sales:v.sales_total,sales_com:v.sales_com,sales_bam:v.sales_bam,cvr:v.visits>0?v.orders/v.visits*100:0,spend:v.spend>0?v.spend:null,roas_com:roasSafe_(v.sales_com*USD_TO_KRW, comCost),roas_total:roasSafe_(v.sales_total*USD_TO_KRW, totalCost)};
     });
 }
 // ─── CHART ────────────────────────────────────────────────────────────────────
