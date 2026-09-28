@@ -598,9 +598,9 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
     <div id="markerZone" class="marker-zone hidden"></div>
     <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
     <div class="chart-note" style="line-height:1.7;">
-      * CVR = 주문 수량 / Visits TY × 100<br>
-      <span style="color:#d97070;">— —</span> Sales KPI/일: ₩3,900,000&nbsp;&nbsp;
-      <span style="color:#4bc8a0;">— —</span> ROAS KPI/일: 263%
+      * CVR = 주문 수량 / Visits TY × 100<span id="kpiNoteWrap"><br>
+      <span style="color:#d97070;">— —</span> Sales KPI/일: ₩3,900,000&nbsp;&nbsp;<span id="kpiNoteRoas">
+      <span style="color:#4bc8a0;">— —</span> ROAS KPI/일: 263%</span></span>
       <br>판매 없이 반품만 발생한 날은 ROAS 계산이 성립하지 않아 점을 표시하지 않습니다.
     </div>
   </div>
@@ -3678,6 +3678,12 @@ function renderChart() {
     if (b) { b.disabled = (mainPeriod === 'daily'); b.title = b.disabled ? '월/주 단위에서만 표시됩니다' : ''; }
   });
   const labels = data.map(d => d.label || d.date.slice(5));
+  // KPI 기준선 각주 — 선이 그려지는 조건과 똑같이 맞춘다. 선이 없으면 범례도 없다.
+  // Sales KPI/일(₩3,900,000)·ROAS KPI/일(263%) 은 둘 다 「닷컴 일 목표」라 월·주에는 뜻이 없다.
+  const _noteWrap = document.getElementById('kpiNoteWrap');
+  const _noteRoas = document.getElementById('kpiNoteRoas');
+  if (_noteWrap) _noteWrap.style.display = (mainPeriod === 'daily') ? '' : 'none';
+  if (_noteRoas) _noteRoas.style.display = (showRoas && mainPeriod === 'daily') ? '' : 'none';
   const annotations = buildAnnotations(labels);
   // Sales(.COM) KPI 기준선 — 390만원 고정(일 목표치), 일 단위에서만 표시
   if (mainPeriod === 'daily') {
