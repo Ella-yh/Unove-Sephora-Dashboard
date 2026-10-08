@@ -4186,7 +4186,7 @@ function ctyMainKpi_(items, data, prevDates, cmpLbl) {
   var notes = [];
   if (ca.used) notes.push('캐나다 월간 자료: ' + ca.used.join('·'));
   if (ca.short) notes.push('캐나다는 ' + fmtWkLabel(getWeekKey(ca.lastWe)).split('-')[1] + ' 마감 주까지 반영');
-  if (CTY === 'ALL' && monthMode) notes.push('미국은 일별 실매출의 달력 월 합계(세포라 월간 원본과 차이 0.4% 이내), 캐나다는 세포라 월간 원본입니다');
+  if (CTY === 'ALL' && monthMode) notes.push('미국은 일별 자료를 달력 월로 합산한 값이고, 캐나다는 세포라 월간 자료 합계입니다. 집계 단위가 달라 단순 비교에 주의하십시오.');
   s.excl = notes.join('<br>') || null;
 }
 // ② 통합 성과 그래프 — renderChart 가 설정(cfg)을 만든 직후, 그리기 전에 호출
