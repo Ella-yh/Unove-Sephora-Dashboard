@@ -314,6 +314,9 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 /* 쿼리 현황 접기/펼치기 렉 (2026-10-08 계측) — KOL 표(1,051행·요소 약 1.5만 개)가 화면 밖일 때 그리지 않는다.
    접기 130~233ms → 41~54ms. 30000px = 전체 목록 실측 높이(29,783px) — 처음 그리기 전 스크롤 길이를 맞추기 위한 자리값 */
 .kol-tbl-wrap{content-visibility:auto;contain-intrinsic-size:auto 30000px;}
+/* 12지표 표(일 보기 257열·4,644칸)도 화면 밖일 때 그리지 않는다 (2026-10-08). .ads-tbl-wrap 은 표 7개가 함께 쓰므로 이 표의 감싸는 칸만 고른다.
+   480px = 일 보기 실측 높이(주 423px · 일 479px). 이 표는 기본 화면에서 일부가 보이는 위치(800px)라 효과는 쿼리를 펼쳐 표가 화면 밖으로 밀릴 때 난다 */
+.ads-tbl-wrap:has(> #mainDataTable){content-visibility:auto;contain-intrinsic-size:auto 480px;}
 .kol-tbl{width:100%;border-collapse:collapse;font-size:11px;}
 .kol-tbl th{padding:8px 10px;background:#F5F5F8;border-bottom:1px solid #E0E0E4;text-align:right;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;white-space:nowrap;cursor:pointer;user-select:none;}
 .kol-tbl th.left{text-align:left;}
