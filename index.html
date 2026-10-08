@@ -1313,9 +1313,9 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
   <div class="chart-sec-title"><span><span id="bmSkuTitle"></span> <span class="cty-badge us" title="국가 칩과 무관하게 미국 값입니다. 캐나다 자료는 있으나 이번 국가 분리 범위가 아닙니다.">미국 기준</span></span>
     <span><button class="btn on" id="btnTop">주요 SKU (B&amp;M 상위 6)</button><button class="btn" id="btnAll" style="margin-left:4px"></button></span></div>
   <div class="scroll"><table id="skuTbl">
-    <colgroup><col style="width:13.5%"><col style="width:5.5%"><col style="width:3.5%"><col style="width:6%"><col style="width:5%"><col style="width:5.5%"><col style="width:6%"><col style="width:6.5%"><col style="width:5.5%"><col style="width:5.5%"><col style="width:5.5%"><col style="width:5%"><col style="width:5.5%"><col style="width:5.5%"><col style="width:8%"><col style="width:8%"></colgroup>
+    <colgroup><col style="width:13.5%"><col style="width:5.5%"><col style="width:3.5%"><col style="width:6%"><col style="width:5%"><col style="width:5.5%"><col style="width:6%"><col style="width:6.5%"><col style="width:5.5%"><col style="width:5.5%"><col style="width:5.5%"><col style="width:5%"><col style="width:5.5%"><col style="width:4.5%"><col style="width:4.5%"><col style="width:5.5%"><col style="width:8%"><col style="width:8%"></colgroup>
     <thead><tr><th class="l">SKU</th><th class="l">SKU ID</th><th>단가</th><th>In-Stock%</th><th title="세포라 원본 STORES OUT W/IT · RAW 열 이름 품절 매장수">품절<br>매장</th>
-      <th>매장<br>재고</th><th title="세포라 원본 DC OH · RAW 열 이름 물류센터실보유 — 물류센터에 실제 입고된 수량">물류센터<br>실보유</th><th title="세포라 원본 DC OO · RAW 열 이름 물류센터발주잔량 — 발주했으나 물류센터 미입고. 소재·도착일 확인 불가" style="color:#9ca3af;white-space:nowrap">물류센터<br>발주잔량</th><th title="매장재고 + 물류센터실보유 (발주잔량 제외) — 화면 계산값이며 RAW에 대응 열이 없다" style="white-space:nowrap">실보유<br>합계</th><th title="(매장재고 + 물류센터실보유) ÷ 4주평균수량_B&amp;M. 세포라 원본 Total WOS는 발주잔량을 포함해 더 크다">소진주수<br>실보유</th><th title="물류센터발주잔량이 도착하면 추가되는 주수 — 현재 보유량 아님" style="color:#9ca3af">소진주수<br>발주분</th><th title="세포라 원본 .COM OH · RAW 열 이름 .COM_OH">닷컴<br>실보유</th><th title="세포라 원본 .COM OO · RAW 열 이름 .COM_OO">닷컴<br>발주잔량</th><th title="세포라 원본 .COM WOS · RAW 열 이름 닷컴재고소진주수">닷컴<br>소진주수</th>
+      <th>매장<br>재고</th><th title="세포라 원본 DC OH · RAW 열 이름 물류센터실보유 — 물류센터에 실제 입고된 수량">물류센터<br>실보유</th><th title="세포라 원본 DC OO · RAW 열 이름 물류센터발주잔량 — 발주했으나 물류센터 미입고. 소재·도착일 확인 불가" style="color:#9ca3af;white-space:nowrap">물류센터<br>발주잔량</th><th title="매장재고 + 물류센터실보유 (발주잔량 제외) — 화면 계산값이며 RAW에 대응 열이 없다" style="white-space:nowrap">실보유<br>합계</th><th title="(매장재고 + 물류센터실보유) ÷ 4주평균수량_B&amp;M. 세포라 원본 Total WOS는 발주잔량을 포함해 더 크다">소진주수<br>실보유</th><th title="물류센터발주잔량이 도착하면 추가되는 주수 — 현재 보유량 아님" style="color:#9ca3af">소진주수<br>발주분</th><th title="세포라 원본 .COM OH · RAW 열 이름 .COM_OH">닷컴<br>실보유</th><th title="세포라 원본 .COM OO · RAW 열 이름 .COM_OO">닷컴<br>발주잔량</th><th title=".COM_OH ÷ 4주평균수량_닷컴 — 지금 가진 닷컴 재고로 몇 주 버티는가 (발주잔량 제외). 2주 미만 = 닷컴 경보">닷컴<br>소진주수 실보유</th><th title=".COM_OO ÷ 4주평균수량_닷컴 — 닷컴 발주잔량이 도착하면 추가되는 주수. 현재 보유량 아님" style="color:#9ca3af">닷컴<br>소진주수 발주분</th><th title="세포라 원본 .COM WOS · RAW 열 이름 닷컴재고소진주수">닷컴<br>소진주수</th>
       <th id="bmThA"></th><th id="bmThB"></th></tr></thead><tbody></tbody></table></div>
   <div class="foot">SKU명 클릭 → 세포라닷컴 상품 페이지 · <b>🌐</b> = 닷컴 전용(B&amp;M 미배치, 음수는 반품 처리분) · <span class="alert">빨간 숫자</span> = In-Stock 80% 미만 또는 세포라 창고 여유 4주 미만</div>
 </div>
@@ -1654,6 +1654,8 @@ function renderSku(all){
      +'<td'+(lowW?' class="alert"':'')+'>'+(s.wosNow==null?dash:s.wosNow)+'</td>'
      +'<td style="color:#9ca3af">'+(s.wosIn==null?dash:'('+s.wosIn+')')+'</td>'
      +'<td>'+(s.coh?s.coh.toLocaleString():dash)+'</td><td>'+(s.coo?s.coo.toLocaleString():dash)+'</td>'
+     +'<td'+(s.cwNow!=null&&s.cwNow>=0&&s.cwNow<2?' class="alert"':'')+'>'+(s.cwNow==null?dash:s.cwNow)+'</td>'   // 국가 분리 5차 — 닷컴 소진주수 실보유 = cwNow · 2주 미만 = 닷컴 경보(이상 징후와 같은 기준) · 분모 0 이면 Code.gs 가 null → 「—」(B&M wosNow 와 같은 처리)
+     +'<td style="color:#9ca3af">'+(s.cwIn==null?dash:'('+s.cwIn+')')+'</td>'   // 닷컴 소진주수 발주분 = cwIn
      +'<td'+(lowCW?' class="alert"':'')+'>'+(s.cw==null?dash:s.cw)+'</td>'
      +'<td'+(s.bm<0?' style="color:#bbb"':'')+'>'+usd(s.bm)+'</td><td>'+usd(s.com)+'</td></tr>';}).join('')
    +'<tr class="sumrow"><td class="l">합계 '+rows.length+'개</td><td></td><td></td><td></td><td></td>'
@@ -1661,7 +1663,7 @@ function renderSku(all){
    +'<td title="구 통합 물류센터합계 '+rows.reduce((a,b)=>a+b.dc,0).toLocaleString()+'">'+rows.reduce((a,b)=>a+(b.dcOH||0),0).toLocaleString()+'</td>'
    +'<td style="color:#9ca3af">'+rows.reduce((a,b)=>a+(b.dcOO||0),0).toLocaleString()+'</td>'
    +'<td>'+rows.reduce((a,b)=>a+(b.si||0)+(b.dcOH||0),0).toLocaleString()+'</td><td></td><td></td>'
-   +'<td>'+rows.reduce((a,b)=>a+b.coh,0).toLocaleString()+'</td><td>'+rows.reduce((a,b)=>a+b.coo,0).toLocaleString()+'</td><td></td>'
+   +'<td>'+rows.reduce((a,b)=>a+b.coh,0).toLocaleString()+'</td><td>'+rows.reduce((a,b)=>a+b.coo,0).toLocaleString()+'</td><td></td><td></td><td></td>'
    +'<td>'+usd(rows.reduce((a,b)=>a+b.bm,0))+'</td><td>'+usd(rows.reduce((a,b)=>a+b.com,0))+'</td></tr>';}
 renderSku(false);
 BMQ('btnTop').onclick=function(){this.classList.add('on');BMQ('btnAll').classList.remove('on');renderSku(false);};
