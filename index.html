@@ -105,6 +105,11 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .ads-metric-tbl th:first-child,.ads-metric-tbl td.ads-metric-lbl{text-align:left;position:sticky;left:0;background:#fff;font-weight:600;color:#1D2847;z-index:1;}
 .ads-metric-tbl thead th{color:#9ca3af;font-weight:700;border-bottom:2px solid #E0E0E4;font-size:9px;letter-spacing:.5px;text-transform:uppercase;}
 .ads-metric-tbl tbody tr:hover td{background:#F8F8FB;}
+/* 국가 분리 (2026-10-08) — 미국 기준 배지 · 캐나다 행 */
+.cty-badge{display:inline-block;font-size:9.5px;font-weight:600;color:#1D4ED8;background:#EEF2FF;border:1px solid #C7D2FE;border-radius:10px;padding:1px 8px;letter-spacing:0;white-space:nowrap;vertical-align:middle;}
+.ads-metric-tbl .ca-lbl{color:#7B3F1D;}
+.ads-metric-tbl .ca-na{color:#7b8194;cursor:help;}
+.ads-metric-tbl .ca-why{display:block;font-size:9px;font-weight:400;color:#7b8194;}
 /* ══ 소재별 성과 하위탭 — 260901 신설 (전부 신규 클래스, 기존 정의 무수정) ══ */
 .subtabs{background:#fff;border-bottom:.5px solid #E8E8EC;padding:0 28px;display:flex;gap:2px;}
 .subtab{padding:11px 16px 9px;font-size:12px;color:#9ca3af;cursor:pointer;border-bottom:2px solid transparent;font-weight:500;}
@@ -500,7 +505,10 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 <!-- ── MAIN AREA ── -->
 <div class="main-area">
   <div class="top-bar">
+    <div style="display:flex;align-items:center;gap:8px;">
     <span class="page-title" id="pageTitle">Commerce Overview</span>
+    <span class="cty-badge" id="usOnlyBadge" style="display:none" title="이 탭의 숫자는 전부 미국 자료입니다. 캐나다 유입·광고 자료는 이 탭에 들어오지 않습니다.">미국 기준 · 캐나다 자료 없음</span>
+    </div>
     <div style="font-size:9px;color:#bbb;letter-spacing:0.3px;">관리자 : 데이터마케팅팀 이윤희</div>
   </div>
   <div class="main-scroll">
@@ -526,7 +534,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
     </div>
   </div>
 </div>
-<style id="dmdStyle">html{overflow-y:scroll;}#demandSec .dmd-chip{font-size:11px;padding:2px 9px;border:1px solid #ccc;border-radius:12px;background:#fff;color:#666;cursor:pointer;margin-right:3px;}#demandSec .dmd-chip.on{background:#33447a;color:#fff;border-color:#33447a;}#demandSec .dmd-ddbtn{font-size:12px;padding:4px 10px;border:1px solid #bbb;border-radius:6px;background:#fff;cursor:pointer;}#demandSec .dmd-ddbtn.muted{color:#aaa;border-color:#ddd;background:#fafafa;}#demandSec .dmd-ddbtn:disabled{cursor:not-allowed;opacity:0.55;}#demandSec .dmd-ddpanel{display:none;position:absolute;top:110%;left:0;z-index:50;background:#fff;border:1px solid #ccc;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.12);padding:6px 10px;min-width:150px;max-height:260px;overflow:auto;}#demandSec .dmd-ddpanel.open{display:block;}#demandSec .dmd-op{display:block;font-size:12px;padding:2px 0;white-space:nowrap;cursor:pointer;}#demandSec .dmd-ax{font-size:11px;color:#666;}#demandSec .dmd-ax input{width:50px;font-size:11px;padding:1px 3px;margin:0 1px;border:1px solid #ccc;border-radius:4px;}#demandSec .dmd-reset{font-size:11px;padding:3px 8px;border:1px solid #bbb;border-radius:6px;background:#fff;cursor:pointer;}#demandSec .dmd-seg{display:inline-flex;border:1px solid #bbb;border-radius:6px;overflow:hidden;}#demandSec .dmd-seg button{font-size:11px;padding:3px 9px;border:0;background:#fff;color:#666;cursor:pointer;border-right:1px solid #eee;}#demandSec .dmd-seg button:last-child{border-right:0;}#demandSec .dmd-seg button.on{background:#2f6fb0;color:#fff;}</style><div class="chart-sec" id="demandSec"><div style="display:flex;justify-content:flex-start;align-items:center;margin-bottom:8px;gap:8px;"><div class="sec-hdr" id="dmdToggle" style="margin-bottom:0;cursor:pointer;user-select:none;"><span id="dmdCaret" style="display:inline-block;font-size:11px;">▸</span> 쿼리 현황</div></div><div id="dmdBody" style="display:none;"><div class="chart-card"><div class="dmd-ctl" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-bottom:10px;"><span class="dmd-seg"><button data-per="monthly">월</button><button data-per="weekly" class="on">주</button><button data-per="daily" title="일별 쿼리 미제공으로 지원되지 않습니다." style="color:#c4c4c4;cursor:not-allowed;">일</button></span><span style="display:inline-flex;gap:6px;"><div class="dmd-dd" style="position:relative;"><button class="dmd-ddbtn" id="dmdMoBtn">기간(월) ▾</button><div class="dmd-ddpanel" id="dmdMoPanel"></div></div><div class="dmd-dd" style="position:relative;"><button class="dmd-ddbtn" id="dmdWkBtn">기간(주) ▾</button><div class="dmd-ddpanel" id="dmdWkPanel"></div></div></span><span style="width:1px;height:16px;background:#ddd;"></span><div class="dmd-dd" style="position:relative;"><button class="dmd-ddbtn" id="dmdGBtn">구글 쿼리 ▾</button><div class="dmd-ddpanel" id="dmdGPanel"><label class="dmd-op"><input type="checkbox" data-p="g" data-k="합계" checked> 합계</label><label class="dmd-op"><input type="checkbox" data-p="g" data-k="unove"> unove</label><label class="dmd-op"><input type="checkbox" data-p="g" data-k="unove hair"> hair</label></div></div><div class="dmd-dd" style="position:relative;"><button class="dmd-ddbtn muted" id="dmdAzBtn">아마존 쿼리 ▾</button><div class="dmd-ddpanel" id="dmdAzPanel"><label class="dmd-op"><input type="checkbox" data-p="a" data-k="unove"> unove</label><label class="dmd-op"><input type="checkbox" data-p="a" data-k="unove hair treatment"> hair treatment</label><label class="dmd-op"><input type="checkbox" data-p="a" data-k="unove shampoo"> shampoo</label><label class="dmd-op"><input type="checkbox" data-p="a" data-k="unove deep damage treatment"> deep damage treatment</label><label class="dmd-op"><input type="checkbox" data-p="a" data-k="unove silk oil essence"> silk oil essence</label><label class="dmd-op"><input type="checkbox" data-p="a" data-k="합계"> 합계</label></div></div><span style="width:1px;height:16px;background:#ddd;"></span><span style="font-size:11px;color:#888;">겹쳐보기</span><span id="dmdOv"><button class="dmd-chip on" data-k="유입">유입</button><button class="dmd-chip on" data-k="매출">매출</button><button class="dmd-chip" data-k="KOL 노출">KOL 노출</button><button class="dmd-chip" data-k="광고 노출">광고 노출</button><button class="dmd-chip" data-k="노출 합계">노출 합계</button></span><span style="width:1px;height:16px;background:#ddd;"></span><span style="font-size:11px;color:#888;">축범위</span><span class="dmd-ax">쿼리 <input type="number" id="axQmin" placeholder="min">~<input type="number" id="axQmax" placeholder="max"></span><span class="dmd-ax">유입 <input type="number" id="axVmin" placeholder="min">~<input type="number" id="axVmax" placeholder="max"></span><span class="dmd-ax">매출 <input type="number" id="axRmin" placeholder="min">~<input type="number" id="axRmax" placeholder="max"></span><span class="dmd-ax">노출 <input type="number" id="axImin" placeholder="min">~<input type="number" id="axImax" placeholder="max"></span><button class="dmd-reset" id="dmdReset">자동</button></div><div class="chart-wrap" style="position:relative;height:300px;"><canvas id="demandChart"></canvas></div></div><div class="chart-card" style="margin-top:10px;"><div class="chart-sec-sub" style="margin-bottom:8px;">쿼리 현황 지표 확인용 표 (현재 필터·주기 기준)</div><div class="ads-tbl-wrap"><table class="ads-metric-tbl" id="demandDataTable"></table></div><div class="chart-note" style="text-align:left;color:#999;margin-top:6px;">단위: K(천) 이상 축약, 매출은 K(천)/M(백만) 축약. 구글·아마존 쿼리, KOL·광고 노출·노출 합계는 일 모드에서 데이터가 없어 '-'로 표시됩니다.</div></div></div></div>
+<style id="dmdStyle">html{overflow-y:scroll;}#demandSec .dmd-chip{font-size:11px;padding:2px 9px;border:1px solid #ccc;border-radius:12px;background:#fff;color:#666;cursor:pointer;margin-right:3px;}#demandSec .dmd-chip.on{background:#33447a;color:#fff;border-color:#33447a;}#demandSec .dmd-ddbtn{font-size:12px;padding:4px 10px;border:1px solid #bbb;border-radius:6px;background:#fff;cursor:pointer;}#demandSec .dmd-ddbtn.muted{color:#aaa;border-color:#ddd;background:#fafafa;}#demandSec .dmd-ddbtn:disabled{cursor:not-allowed;opacity:0.55;}#demandSec .dmd-ddpanel{display:none;position:absolute;top:110%;left:0;z-index:50;background:#fff;border:1px solid #ccc;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.12);padding:6px 10px;min-width:150px;max-height:260px;overflow:auto;}#demandSec .dmd-ddpanel.open{display:block;}#demandSec .dmd-op{display:block;font-size:12px;padding:2px 0;white-space:nowrap;cursor:pointer;}#demandSec .dmd-ax{font-size:11px;color:#666;}#demandSec .dmd-ax input{width:50px;font-size:11px;padding:1px 3px;margin:0 1px;border:1px solid #ccc;border-radius:4px;}#demandSec .dmd-reset{font-size:11px;padding:3px 8px;border:1px solid #bbb;border-radius:6px;background:#fff;cursor:pointer;}#demandSec .dmd-seg{display:inline-flex;border:1px solid #bbb;border-radius:6px;overflow:hidden;}#demandSec .dmd-seg button{font-size:11px;padding:3px 9px;border:0;background:#fff;color:#666;cursor:pointer;border-right:1px solid #eee;}#demandSec .dmd-seg button:last-child{border-right:0;}#demandSec .dmd-seg button.on{background:#2f6fb0;color:#fff;}</style><div class="chart-sec" id="demandSec"><div style="display:flex;justify-content:flex-start;align-items:center;margin-bottom:8px;gap:8px;"><div class="sec-hdr" id="dmdToggle" style="margin-bottom:0;cursor:pointer;user-select:none;"><span id="dmdCaret" style="display:inline-block;font-size:11px;">▸</span> 쿼리 현황</div><span class="cty-badge" title="구글·아마존 쿼리와 겹쳐보기(유입·매출·노출)는 전부 미국 자료입니다.">미국 기준 · 캐나다 자료 없음</span></div><div id="dmdBody" style="display:none;"><div class="chart-card"><div class="dmd-ctl" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-bottom:10px;"><span class="dmd-seg"><button data-per="monthly">월</button><button data-per="weekly" class="on">주</button><button data-per="daily" title="일별 쿼리 미제공으로 지원되지 않습니다." style="color:#c4c4c4;cursor:not-allowed;">일</button></span><span style="display:inline-flex;gap:6px;"><div class="dmd-dd" style="position:relative;"><button class="dmd-ddbtn" id="dmdMoBtn">기간(월) ▾</button><div class="dmd-ddpanel" id="dmdMoPanel"></div></div><div class="dmd-dd" style="position:relative;"><button class="dmd-ddbtn" id="dmdWkBtn">기간(주) ▾</button><div class="dmd-ddpanel" id="dmdWkPanel"></div></div></span><span style="width:1px;height:16px;background:#ddd;"></span><div class="dmd-dd" style="position:relative;"><button class="dmd-ddbtn" id="dmdGBtn">구글 쿼리 ▾</button><div class="dmd-ddpanel" id="dmdGPanel"><label class="dmd-op"><input type="checkbox" data-p="g" data-k="합계" checked> 합계</label><label class="dmd-op"><input type="checkbox" data-p="g" data-k="unove"> unove</label><label class="dmd-op"><input type="checkbox" data-p="g" data-k="unove hair"> hair</label></div></div><div class="dmd-dd" style="position:relative;"><button class="dmd-ddbtn muted" id="dmdAzBtn">아마존 쿼리 ▾</button><div class="dmd-ddpanel" id="dmdAzPanel"><label class="dmd-op"><input type="checkbox" data-p="a" data-k="unove"> unove</label><label class="dmd-op"><input type="checkbox" data-p="a" data-k="unove hair treatment"> hair treatment</label><label class="dmd-op"><input type="checkbox" data-p="a" data-k="unove shampoo"> shampoo</label><label class="dmd-op"><input type="checkbox" data-p="a" data-k="unove deep damage treatment"> deep damage treatment</label><label class="dmd-op"><input type="checkbox" data-p="a" data-k="unove silk oil essence"> silk oil essence</label><label class="dmd-op"><input type="checkbox" data-p="a" data-k="합계"> 합계</label></div></div><span style="width:1px;height:16px;background:#ddd;"></span><span style="font-size:11px;color:#888;">겹쳐보기</span><span id="dmdOv"><button class="dmd-chip on" data-k="유입">유입</button><button class="dmd-chip on" data-k="매출">매출</button><button class="dmd-chip" data-k="KOL 노출">KOL 노출</button><button class="dmd-chip" data-k="광고 노출">광고 노출</button><button class="dmd-chip" data-k="노출 합계">노출 합계</button></span><span style="width:1px;height:16px;background:#ddd;"></span><span style="font-size:11px;color:#888;">축범위</span><span class="dmd-ax">쿼리 <input type="number" id="axQmin" placeholder="min">~<input type="number" id="axQmax" placeholder="max"></span><span class="dmd-ax">유입 <input type="number" id="axVmin" placeholder="min">~<input type="number" id="axVmax" placeholder="max"></span><span class="dmd-ax">매출 <input type="number" id="axRmin" placeholder="min">~<input type="number" id="axRmax" placeholder="max"></span><span class="dmd-ax">노출 <input type="number" id="axImin" placeholder="min">~<input type="number" id="axImax" placeholder="max"></span><button class="dmd-reset" id="dmdReset">자동</button></div><div class="chart-wrap" style="position:relative;height:300px;"><canvas id="demandChart"></canvas></div></div><div class="chart-card" style="margin-top:10px;"><div class="chart-sec-sub" style="margin-bottom:8px;">쿼리 현황 지표 확인용 표 (현재 필터·주기 기준)</div><div class="ads-tbl-wrap"><table class="ads-metric-tbl" id="demandDataTable"></table></div><div class="chart-note" style="text-align:left;color:#999;margin-top:6px;">단위: K(천) 이상 축약, 매출은 K(천)/M(백만) 축약. 구글·아마존 쿼리, KOL·광고 노출·노출 합계는 일 모드에서 데이터가 없어 '-'로 표시됩니다.</div></div></div></div>
 <div class="chart-sec">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
     <div class="sec-hdr" style="margin-bottom:0;flex:1;">통합 성과 그래프</div>
@@ -608,6 +616,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
     <div class="chart-sec-sub" style="margin-bottom:8px;">지표 확인용 표 (12개 지표 · 현재 필터·주기 기준)</div>
     <div class="ads-tbl-wrap"><table class="ads-metric-tbl" id="mainDataTable"></table></div>
     <div class="chart-note" style="text-align:left;color:#999;margin-top:6px;">단위: 방문·수량은 K(천) 이상 축약, 매출·비용은 K(천)/M(백만) 축약, CVR·ROAS는 %. 페이드 외 4개 비용 지표와 전체 ROAS는 일 단위에서 데이터가 없어 '-'로 표시됩니다.</div>
+    <div class="chart-note" style="text-align:left;color:#999;margin-top:2px;">위 12행은 미국 기준입니다. 아래 5행(갈색)은 캐나다와 전체(미국+캐나다)이며 같은 환율 ×1,500 으로 환산합니다. 캐나다는 주 단위 자료만 있어 일 단위는 「—」, 월 단위는 월간 SKU 합계만 있어 TTL 2행만 표시합니다. 「전체」 월 값은 미국(일별 합산)과 캐나다(세포라 월간 원본)를 더한 것입니다. 「—」에 마우스를 올리면 이유가 보입니다.</div>
   </div>
 </div>
 <div style="padding:0 28px 20px;">
@@ -3968,6 +3977,66 @@ const MAIN_TABLE_METRICS = [
   {label:'전체 ROAS',    fmt:function(v){ return mtblPct(v, true); }, get:function(d){ return d.roas_total; }},
   {label:'닷컴 ROAS',    fmt:function(v){ return mtblPct(v, true); }, get:function(d){ return d.roas_com; }},
 ];
+// ─── 캐나다·전체 5행 (국가 분리 1차 · 2026-10-08) ─────────────────────────────
+// 위 12행은 미국 값이며 손대지 않는다. 캐나다 자료가 있는 매출 지표만 아래에 행을 더한다.
+// 원천 window.CADATA (Apps Script parseCA_)
+//   주 = Raw_CA_주간 매장 행 합(B&M) + Raw_CA_창고 위치구분='닷컴 물류센터' 행 합(.COM) — 미국 닷컴과 같은 방식
+//   월 = Raw_CA_월간_SKU 합계 — 채널 구분이 없어 .COM·B&M 행은 「—」
+//   일 = 캐나다는 주 단위 자료뿐 → 「—」
+// 환율은 미국과 같은 USD_TO_KRW — 세포라 엑셀의 캐나다 값도 USD다(2026-10-02 확정).
+// 계산할 수 없는 칸은 0 이 아니라 「—」 + 이유(셀 툴팁 · 행 전체가 「—」이면 행 이름 아래 한 줄).
+const CA_WHY = {
+  none:  '캐나다 자료가 아직 연결되지 않았습니다 (Apps Script 반영 후 표시)',
+  daily: '캐나다는 주 단위 자료만 있어 일 단위로 나눌 수 없습니다',
+  monCh: '캐나다 월간 자료는 채널 구분 없이 합계만 있습니다',
+  gap:   '이 기간의 캐나다 자료가 없습니다'
+};
+function caData_() {
+  var c = window.CADATA;
+  return (c && Array.isArray(c.wk)) ? c : null;
+}
+// 한 기간(d)의 캐나다 값 { v: USD 숫자 또는 null, why: 이유 } · part = 'bm' | 'com' | 'ttl'
+function caPart_(d, part) {
+  var c = caData_();
+  if (!c) return { v:null, why:CA_WHY.none };
+  if (mainPeriod === 'daily') return { v:null, why:CA_WHY.daily };
+  if (mainPeriod === 'monthly') {
+    if (part !== 'ttl') return { v:null, why:CA_WHY.monCh };
+    var m = (c.monthly || []).find(function(x){ return x.key === d.date; });
+    return m ? { v:m.sales, why:'' } : { v:null, why:CA_WHY.gap };
+  }
+  // 주 키 = 일요일 날짜(getWeekKey). 캐나다 주종료일(토요일)을 같은 키로 바꿔 맞춘다
+  var w = c.wk.find(function(x){ return getWeekKey(x.we) === d.date; });
+  if (!w) return { v:null, why:CA_WHY.gap };
+  return { v: part === 'bm' ? w.bm : part === 'com' ? w.com : w.bm + w.com, why:'' };
+}
+function caRowWhy_(part) {
+  var why = !caData_() ? CA_WHY.none : mainPeriod === 'daily' ? CA_WHY.daily
+          : (mainPeriod === 'monthly' && part !== 'ttl') ? CA_WHY.monCh : '';
+  return why ? '<span class="ca-why">— ' + why + '</span>' : '';
+}
+// withUs = true 이면 「전체」 = 미국(위 12행과 같은 값) + 캐나다
+function caMetric_(name, part, withUs) {
+  return {
+    get label() { return '<span class="ca-lbl">' + name + '</span>' + caRowWhy_(part); },
+    fmt: function(v) { return v == null ? '<span class="ca-na" title="' + this._why + '">—</span>' : mtblMoney(v); },
+    get: function(d) {
+      var r = caPart_(d, part);
+      this._why = r.why;
+      if (r.v == null) return null;
+      var us = withUs ? (part === 'com' ? d.sales_com : d.sales) : 0;
+      if (typeof us !== 'number') { this._why = '이 기간의 미국 값이 없습니다'; return null; }
+      return (r.v + us) * USD_TO_KRW;
+    }
+  };
+}
+MAIN_TABLE_METRICS.push(
+  caMetric_('Sales .COM (캐나다)', 'com', false),
+  caMetric_('Sales B&amp;M (캐나다)', 'bm', false),
+  caMetric_('Sales TTL (캐나다)', 'ttl', false),
+  caMetric_('Sales .COM (전체)', 'com', true),
+  caMetric_('Sales TTL (전체)', 'ttl', true)
+);
 function renderMainDataTable(data) {
   const el = document.getElementById('mainDataTable');
   if (!el) return;
@@ -4679,6 +4748,9 @@ function switchTab(tab) {
   const titles = {main:'통합 대시보드',channel:'유입 채널별',ads:'퍼포먼스 광고',events:'이벤트 관리',settings:'Settings',onsite:'온사이트 광고',bm:'B&M · 재고',sku:'SKU 실매출'};
   const pt = document.getElementById('pageTitle');
   if (pt) pt.textContent = titles[tab] || '';
+  // 국가 분리 — 캐나다 자료가 없는 3탭은 제목 옆에 「미국 기준」 배지 (국가 선택 상태를 읽지 않는다)
+  const usb = document.getElementById('usOnlyBadge');
+  if (usb) usb.style.display = (tab === 'channel' || tab === 'ads' || tab === 'onsite') ? '' : 'none';
   if (tab === 'channel') { try { refreshChannel(); } catch(e){} }
   if (tab === 'ads')     { try { refreshAds();     } catch(e){} }
   if (tab === 'onsite')  { try { refreshOnsite(); } catch(e){} }
@@ -5475,6 +5547,7 @@ function onAuthSuccess(user) {
           window.ONSITE = (c.onsite) || null;
           window.BMDATA  = (c.bm) || null;        // 구버전 캐시 호환
           window.SKUDATA = (c.skuSales) || null;
+          window.CADATA  = (c.ca) || null;        // 국가 분리 — 캐나다 4탭 (없으면 캐나다 칸은 「—」)
           try { var _bt=document.querySelector('.sb-item.active'); if (_bt && _bt.getAttribute('data-tab')==='bm') { if (!window.BMDATA) window.BMDATA = loadTabCache_('sephora_cache_bm'); if (typeof refreshBM==='function') refreshBM(); } } catch(e){}
           try { var _st=document.querySelector('.sb-item.active'); if (_st && _st.getAttribute('data-tab')==='sku') { if (!window.SKUDATA) window.SKUDATA = loadTabCache_('sephora_cache_sku'); if (typeof refreshSKU==='function') refreshSKU(); } } catch(e){}
           try { var _at=document.querySelector('.sb-item.active'); if (_at && _at.getAttribute('data-tab')==='onsite' && typeof refreshOnsite==='function') refreshOnsite(); } catch(e){}
@@ -5587,6 +5660,7 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     window.ONSITE = data.onsite || null;
     window.BMDATA = data.bm || null;
     window.SKUDATA = data.skuSales || null;
+    window.CADATA = data.ca || null;   // 국가 분리 — 캐나다 4탭
     // 캐시로 먼저 그린 화면을 새 데이터로 다시 그린다 (안 그리면 W27 재고처럼 옛 값이 남는다)
     try { var _bt2=document.querySelector('.sb-item.active'); if (_bt2 && _bt2.getAttribute('data-tab')==='bm' && typeof refreshBM==='function') refreshBM(true); } catch(e){}
     try { var _st2=document.querySelector('.sb-item.active'); if (_st2 && _st2.getAttribute('data-tab')==='sku' && typeof refreshSKU==='function') refreshSKU(true); } catch(e){}
@@ -5630,6 +5704,7 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
         ts: Date.now(),
         commerce: newSku, sales: newSales, channel: newCh, onsite: (data.onsite || null), demand: (data.demand || null),
         ads: Array.from(ADS_RAW), adsDict: window.ADS_DICT || { campaign: [], adgroup: [], creative: [] }, kol: Array.from(KOL_RAW),
+        ca: (data.ca || null),
         updatedAt: data.updatedAt
       }));
     } catch(e) { console.warn('[cache] localStorage 저장 실패 — 다음 로딩은 풀 페치:', e.message); }
