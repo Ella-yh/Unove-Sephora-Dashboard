@@ -4435,10 +4435,12 @@ function ctyCaStores_(D) {
   });
   return rows;
 }
+function ctyRegOf_(s) { return s[1] || '미매핑'; }
 function ctyRegBtns_(list) {
   var box = document.getElementById('stRegBtns'); if (!box) return;
   var cnt = {};
-  list.forEach(function(s){ cnt[s[1]] = (cnt[s[1]] || 0) + 1; });
+  // 목록은 표에 들어가는 매장 행의 권역 값에서 뽑는다(코드에 적어 둔 목록 없음). 권역이 비면 「미매핑」으로 센다
+  list.forEach(function(s){ var k = ctyRegOf_(s); cnt[k] = (cnt[k] || 0) + 1; });
   var regs = Object.keys(cnt).sort(function(a, b){ return a === '미매핑' ? 1 : b === '미매핑' ? -1 : a.localeCompare(b); });
   if (ctyStoreReg !== 'ALL' && !cnt[ctyStoreReg]) ctyStoreReg = 'ALL';   // 국가를 바꿔 목록에 없는 권역이면 해제
   box.innerHTML = '<span style="font-size:9px;color:#9ca3af;margin-right:2px">권역</span>'
@@ -4471,7 +4473,7 @@ window.ctyStoreRows_ = function(rows, D) {
     else { low.classList.add('cty-locked'); low.disabled = true; low.title = CTY_WOS_WHY; }
   }
   ctyRegBtns_(out);
-  if (ctyStoreReg !== 'ALL') out = out.filter(function(s){ return s[1] === ctyStoreReg; });
+  if (ctyStoreReg !== 'ALL') out = out.filter(function(s){ return ctyRegOf_(s) === ctyStoreReg; });   // 「권역 전체」면 거르지 않는다 — 미매핑 매장도 반드시 보인다
   return out;
 };
 window.ctyStoreAfter_ = function(shown, rows, foot, tb, D) {
