@@ -7753,6 +7753,7 @@ function renderDemand(){
     }
   }});
   renderDemandTable(keys, p, daily);
+  window.__dmdRenderedFor=window.DEMAND;   // 펼치기 렉 완화(2026-10-08) — 이 데이터로 그렸다는 표시. 데이터를 새로 받으면 DEMAND 가 새 객체가 된다
 }
 window.renderDemand=renderDemand;
 const DMD_TABLE_METRICS=[
@@ -7815,7 +7816,7 @@ function initDemandControls(){
     st.collapsed=!st.collapsed;
     var b=document.getElementById('dmdBody');if(b)b.style.display=st.collapsed?'none':'block';
     var cr=document.getElementById('dmdCaret');if(cr)cr.textContent=st.collapsed?'▸':'▾';
-    if(!st.collapsed){try{buildMoPanel();buildWkPanel();updFilterLabels();syncWkEnable();}catch(e){}renderDemand();}
+    if(!st.collapsed){if(window._demandChart&&window.__dmdRenderedFor===window.DEMAND)return;try{buildMoPanel();buildWkPanel();updFilterLabels();syncWkEnable();}catch(e){}renderDemand();}
   };
   [].forEach.call(sec.querySelectorAll('.dmd-seg button'),function(btn){btn.onclick=function(){if(btn.getAttribute('data-per')==='daily')return;st.period=btn.getAttribute('data-per');[].forEach.call(sec.querySelectorAll('.dmd-seg button'),function(b){b.classList.toggle('on',b===btn);});buildMoPanel();buildWkPanel();updFilterLabels();syncWkEnable();renderDemand();};});
   var gp=document.getElementById('dmdGPanel'),ap=document.getElementById('dmdAzPanel'),gb=document.getElementById('dmdGBtn'),ab=document.getElementById('dmdAzBtn');
