@@ -1972,6 +1972,11 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
   <button class="btn on" id="sk_curK">KRW(백만원)</button><button class="btn" id="sk_curU">USD</button></span></div>
 <div class="chart-card"><div class="tw"><table id="sk_tbl"></table></div><div class="foot" id="sk_tblFoot"></div></div>
 <div class="warn" id="sk_warnBox"></div>
+<details id="skCaSec" class="chart-card" style="margin-top:9px">
+  <summary style="cursor:pointer;font-size:12px;font-weight:600;color:#7B3F1D">캐나다 월간 SKU <span style="font-weight:400;color:#9ca3af;font-size:11px">Raw_CA_월간_SKU · 미국 SKU와 번호가 달라(@ 접두) 합치지 않고 따로 표시 · 금액 단위는 위 KRW/USD 토글을 따름</span></summary>
+  <div class="tw" style="margin-top:10px"><table id="skCaTbl"></table></div>
+  <div class="foot" id="skCaFoot"></div>
+</details>
 </div>
 <script>
 (function(){
@@ -4498,6 +4503,53 @@ window.ctyStoreAfter_ = function(shown, rows, foot, tb, D) {
     + ' · 등급 = 최근 4주 주당 매출, 미국과 같은 기준'
     + ' · <span class="cty-na">WOS — ' + CTY_WOS_WHY + (CTY === 'ALL' ? ' (전체에서는 미국 매장도 끕니다)' : '') + '</span>';
 };
+// ═══ 국가 분리 4차 (2026-10-08) — SKU 실매출 탭 「캐나다 월간 SKU」 접이식 섹션 ═══════════════
+// 미국 SKU 표(sk_tbl)는 건드리지 않는다. 캐나다는 열 구조가 달라(11열) 아래에 따로 둔다.
+// 🛑 미국 SKU 와 합치지 않는다 — 캐나다 SKU 번호(@ 접두 제품명)가 달라 섞으면 행이 2배가 된다.
+// 국가 칩 상태(CTY)를 읽지 않는다. 금액 단위는 SKU 표의 KRW(백만원)/USD 토글을 화면에서 읽어 따른다.
+function ctySkuCaEsc_(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function ctySkuCaRender_() {
+  var sec = document.getElementById('skCaSec'), tbl = document.getElementById('skCaTbl'), foot = document.getElementById('skCaFoot');
+  if (!sec || !tbl || !sec.open) return;
+  var c = caData_(), rows = (c && c.skuMonthly) || [];
+  if (!rows.length) { tbl.innerHTML = ''; foot.innerHTML = '<span class="cty-na">— ' + CA_WHY.none + '</span>'; return; }
+  var usdMode = !!(document.getElementById('sk_curU') && document.getElementById('sk_curU').classList.contains('on'));
+  var unit = usdMode ? 'USD' : '백만원';
+  var money = function(v){
+    if (v == null) return '<span class="cty-na">—</span>';
+    return usdMode ? v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                   : (v * USD_TO_KRW / 1e6).toFixed(1);
+  };
+  var num = function(v){ return v == null ? '<span class="cty-na">—</span>' : Math.round(v).toLocaleString('ko-KR'); };
+  // 월매출 합계는 원값을 먼저 더한 월 합계(monthly)를 쓴다 — 센트 반올림된 SKU 행을 더하면 몇 센트 어긋난다
+  var mSales = function(ym, fallback){ var m = (c.monthly || []).find(function(x){ return x.ym === ym; }); return m ? m.sales : Math.round(fallback * 100) / 100; };
+  var yms = rows.map(function(r){ return r.ym; }).filter(function(x, i, a){ return a.indexOf(x) === i; }).sort().reverse();   // 최근 달 먼저
+  var h = '<thead><tr><th style="text-align:left">년월</th><th style="text-align:left">월종료일</th><th style="text-align:left">SKU번호</th><th style="text-align:left">제품명</th><th style="text-align:left">상태</th>'
+        + '<th>정가<br>USD</th><th>월매출<br>' + unit + '</th><th>월수량</th><th>기말재고<br>개</th><th>기말재고 소매가<br>' + unit + '</th><th>YTD 매출<br>' + unit + '</th></tr></thead><tbody>';
+  yms.forEach(function(ym){
+    var g = rows.filter(function(r){ return r.ym === ym; }).sort(function(a, b){ return (b.sales || 0) - (a.sales || 0); });
+    var t = { sales:0, qty:0, inv:0, invR:0, ytd:0 };
+    g.forEach(function(r){
+      t.sales += r.sales || 0; t.qty += r.qty || 0; t.inv += r.inv || 0; t.invR += r.invR || 0; t.ytd += r.ytd || 0;
+      h += '<tr><td style="text-align:left">' + ym + '</td><td style="text-align:left">' + ctySkuCaEsc_(r.me) + '</td><td style="text-align:left">' + ctySkuCaEsc_(r.sku) + '</td>'
+         + '<td style="text-align:left;color:#333">' + ctySkuCaEsc_(r.n) + '</td><td style="text-align:left">' + ctySkuCaEsc_(r.st) + '</td>'
+         + '<td>' + (r.p == null ? '<span class="cty-na">—</span>' : r.p) + '</td><td>' + money(r.sales) + '</td><td>' + num(r.qty) + '</td>'
+         + '<td>' + num(r.inv) + '</td><td>' + money(r.invR) + '</td><td>' + money(r.ytd) + '</td></tr>';
+    });
+    h += '<tr class="sumrow"><td style="text-align:left">' + ym + ' 합계</td><td></td><td></td><td style="text-align:left">' + g.length + '종</td><td></td><td></td>'
+       + '<td>' + money(mSales(ym, t.sales)) + '</td><td>' + num(t.qty) + '</td><td>' + num(t.inv) + '</td><td>' + money(Math.round(t.invR * 100) / 100) + '</td><td>' + money(Math.round(t.ytd * 100) / 100) + '</td></tr>';
+  });
+  tbl.innerHTML = h + '</tbody>';
+  foot.innerHTML = '캐나다 월간 ' + yms.length + '개월 (' + yms.slice().reverse().join('·') + ') · 월매출은 B&amp;M+.COM 합계(채널 구분 없음) · 환율 ×1,500 (미국과 같음 — 세포라 엑셀의 캐나다 값도 USD) · 캐나다는 SKU별 주간 자료가 없어 월 단위만 있습니다 · 합계행의 기말재고 소매가·YTD는 SKU 행(센트 단위)을 더한 값이라 원본 합계와 몇 센트 다를 수 있습니다';
+}
+(function(){
+  var bind = function(){
+    var sec = document.getElementById('skCaSec');
+    if (sec) sec.addEventListener('toggle', ctySkuCaRender_);
+    ['sk_curK', 'sk_curU'].forEach(function(id){ var b = document.getElementById(id); if (b) b.addEventListener('click', function(){ setTimeout(ctySkuCaRender_, 0); }); });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
+})();
 function renderMainDataTable(data) {
   const el = document.getElementById('mainDataTable');
   if (!el) return;
