@@ -1339,8 +1339,9 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 </div>
 
 <div class="chart-card" style="margin-top:9px">
-  <div class="chart-sec-title"><span>매장별 실적 · 재고 <span class="cty-badge us" title="국가 칩과 무관하게 미국 값입니다. 캐나다 매장은 다음 업데이트에서 이 표에 더해집니다.">미국 기준</span></span>
+  <div class="chart-sec-title"><span>매장별 실적 · 재고</span>
     <span id="stBtns"><button class="btn on" data-t="ALL">전체</button><button class="btn" data-t="Tier 1" style="margin-left:4px">Tier 1</button><button class="btn" data-t="Tier 2" style="margin-left:4px">Tier 2</button><button class="btn" data-t="LOW" style="margin-left:4px">매장 재고 4주 미만</button></span></div>
+  <div id="stRegBtns" style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin:-3px 0 8px"></div>
   <div class="scroll"><table id="stTbl">
     <colgroup><col style="width:25%"><col style="width:11%"><col style="width:10%"><col style="width:14%"><col style="width:9%"><col style="width:8%"><col style="width:7%"><col style="width:8%"><col style="width:8%"></colgroup>
     <thead><tr><th class="l">매장</th><th class="l">권역</th><th class="l">등급</th><th class="l" id="bmThTrend"></th>
@@ -1779,6 +1780,7 @@ function spark(v){const w=98,h=20,fv=v.filter(x=>x!=null),lo=Math.min(0,...fv),h
   +'<circle cx="'+X(v.length-1)+'" cy="'+Y(v[v.length-1])+'" r="2" fill="'+NAVY+'"/></svg>';}
 function renderStores(f){
   let rows=D.stores.slice();
+  if(typeof window.ctyStoreRows_==='function')rows=window.ctyStoreRows_(rows,D);   // 국가 분리 3차 — 국가·권역에 맞춘 매장 목록 (미국·권역 전체면 그대로)
   if(f==='LOW')rows=rows.filter(s=>s[8]!=null&&s[8]>=0&&s[8]<4);
   else if(f!=='ALL')rows=rows.filter(s=>s[2]===f);
   const shown=rows.slice(0,50),tb=BMQ1('#stTbl tbody');
@@ -1802,7 +1804,7 @@ function renderStores(f){
         +'<br>최근 4주 주당 $'+s[4]+' · 매장 재고 $'+s[7].toLocaleString()+(s[8]!=null?' · WOS '+s[8]+'주':'')
         +'<br><span style="color:#9fb0d6">'+last6+'</span>');});
     tr.addEventListener('mouseleave',HT);});
-  BMQ('stFoot').innerHTML='표시 '+shown.length+'개 / 해당 조건 '+rows.length+'개 (전체 판매 발생 매장 '+D.kpi.stores[0]+'개) · 행에 마우스를 올리면 전주 대비·최근 6주 상세 표시 · 추이 = '+D.weeks[0]+'~'+CW+' · WOS = '+CW+' 매장 재고 ÷ 최근 4주 주당 매출 · <span class="alert">4주 미만 = 보충 신호</span>';}
+  BMQ('stFoot').innerHTML='표시 '+shown.length+'개 / 해당 조건 '+rows.length+'개 (전체 판매 발생 매장 '+D.kpi.stores[0]+'개) · 행에 마우스를 올리면 전주 대비·최근 6주 상세 표시 · 추이 = '+D.weeks[0]+'~'+CW+' · WOS = '+CW+' 매장 재고 ÷ 최근 4주 주당 매출 · <span class="alert">4주 미만 = 보충 신호</span>';if(typeof window.ctyStoreAfter_==='function')window.ctyStoreAfter_(shown,rows,BMQ('stFoot'),tb,D);}
 renderStores('ALL');
 BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   BMQA('#stBtns button').forEach(x=>x.classList.remove('on'));b.classList.add('on');renderStores(b.dataset.t);});
@@ -4059,10 +4061,10 @@ MAIN_TABLE_METRICS.push(
   caMetric_('Sales TTL (전체)', 'ttl', true)
 );
 // ═══ 국가 분리 2차 (2026-10-08) — 국가 칩 1단 · 전역 국가 상태 CTY · 끄는 규칙 ═══════════
-// 🛑 CTY 를 읽는 곳은 아래 다섯 곳뿐이다. 다른 곳에서 읽지 않는다(회귀 위험을 구조적으로 막는 장치).
+// 🛑 CTY 를 읽는 곳은 아래 여섯 묶음뿐이다. 다른 곳에서 읽지 않는다(회귀 위험을 구조적으로 막는 장치).
 //   ① ctyMainKpi_  — 통합 KPI          ② ctyMainChart_ — 통합 성과 그래프(mainChart)
 //   ③ setSalesType 감싸기 — 「전체」일 때 채널 단일 선택   ④ ctyBmKpi_ — B&M 주간 핵심 지표
-//   ⑤ ctySkuKpi_  — SKU 최근 구간 요약
+//   ⑤ ctySkuKpi_  — SKU 최근 구간 요약  ⑥ ctyStoreRows_·ctyStoreAfter_ — B&M 매장별 표 (3차)
 // 「미국」(기본값)일 때 ①~⑤는 숫자를 바꾸지 않는다. 바꾸는 것은 닷컴 ROAS 카드 제목·부제(승인 문구)뿐이다.
 var CTY = 'US';
 const CTY_WHY = {
@@ -4093,6 +4095,8 @@ window.setCty = function(c) {
   }
   try { renderKPI(); } catch(e) { console.warn('[CTY] KPI', e); }
   try { renderChart(); } catch(e) { console.warn('[CTY] chart', e); }
+  // 매장별 표는 다시 그릴 때 「전체」 버튼 기준으로 그려진다 — 버튼 표시도 맞춘다
+  document.querySelectorAll('#stBtns button').forEach(function(b){ b.classList.toggle('on', b.dataset.t === 'ALL'); });
   try { if (window.BMDATA && typeof window.refreshBM === 'function') window.refreshBM(true); } catch(e) { console.warn('[CTY] B&M', e); }
   try { if (typeof window._skuRedraw === 'function') window._skuRedraw(); } catch(e) { console.warn('[CTY] SKU', e); }
 };
@@ -4399,6 +4403,98 @@ window.ctySkuKpi_ = function(K, x) {
   }
   K[3][1] = x.M === 's' ? x.eok(usSum + caSum) : x.nf(usSum + caSum) + '개';
   K[3][2] = '미국 ' + fmtV(usSum) + ' + 캐나다 ' + fmtV(caSum) + ' (' + caKeys.map(x.nmk).join('·') + ')' + shortNote;
+};
+// ═══ 국가 분리 3차 (2026-10-08) — B&M 매장별 표에 캐나다 매장 · 권역 버튼 ═══════════════
+// ⑥ ctyStoreRows_ / ctyStoreAfter_ — 매장별 표(renderStores)만 국가를 따른다. 위의 등급 분포·권역 차트는 「미국 기준」 그대로
+// 캐나다 매장 행은 미국 행(Code.gs parseBM_ 의 stores)과 같은 11칸 구조로 만든다:
+//   [매장명, 권역, 등급, 추이(D.weeks 축), 최근4주 주당, 금주, 전주, 매장재고, WOS, 증감표시, 지역 설명]
+// 규칙도 미국과 같다 — 이번 주 매출>0 매장만 · 금액은 달러 정수 · 등급 = 최근 4주 주당 매출(아래 ctyTier_)
+var ctyStoreReg = 'ALL';
+const CTY_WOS_WHY = '캐나다는 판매 이력이 짧아(첫 판매 W30) 소진주수를 계산하지 않습니다';
+// Code.gs bmTier_ 와 같은 규칙·같은 임계값 — 최근 4주 주당 매출 $200↑ / $100~200 / $50~100 / $50↓
+function ctyTier_(v) { return v >= 200 ? 'Tier 1' : v >= 100 ? 'Tier 2' : v >= 50 ? 'Tier 3' : 'Tier 4'; }
+function ctyCaStores_(D) {
+  var c = caData_(); if (!c || !c.stores) return [];
+  var CW = D.weeks[D.weeks.length - 1], PW = D.weeks[D.weeks.length - 2];
+  var ci = c.weeks.indexOf(CW), pi = c.weeks.indexOf(PW), ei = c.weeks.indexOf(CA_ENTRY_WEEK);
+  if (ci < 0) return [];
+  var rows = [];
+  c.stores.forEach(function(st){
+    var rd = function(j){ return j >= 0 ? Math.round(st.hist[j] || 0) : 0; };
+    var cur = rd(ci);
+    if (!(cur > 0)) return;
+    var l4 = 0, c4 = 0;
+    for (var j = Math.max(0, ci - 3); j <= ci; j++) { l4 += rd(j); c4++; }
+    var last4 = Math.round(l4 / (c4 || 1)), prev = rd(pi), wow = cur - prev;
+    // 추이 — 미국 표와 같은 주차 축(D.weeks)에 맞추고, 캐나다 진입(W28) 이전 칸은 비운다
+    var hist = D.weeks.map(function(w){ var k = c.weeks.indexOf(w); return (k < 0 || k < ei) ? null : rd(k); });
+    var r = [st.n, st.reg || '미매핑', ctyTier_(last4), hist, last4, cur, prev, Math.round(st.inv || 0), null,
+             wow > 0 ? '▲' : (wow < 0 ? '▼' : '–'), st.kor || ''];
+    r._ca = true;
+    rows.push(r);
+  });
+  return rows;
+}
+function ctyRegBtns_(list) {
+  var box = document.getElementById('stRegBtns'); if (!box) return;
+  var cnt = {};
+  list.forEach(function(s){ cnt[s[1]] = (cnt[s[1]] || 0) + 1; });
+  var regs = Object.keys(cnt).sort(function(a, b){ return a === '미매핑' ? 1 : b === '미매핑' ? -1 : a.localeCompare(b); });
+  if (ctyStoreReg !== 'ALL' && !cnt[ctyStoreReg]) ctyStoreReg = 'ALL';   // 국가를 바꿔 목록에 없는 권역이면 해제
+  box.innerHTML = '<span style="font-size:9px;color:#9ca3af;margin-right:2px">권역</span>'
+    + ['ALL'].concat(regs).map(function(r){
+        return '<button class="btn' + (r === ctyStoreReg ? ' on' : '') + '" data-r="' + r + '">'
+          + (r === 'ALL' ? '전체' : r + ' <span style="opacity:.6;font-weight:500">' + cnt[r] + '</span>') + '</button>';
+      }).join('');
+  if (!box.dataset.bound) {
+    box.dataset.bound = '1';
+    box.addEventListener('click', function(e){
+      var b = e.target.closest('button'); if (!b) return;
+      ctyStoreReg = b.dataset.r;
+      var on = document.querySelector('#stBtns button.on') || document.querySelector('#stBtns button[data-t="ALL"]');
+      if (on) on.click();   // 등급 버튼 상태 그대로 다시 그린다
+    });
+  }
+}
+window.ctyStoreRows_ = function(rows, D) {
+  var out = rows;
+  if (CTY !== 'US') {
+    var ca = ctyCaStores_(D);
+    out = CTY === 'CA' ? ca
+        : rows.map(function(s){ var x = s.slice(); x[8] = null; return x; }).concat(ca);   // 전체 — 소진주수는 끈다(승인 4)
+    out.sort(function(a, b){ return b[5] - a[5]; });
+  }
+  // 「매장 재고 4주 미만」 버튼은 소진주수 기반 — 캐나다·전체에서 잠근다
+  var low = document.querySelector('#stBtns [data-t="LOW"]');
+  if (low) {
+    if (CTY === 'US') { if (low.classList.contains('cty-locked')) { low.classList.remove('cty-locked'); low.disabled = false; low.title = ''; } }
+    else { low.classList.add('cty-locked'); low.disabled = true; low.title = CTY_WOS_WHY; }
+  }
+  ctyRegBtns_(out);
+  if (ctyStoreReg !== 'ALL') out = out.filter(function(s){ return s[1] === ctyStoreReg; });
+  return out;
+};
+window.ctyStoreAfter_ = function(shown, rows, foot, tb, D) {
+  if (CTY === 'US') return;
+  var ei = D.weeks.indexOf(CA_ENTRY_WEEK);
+  tb.querySelectorAll('tr').forEach(function(tr){
+    var s = shown[+tr.dataset.i]; if (!s) return;
+    var wosTd = tr.lastElementChild; if (wosTd) { wosTd.title = CTY_WOS_WHY; wosTd.style.color = '#7b8194'; }
+    if (!s._ca || ei < 0) return;
+    // 스파크라인 — 캐나다 진입(W28) 점선
+    var svg = tr.querySelector('svg'); if (!svg) return;
+    var w = +svg.getAttribute('width'), h = +svg.getAttribute('height'), x = 2 + (w - 4) * ei / (s[3].length - 1);
+    svg.insertAdjacentHTML('afterbegin', '<line x1="' + x + '" x2="' + x + '" y1="0" y2="' + h + '" stroke="#7B3F1D" stroke-opacity=".4" stroke-width="1" stroke-dasharray="2,2"/>');
+  });
+  var c = caData_(), CW = D.weeks[D.weeks.length - 1];
+  var caAll = c && c.stores ? c.stores.length : 0, caN = ctyCaStores_(D).length;
+  var scope = CTY === 'CA' ? '캐나다 등록 ' + caAll + '곳 중 ' + CW + ' 판매 발생 ' + caN + '곳'
+                           : '판매 발생 미국 ' + D.kpi.stores[0] + '곳 + 캐나다 ' + caN + '곳';
+  foot.innerHTML = '표시 ' + shown.length + '개 / 해당 조건 ' + rows.length + '개 (' + scope + ')'
+    + (ctyStoreReg !== 'ALL' ? ' · 권역 ' + ctyStoreReg : '')
+    + ' · 추이 = ' + D.weeks[0] + '~' + CW + ' (캐나다는 ' + CA_ENTRY_WEEK + '부터, 점선 = 캐나다 진입)'
+    + ' · 등급 = 최근 4주 주당 매출, 미국과 같은 기준'
+    + ' · <span class="cty-na">WOS — ' + CTY_WOS_WHY + (CTY === 'ALL' ? ' (전체에서는 미국 매장도 끕니다)' : '') + '</span>';
 };
 function renderMainDataTable(data) {
   const el = document.getElementById('mainDataTable');
