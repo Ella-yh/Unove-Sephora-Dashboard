@@ -1534,6 +1534,7 @@ function chart(host,o){
   const W=Math.max(o.minW||360,Math.round(host.getBoundingClientRect().width)||o.W||820);
   const n=o.labels.length,iw=W-pl-pr,ih=H-pt-pb;
   const tot=o.labels.map((_,i)=>o.stacks.reduce((s,st)=>s+Math.max(0,st.data[i]||0),0));
+  const totShow=o.labels.map((_,i)=>o.stacks.reduce((s,st)=>s+(st.data[i]||0),0));   // 툴팁 「합계」 전용 — 음수(반품) 포함 실제 합. 높이·축은 위 tot 그대로 (2026-10-08)
   const ymax=Math.max(...tot,o.ref||0,...(o.refPerBar||[0]))*1.14||1;
   const bw=Math.max(1.5,Math.min(28,iw/n*0.68));
   const X=i=>pl+iw*((i+0.5)/n),Y=v=>pt+ih*(1-v/ymax);
@@ -1562,8 +1563,8 @@ function chart(host,o){
     svg.appendChild(txt(X(i),H-7,lb,{'text-anchor':'middle','font-size':8.5}));});
   o.labels.forEach((lb,i)=>{const r=el('rect',{x:pl+iw*i/n,y:pt,width:iw/n,height:ih,fill:'transparent'});
     r.addEventListener('mousemove',e=>{let h='<b>'+(o.tipT?o.tipT(i):lb)+'</b>';
-      o.stacks.forEach(st=>h+='<br><span style="color:'+st.color+'">■</span> '+st.name+' '+(st.data[i]==null?'결측':o.tipF(st.data[i])));
-      if(o.stacks.length>1)h+='<br><span style="color:#9fb0d6">합계</span> '+o.tipF(tot[i]);
+      o.stacks.forEach(st=>h+='<br><span style="color:'+st.color+'">■</span> '+st.name+' '+(st.data[i]==null?'결측':o.tipF(st.data[i]))+(o.negNote&&st.data[i]<0?' '+o.negNote:''));
+      if(o.stacks.length>1)h+='<br><span style="color:#9fb0d6">합계</span> '+o.tipF(totShow[i]);
       if(o.line)h+='<br><span style="color:'+o.line.color+'">━</span> '+o.line.name+' '+o.line.tipF(o.line.data[i]);
       ST(e,h);});
     r.addEventListener('mouseleave',HT);svg.appendChild(r);});
@@ -1585,7 +1586,7 @@ function drawTrend(g){
   chart(BMQ('chTrend'),{labels:labels,H:248,W:820,pr:44,band:band,
     stacks:[{name:'B&M',color:NAVY,data:bm},{name:'.COM',color:ROSE,data:com}],
     line:{name:'B&M 비중',color:CLICKS,data:bm.map((v,i)=>Math.max(0,Math.min(100,v/Math.max(1,v+com[i])*100))),min:0,max:100,fmt:v=>Math.round(v)+'%',tipF:v=>v.toFixed(1)+'%'},
-    ref:ref,refLabel:refL,refPerBar:perBar,yFmt:v=>'$'+Math.round(v/1000)+'K',tipF:v=>usd(v),tipT:tipT,xTicks:ticks});
+    ref:ref,refLabel:refL,refPerBar:perBar,yFmt:v=>'$'+Math.round(v/1000)+'K',tipF:v=>usd(v),tipT:tipT,xTicks:ticks,negNote:'(반품)'});
   BMQ('trendFoot').innerHTML=foot+' <span style="color:#ddd">| 렌더 '+(performance.now()-t0).toFixed(0)+'ms</span>';}
 drawTrend('w');
 BMQA('[data-g]').forEach(b=>b.addEventListener('click',()=>{
@@ -3913,7 +3914,7 @@ function renderChart() {
             label: ctx => {
               const v = ctx.raw;
               if (ctx.dataset.label === 'Visits') return `  Visits: ${v.toLocaleString()}`;
-              if (ctx.dataset.label.startsWith('Sales')) return '  ' + ctx.dataset.label + ': ₩' + Math.round(Math.abs(v)).toLocaleString('ko-KR');
+              if (ctx.dataset.label.startsWith('Sales')) return '  ' + ctx.dataset.label + ': ' + (v < 0 ? '−' : '') + '₩' + Math.round(Math.abs(v)).toLocaleString('ko-KR') + (v < 0 ? ' (반품)' : '');
               if (ctx.dataset.label === 'CVR') return `  CVR: ${v.toFixed(2)}%`;
               if (ctx.dataset.label === '페이드 비용') return v != null ? `  페이드 비용: ₩${Math.round(v).toLocaleString('ko-KR')}` : null;
               if (ctx.dataset.label === '브랜딩 비용' || ctx.dataset.label === 'KOL 비용' || ctx.dataset.label === '채널마케팅 비용' || ctx.dataset.label === '광고비(총계)') return v != null ? '  ' + ctx.dataset.label + ': ₩' + Math.round(v).toLocaleString('ko-KR') : null;
@@ -4296,7 +4297,15 @@ function ctyMainChart_(cfg, data) {
     if (!ctx.dataset._cty) return origLabel(ctx);
     var v = ctx.raw;
     if (v == null) return '  ' + ctx.dataset.label + ': — (' + (ctx.dataset._why[ctx.dataIndex] || '') + ')';
-    return '  ' + ctx.dataset.label + ': ' + (v < 0 ? '−' : '') + '₩' + Math.round(Math.abs(v)).toLocaleString('ko-KR');
+    return '  ' + ctx.dataset.label + ': ' + (v < 0 ? '−' : '') + '₩' + Math.round(Math.abs(v)).toLocaleString('ko-KR') + (v < 0 ? ' (반품)' : '');
+  };
+  // 「전체」 누적 — 툴팁 아래 합계 = 음수(반품) 포함 실제 합. 막대 높이·축(min:0)은 그대로 (B&M 탭 채널별 매출 추이와 같은 원칙)
+  if (CTY === 'ALL') tt.footer = function(items) {
+    if (!items.length) return '';
+    var i = items[0].dataIndex, sum = 0, miss = '';
+    items[0].chart.data.datasets.forEach(function(d){ if (!d._cty) return; var v = d.data[i]; if (v == null) miss = d._why[i] || '값 없음'; else sum += v; });
+    if (miss) return '합계 (미국+캐나다): — (' + miss + ')';
+    return '합계 (미국+캐나다): ' + (sum < 0 ? '−' : '') + '₩' + Math.round(Math.abs(sum)).toLocaleString('ko-KR');
   };
   if (CTY === 'ALL' && mainPeriod === 'daily') notes.unshift('일 단위는 캐나다 자료가 없어 미국만 표시합니다 (캐나다는 주 단위 자료뿐)');
   if (note) {
