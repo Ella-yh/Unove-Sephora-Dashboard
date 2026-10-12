@@ -261,6 +261,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 .ch-tbl th:first-child{text-align:left;min-width:140px;}
 .ch-tbl td{padding:5px 8px;border-bottom:0.5px solid #EBEBEF;text-align:right;color:#666;font-variant-numeric:tabular-nums;}
 .ch-tbl td:first-child{text-align:left;font-weight:600;color:#333;}
+#chVisitsTable .ch-tbl td,#chSalesTable .ch-tbl td{white-space:nowrap;}   /* 2026-10-12 — 「₩0.1백만」이 두 줄로 꺾이지 않게 */
 .ch-tbl tr:last-child td{font-weight:700;background:#F5F5F8;border-top:1px solid #E0E0E4;}
 .ch-tbl .wow-up{color:#16a34a;font-weight:700;}
 .ch-tbl .wow-dn{color:#c8102e;font-weight:700;}
@@ -801,6 +802,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
     <div class="leg-row">
       <div class="leg"><div class="leg-dot" style="background:rgba(47,84,150,0.25);border:1.5px solid rgba(47,84,150,0.6);"></div>Visits (Area)</div>
       <div class="leg"><div class="leg-dot" style="background:#c8102e;border-radius:1px;"></div>Sales (백만원) (Bar)</div>
+      <div class="leg" id="chComboCtyLeg" style="display:none;"><div class="leg-dot" style="background:rgba(29,78,216,0.85);border-radius:1px;"></div>미국(아래)<div class="leg-dot" style="background:rgba(123,63,29,0.85);border-radius:1px;margin-left:6px;"></div>캐나다(위) 누적</div>
       <div class="leg"><div class="leg-dot" style="background:#F4B942;border-radius:50%;"></div>CVR % (Line)</div>
     </div>
     <div class="chart-wrap" style="height:360px;"><canvas id="chComboChart"></canvas></div>
@@ -829,14 +831,14 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 </div>
 <div class="chart-sec">
   <div class="sec-hdr">Visits · Sales — Weekly by Channel (Table)</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+  <div style="display:grid;grid-template-columns:minmax(0,1fr);gap:10px;">
     <div class="chart-card">
       <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#2F5496;margin-bottom:8px;">Visits TY</div>
-      <div id="chVisitsTable"></div>
+      <div id="chVisitsTable" style="overflow-x:auto;"></div>
     </div>
     <div class="chart-card">
       <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#548235;margin-bottom:8px;">Sales TY (백만원)</div>
-      <div id="chSalesTable"></div>
+      <div id="chSalesTable" style="overflow-x:auto;"></div>
     </div>
   </div>
 </div>
@@ -4180,6 +4182,7 @@ MAIN_TABLE_METRICS.push(
 //   ⑦ ctyChannelFill_ — 유입 탭  ⑧ ctyCaVisitKpi_·ctyCaInflowSeries_ — 통합 Visits·CVR (2026-10-12)
 //   ⑨ renderMainDataTable — 지표 확인용 표는 국가 칩에 맞는 묶음만 (2026-10-12)
 //   ⑩ evCtyOk_ — 통합 탭 이벤트 마커·이벤트 목록·KOL 표 (2026-10-12)
+//   ⑪ ctyChComboSplit_ — 유입 탭 Overview 매출 막대 「전체」 누적 (2026-10-12)
 // 「미국」(기본값)일 때 ①~⑤는 숫자를 바꾸지 않는다. 바꾸는 것은 닷컴 ROAS 카드 제목·부제(승인 문구)뿐이다.
 var CTY = 'US';
 const CTY_WHY = {
@@ -4710,8 +4713,23 @@ function ctySkuCaRender_() {
 // 정의는 미국과 같다 — 방문 = SKU 행 방문 합 · CVR = 주문 수량 ÷ 방문 × 100 · 「전체」 CVR = (미국 주문 + 캐나다 주문) ÷ (미국 방문 + 캐나다 방문)
 // 캐나다 자료가 없는 기간(진입 전)은 0 이 아니라 「값 없음」 — 「전체」도 그 기간은 「값 없음」
 // 🛑 CTY 를 읽는 곳 ⑦ ctyChannelFill_ — 유입 탭 · ⑧ ctyCaVisitKpi_·ctyCaInflowSeries_ — 통합 KPI·그래프 Visits·CVR
-function ctyCaChannel_() { var c = window.CADATA; return (c && Array.isArray(c.channel) && c.channel.length) ? c.channel : null; }
-function ctyCaCom_()     { var c = window.CADATA; return (c && Array.isArray(c.commerce) && c.commerce.length) ? c.commerce : null; }
+// 캐나다 첫 매출일 이전(판매 시작 전 방문만 있는 날)은 제외한다 (2026-10-12 MJ 결정)
+// 기준일 = 유입 매출(sales) > 0 또는 이커머스 주문(orders) > 0 인 가장 이른 날짜 — 숫자를 박지 않고 자료에서 읽는다
+var _ctyCut = { src:null };
+function ctyCaCut_() {
+  var c = window.CADATA;
+  if (!c) return null;
+  if (_ctyCut.src === c) return _ctyCut;
+  var ch = Array.isArray(c.channel) ? c.channel : [], cm = Array.isArray(c.commerce) ? c.commerce : [], first = '';
+  ch.forEach(function(r){ if ((r.sales || 0) > 0 && (!first || r.date < first)) first = r.date; });
+  cm.forEach(function(r){ if ((r.orders || 0) > 0 && (!first || r.date < first)) first = r.date; });
+  _ctyCut = { src:c, start:first,
+              ch: first ? ch.filter(function(r){ return r.date >= first; }) : [],
+              cm: first ? cm.filter(function(r){ return r.date >= first; }) : [] };
+  return _ctyCut;
+}
+function ctyCaChannel_() { var k = ctyCaCut_(); return (k && k.ch.length) ? k.ch : null; }
+function ctyCaCom_()     { var k = ctyCaCut_(); return (k && k.cm.length) ? k.cm : null; }
 function ctyDateSpan_(rows) {
   var a = '', b = '';
   rows.forEach(function(r){ if (!a || r.date < a) a = r.date; if (!b || r.date > b) b = r.date; });
@@ -4749,7 +4767,7 @@ function ctyChannelFill_() {
   var hint = document.getElementById('ctyChHint');
   if (hint) {
     if (!ca) hint.innerHTML = '<span class="cty-na">캐나다 유입 자료가 아직 연결되지 않았습니다 (Apps Script 반영 후 표시) — 캐나다·전체를 골라도 아래는 미국 값</span>';
-    else { var sp = ctyDateSpan_(ca); hint.textContent = '캐나다는 ' + sp.from + '부터 (' + sp.to + '까지) · 「전체」는 캐나다 자료가 있는 날짜만 미국+캐나다로 합산 · 캐나다 매출은 브랜드포털 C$ × 1,000원'; }
+    else { var sp = ctyDateSpan_(ca); hint.textContent = '캐나다는 첫 매출일 ' + sp.from + '부터 (' + sp.to + '까지 · 그 전 방문만 있는 날은 제외) · 「전체」는 캐나다 자료가 있는 날짜만 미국+캐나다로 합산 · 캐나다 매출은 브랜드포털 C$ × 1,000원'; }
   }
   var usb = document.getElementById('usOnlyBadge');
   var chOn = document.getElementById('tabChannel') && document.getElementById('tabChannel').style.display !== 'none';
@@ -6137,14 +6155,20 @@ function renderComboChart(weeks, channels, pivot) {
     const cw = channels.reduce((s,ch)=>s+(pivot[ch]?.[w]?.cw||0),0);
     return v > 0 ? +(cw / v * 100).toFixed(2) : 0; // 방문 가중 통합 CVR
   });
+  // 「전체」 — 매출 막대를 미국(아래) + 캐나다(위) 누적으로 (2026-10-12 · 통합 탭과 같은 색). 미국·캐나다 칩은 그대로
+  const ctyStack = ctyChComboSplit_(weeks, channels, totSales);
+  const _cl = document.getElementById('chComboCtyLeg');
+  if (_cl) _cl.style.display = ctyStack ? '' : 'none';
   comboChartInstance = new Chart(ctx, {
     data: {
       labels: weeks.map(w => CH_WEEK_RANGES[w] || w),
       datasets: [
+        ...(ctyStack ? ctyStack.datasets : []),
         {
           type: 'bar',
           label: 'Sales (백만원)',
           data: totSales,
+          hidden: !!ctyStack,
           backgroundColor: makeGrad('chComboChart','#d97070',0.85,0.45),
           borderColor: '#d97070',
           borderWidth: 1,
@@ -6195,7 +6219,12 @@ function renderComboChart(weeks, channels, pivot) {
             label: function(ctx) {
               if (ctx.dataset.label === 'Visits') return 'Visits: ' + ctx.parsed.y.toLocaleString();
               if (ctx.dataset.label === 'Sales (백만원)') return 'Sales: ₩' + Math.round(ctx.parsed.y).toLocaleString('ko-KR');
+              if (ctx.dataset._cty) return ctx.dataset.label + ': ₩' + Math.round(ctx.parsed.y).toLocaleString('ko-KR');
               return 'CVR: ' + ctx.parsed.y.toFixed(2) + '%';
+            },
+            footer: function(items) {
+              if (!ctyStack || !items.length) return '';
+              return 'Sales 합계 (미국+캐나다): ₩' + Math.round(totSales[items[0].dataIndex]).toLocaleString('ko-KR');
             }
           }
         }
@@ -6213,6 +6242,7 @@ function renderComboChart(weeks, channels, pivot) {
           type: 'linear',
           position: 'right',
           beginAtZero: true,
+          stacked: !!ctyStack,
           title: { display: true, text: 'Sales (백만원)', color: '#d97070', font: { size: 11, weight: 'bold' } },
           ticks: { callback: v => '₩'+(v/1000000).toFixed(1)+'M', color: '#d97070', font: { size: 10 } },
           grid: { drawOnChartArea: false },
@@ -6227,12 +6257,31 @@ function renderComboChart(weeks, channels, pivot) {
           afterFit: function(axis) { axis.paddingRight = 10; },
         },
         x: {
+          stacked: !!ctyStack,
           ticks: { font: { size: 9 } },
           grid: { display: false },
         }
       }
     }
   });
+}
+// 「전체」 Overview 누적 막대용 — 기간별 캐나다 매출(유입 탭 필터와 같은 기준) · 미국 = 합계 − 캐나다. 「전체」가 아니면 null
+// 🛑 CTY ⑪ — 유입 탭 Overview 매출 막대 (2026-10-12)
+function ctyChComboSplit_(weeks, channels, totSales) {
+  var ca = ctyCaChannel_();
+  if (CTY !== 'ALL' || !ca) return null;
+  var chSet = {}; channels.forEach(function(c){ chSet[c] = 1; });
+  var by = {};
+  ca.forEach(function(r){
+    if (!chSet[r.channel]) return;
+    if (selChMonths.size > 0 && !selChMonths.has(r.date.slice(0, 7))) return;
+    if (selChWeeks.size > 0 && !selChWeeks.has(getWeekKey(r.date))) return;
+    var k = chPeriodKey(r.date); by[k] = (by[k] || 0) + (r.sales || 0);
+  });
+  var caS = weeks.map(function(w){ return by[w] || 0; });
+  var usS = weeks.map(function(w, i){ return totSales[i] - caS[i]; });
+  var bar = function(label, data, color){ return { type:'bar', label:label, data:data, _cty:true, stack:'cty', backgroundColor: hexToRgba(color, 0.85), hoverBackgroundColor: color, borderWidth:0, yAxisID:'ySales', order:2, barPercentage:0.55 }; };
+  return { datasets: [ bar('Sales 미국', usS, CTY_COLOR.US), bar('Sales 캐나다', caS, CTY_COLOR.CA) ] };
 }
 buildChMonthOptions();
 buildChWeekOptions();
