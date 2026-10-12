@@ -106,7 +106,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .ads-metric-tbl thead th{color:#9ca3af;font-weight:700;border-bottom:2px solid #E0E0E4;font-size:9px;letter-spacing:.5px;text-transform:uppercase;}
 .ads-metric-tbl tbody tr:hover td{background:#F8F8FB;}
 /* 국가 분리 (2026-10-08) — 미국 기준 배지 · 캐나다 행 */
-.cty-badge{display:inline-block;font-size:9.5px;font-weight:600;color:#1D4ED8;background:#EEF2FF;border:1px solid #C7D2FE;border-radius:10px;padding:1px 8px;letter-spacing:0;white-space:nowrap;vertical-align:middle;}
+.cty-badge{display:inline-block;font-size:9.5px;font-weight:600;color:#A8463F;background:#FBEDEC;border:1px solid #F0C9C5;border-radius:10px;padding:1px 8px;letter-spacing:0;white-space:nowrap;vertical-align:middle;}
 .ads-metric-tbl .ca-lbl{color:#7B3F1D;}
 .ads-metric-tbl .ca-na{color:#7b8194;cursor:help;}
 .ads-metric-tbl .ca-why{display:block;font-size:9px;font-weight:400;color:#7b8194;}
@@ -119,7 +119,7 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .cty-row .cty-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;color:#9ca3af;margin-right:2px;}
 .cty-row .cty-chip{font-size:11px;font-weight:600;padding:3px 13px;border:1px solid #D8D8DC;border-radius:14px;background:#fff;color:#555;cursor:pointer;}
 .cty-row .cty-chip.on{background:#1D2847;color:#fff;border-color:#1D2847;}
-.cty-row .cty-hint{font-size:10px;color:#9ca3af;margin-left:6px;}
+.cty-row .cty-hint{font-size:10px;color:#9ca3af;}
 .cty-badge.us{color:#555;background:#F3F4F6;border-color:#E0E0E4;}
 .cty-locked{text-decoration:line-through;opacity:.45;cursor:not-allowed !important;}
 .cty-na{color:#7b8194;}
@@ -232,7 +232,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 .ev-item:last-child{border-bottom:none;}
 .ev-tag{font-size:9px;font-weight:700;padding:2px 6px;border-radius:2px;flex-shrink:0;white-space:nowrap;color:#fff;}
 /* 이벤트·KOL 국가 (2026-10-12) */
-.ev-cty{font-size:9px;font-weight:700;padding:1px 6px;border-radius:9px;flex-shrink:0;white-space:nowrap;color:#1D4ED8;background:#EEF2FF;border:1px solid #C7D2FE;}
+.ev-cty{font-size:9px;font-weight:700;padding:1px 6px;border-radius:9px;flex-shrink:0;white-space:nowrap;color:#A8463F;background:#FBEDEC;border:1px solid #F0C9C5;}
 .ev-cty.ca{color:#7B3F1D;background:#FBF3EC;border-color:#E7CDB6;}
 .ev-cty.both{color:#555;background:#F3F4F6;border-color:#E0E0E4;}
 .ev-info{flex:1;min-width:0;}
@@ -261,7 +261,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 .ch-tbl th:first-child{text-align:left;min-width:140px;}
 .ch-tbl td{padding:5px 8px;border-bottom:0.5px solid #EBEBEF;text-align:right;color:#666;font-variant-numeric:tabular-nums;}
 .ch-tbl td:first-child{text-align:left;font-weight:600;color:#333;}
-#chVisitsTable .ch-tbl td,#chSalesTable .ch-tbl td{white-space:nowrap;}   /* 2026-10-12 — 「₩0.1백만」이 두 줄로 꺾이지 않게 */
+#chVisitsTable .ch-tbl td,#chSalesTable .ch-tbl td,#chCvrTable .ch-tbl td{white-space:nowrap;}   /* 2026-10-12 — 「₩0.1백만」이 두 줄로 꺾이지 않게 */
 .ch-tbl tr:last-child td{font-weight:700;background:#F5F5F8;border-top:1px solid #E0E0E4;}
 .ch-tbl .wow-up{color:#16a34a;font-weight:700;}
 .ch-tbl .wow-dn{color:#c8102e;font-weight:700;}
@@ -397,6 +397,23 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 .sb-item.active{background:#1D2847;color:#D9A89A;}
 .sb-item.active .sb-icon{color:#D9A89A;}
 .sb-icon{flex-shrink:0;width:18px;display:flex;align-items:center;justify-content:center;}
+/* 국가 선택 — 사이드바 (2026-10-12) · 미국 = UNOVE 분홍(통합 탭 매출 막대색) · 캐나다 = 갈색 · 전체 = 반반 */
+.sb-cty{display:flex;align-items:center;gap:9px;width:100%;padding:7px 9px;border:0;border-radius:6px;background:transparent;color:#9aa3bd;cursor:pointer;white-space:nowrap;overflow:hidden;font-family:inherit;text-align:left;transition:all .13s;}
+.sb-cty:hover{background:rgba(255,255,255,0.07);color:#ddd;}
+.sb-cty .sb-text{font-size:11px;font-weight:500;}
+.sb-cdot{display:block;width:10px;height:10px;border-radius:50%;}
+.sb-cty[data-cty="US"] .sb-cdot{background:#d97070;}
+.sb-cty[data-cty="CA"] .sb-cdot{background:#7B3F1D;}
+.sb-cty[data-cty="ALL"] .sb-cdot{background:linear-gradient(90deg,#d97070 50%,#7B3F1D 50%);}
+.sb-cty.on{color:#fff;}
+.sb-cty.on[data-cty="US"]{background:#d97070;}
+.sb-cty.on[data-cty="CA"]{background:#7B3F1D;}
+.sb-cty.on[data-cty="ALL"]{background:rgba(255,255,255,0.16);}
+.sb-cty.on .sb-cdot{box-shadow:0 0 0 2px #fff;}
+.cty-cur{display:inline-block;font-size:11px;font-weight:600;color:#fff;border-radius:10px;padding:2px 10px;vertical-align:middle;white-space:nowrap;}
+.cty-cur[data-cty="US"]{background:#d97070;}
+.cty-cur[data-cty="CA"]{background:#7B3F1D;}
+.cty-cur[data-cty="ALL"]{background:linear-gradient(90deg,#d97070 50%,#7B3F1D 50%);}
 .sb-text{font-size:11px;font-weight:500;transition:opacity .2s;white-space:nowrap;}
 .sidebar.collapsed .sb-text{opacity:0;pointer-events:none;width:0;overflow:hidden;}
 .sb-footer{padding:10px 8px;border-top:0.5px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;gap:7px;overflow:hidden;}
@@ -487,6 +504,10 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
     <button class="sb-toggle" onclick="toggleSidebar()" title="접기/펼치기">‹</button>
   </div>
   <div class="sb-nav">
+    <div class="sb-section-lbl">국가</div>
+    <button class="cty-chip sb-cty" data-cty="ALL" onclick="setCty('ALL')" title="전체 (미국+캐나다)"><span class="sb-icon"><span class="sb-cdot"></span></span><span class="sb-text">전체</span></button>
+    <button class="cty-chip sb-cty on" data-cty="US" onclick="setCty('US')" title="미국"><span class="sb-icon"><span class="sb-cdot"></span></span><span class="sb-text">미국</span></button>
+    <button class="cty-chip sb-cty" data-cty="CA" onclick="setCty('CA')" title="캐나다"><span class="sb-icon"><span class="sb-cdot"></span></span><span class="sb-text">캐나다</span></button>
     <div class="sb-section-lbl">Analytics</div>
     <div class="sb-item active" data-tab="main" onclick="switchTab('main')">
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><rect x="0.5" y="6" width="3" height="7.5" rx="0.5"/><rect x="5.5" y="3.5" width="3" height="10" rx="0.5"/><rect x="10.5" y="0.5" width="3" height="13" rx="0.5"/></svg></span><span class="sb-text">통합 대시보드</span>
@@ -533,13 +554,14 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
   <div class="top-bar">
     <div style="display:flex;align-items:center;gap:8px;">
     <span class="page-title" id="pageTitle">Commerce Overview</span>
+    <span class="cty-cur" id="ctyCurBadge" data-cty="US">미국</span>
     <span class="cty-badge" id="usOnlyBadge" style="display:none" title="이 탭의 숫자는 전부 미국 자료입니다. 캐나다 유입·광고 자료는 이 탭에 들어오지 않습니다.">미국 기준 · 캐나다 자료 없음</span>
     </div>
     <div style="font-size:9px;color:#bbb;letter-spacing:0.3px;">관리자 : 데이터마케팅팀 이윤희</div>
   </div>
   <div class="main-scroll">
 <div id="tabMain">
-<div class="cty-row" style="padding:14px 28px 0;"><span class="cty-lbl">국가</span><button class="cty-chip" data-cty="ALL" onclick="setCty('ALL')">전체</button><button class="cty-chip on" data-cty="US" onclick="setCty('US')">미국</button><button class="cty-chip" data-cty="CA" onclick="setCty('CA')">캐나다</button><span class="cty-hint">KPI · 통합 성과 그래프에 적용 · 아래 12지표 표는 국가와 무관하게 미국·캐나다·전체를 함께 표시</span></div>
+<div class="cty-row" style="padding:14px 28px 0;"><span class="cty-hint">국가(왼쪽 메뉴)는 KPI · 통합 성과 그래프 · 지표 확인용 표에 적용</span></div>
 <div class="kpi-row" id="kpiRow"></div>
 <div class="filter-row">
   <div class="filter-block">
@@ -757,7 +779,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 </div><!-- /tabEvents -->
 <!-- ═══════════ CHANNEL ANALYSIS TAB ═══════════ -->
 <div id="tabChannel" style="display:none;">
-<div class="cty-row" style="padding:14px 28px 0;"><span class="cty-lbl">국가</span><button class="cty-chip" data-cty="ALL" onclick="setCty('ALL')">전체</button><button class="cty-chip on" data-cty="US" onclick="setCty('US')">미국</button><button class="cty-chip" data-cty="CA" onclick="setCty('CA')">캐나다</button><span class="cty-hint" id="ctyChHint"></span></div>
+<div class="cty-row" style="padding:14px 28px 0;"><span class="cty-hint" id="ctyChHint"></span></div>
 <div class="ch-kpi-row" id="chKpiRow"></div>
 <div class="filter-row">
   
@@ -802,7 +824,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
     <div class="leg-row">
       <div class="leg"><div class="leg-dot" style="background:rgba(47,84,150,0.25);border:1.5px solid rgba(47,84,150,0.6);"></div>Visits (Area)</div>
       <div class="leg"><div class="leg-dot" style="background:#c8102e;border-radius:1px;"></div>Sales (백만원) (Bar)</div>
-      <div class="leg" id="chComboCtyLeg" style="display:none;"><div class="leg-dot" style="background:rgba(29,78,216,0.85);border-radius:1px;"></div>미국(아래)<div class="leg-dot" style="background:rgba(123,63,29,0.85);border-radius:1px;margin-left:6px;"></div>캐나다(위) 누적</div>
+      <div class="leg" id="chComboCtyLeg" style="display:none;"><div class="leg-dot" style="background:rgba(217,112,112,0.85);border-radius:1px;"></div>미국(아래)<div class="leg-dot" style="background:rgba(123,63,29,0.85);border-radius:1px;margin-left:6px;"></div>캐나다(위) 누적</div>
       <div class="leg"><div class="leg-dot" style="background:#F4B942;border-radius:50%;"></div>CVR % (Line)</div>
     </div>
     <div class="chart-wrap" style="height:360px;"><canvas id="chComboChart"></canvas></div>
@@ -850,7 +872,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 </div>
 <div class="chart-sec">
   <div class="chart-card">
-    <div id="chCvrTable"></div>
+    <div id="chCvrTable" style="overflow-x:auto;"></div>
   </div>
 </div>
 </div><!-- /tabChannel -->
@@ -1300,7 +1322,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 
 <!-- ══ B&M 매출 및 재고 현황 탭 (2026-08-03 신설) ══════════════════════════ -->
 <div id="tabBm" style="display:none">
-<div class="cty-row" style="margin-bottom:4px;"><span class="cty-lbl">국가</span><button class="cty-chip" data-cty="ALL" onclick="setCty('ALL')">전체</button><button class="cty-chip on" data-cty="US" onclick="setCty('US')">미국</button><button class="cty-chip" data-cty="CA" onclick="setCty('CA')">캐나다</button><span class="cty-hint">주간 핵심 지표에 적용 · 「미국 기준」 표시가 붙은 차트·표는 국가와 무관하게 미국 값</span></div>
+<div class="cty-row" style="margin-bottom:4px;"><span class="cty-hint">국가(왼쪽 메뉴)는 주간 핵심 지표 · 매장별 실적에 적용 · 「미국 기준」 표시가 붙은 차트·표는 국가와 무관하게 미국 값</span></div>
 
 
 <div class="sec-hdr"><span class="bar"></span>주간 핵심 지표 <span style="font-weight:500;letter-spacing:0;text-transform:none;color:#9ca3af" id="bmKpiVs"></span></div>
@@ -1978,7 +2000,7 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
 <div id="sk_msg" style="display:none"></div>
 <div id="sk_tip"></div>
 <div class="wrap">
-<div class="cty-row" style="margin-bottom:8px;"><span class="cty-lbl">국가</span><button class="cty-chip" data-cty="ALL" onclick="setCty('ALL')">전체</button><button class="cty-chip on" data-cty="US" onclick="setCty('US')">미국</button><button class="cty-chip" data-cty="CA" onclick="setCty('CA')">캐나다</button><span class="cty-hint">최근 구간 요약에 적용 · 캐나다는 월간 자료(Raw_CA_월간_SKU)만 있음 · 「미국 기준」 차트·표는 국가와 무관</span></div>
+<div class="cty-row" style="margin-bottom:8px;"><span class="cty-hint">국가(왼쪽 메뉴)는 최근 구간 요약에 적용 · 캐나다는 월간 자료(Raw_CA_월간_SKU)만 있음 · 「미국 기준」 차트·표는 국가와 무관</span></div>
 <div class="ctl">
  <div class="filter-row" style="flex:1">
   <div class="filter-block"><div class="filter-lbl">주기</div>
@@ -4192,15 +4214,25 @@ const CTY_WHY = {
   comInv: '미국 .COM 재고(.COM_OH)와 같은 기준의 캐나다 자료가 없습니다', // .COM 재고
   caDaily:'캐나다는 주 단위 자료만 있습니다 (일 보기 잠금)'
 };
-const CTY_COLOR = { US:'#1D4ED8', CA:'#7B3F1D' };
+const CTY_COLOR = { US:'#d97070', CA:'#7B3F1D' };   // 미국 = UNOVE 분홍(통합 탭 매출 막대) (2026-10-12 · 이전 파랑 #1D4ED8)
 const CTY_CA_SHADE = { total:'#7B3F1D', com:'#A8693A', bam:'#D4A373' };   // 「캐나다」 칩 막대 — 갈색 진하기로 채널 구분 (2026-10-12)
 const CA_ENTRY_WEEK = 'W28';   // 캐나다 진입 — 닷컴 첫 매출 W28 1,453.37 · 매장 첫 판매 W30 (MJ 2026-10-08)
 const CTY_ENTRY_LABEL = '캐나다 진입 (닷컴 W28 · 매장 W30)';
 function ctyNA_(why) { return '<span class="cty-na">—</span>'; }
+// 제목 옆 지금 국가 배지 — 국가가 적용되는 탭(통합·유입·B&M·SKU)에서만 (2026-10-12)
+function ctyCurBadge_() {
+  var b = document.getElementById('ctyCurBadge'); if (!b) return;
+  var act = document.querySelector('.sb-item.active');
+  var tab = act ? act.dataset.tab : 'main';
+  b.dataset.cty = CTY;
+  b.textContent = { US:'미국', CA:'캐나다', ALL:'전체 (미국+캐나다)' }[CTY];
+  b.style.display = ['main', 'channel', 'bm', 'sku'].indexOf(tab) >= 0 ? '' : 'none';
+}
 window.setCty = function(c) {
   if (c === CTY) return;
   CTY = c;
   document.querySelectorAll('.cty-chip').forEach(function(b){ b.classList.toggle('on', b.dataset.cty === c); });
+  ctyCurBadge_();   // 2026-10-12 제목 옆 지금 국가
   // 「전체」 — 채널 칩 단일 선택 (승인 3 추가). 여러 개가 켜져 있으면 첫 번째만 남긴다
   if (c === 'ALL' && selSalesTypes.size > 1) {
     var keep = ['com','bam','total'].find(function(t){ return selSalesTypes.has(t); });
@@ -5581,6 +5613,7 @@ function switchTab(tab) {
   const titles = {main:'통합 대시보드',channel:'유입 채널별',ads:'퍼포먼스 광고',events:'이벤트 관리',settings:'Settings',onsite:'온사이트 광고',bm:'B&M · 재고',sku:'SKU 실매출'};
   const pt = document.getElementById('pageTitle');
   if (pt) pt.textContent = titles[tab] || '';
+  try { ctyCurBadge_(); } catch(e){}
   // 국가 분리 — 캐나다 자료가 없는 3탭은 제목 옆에 「미국 기준」 배지 (국가 선택 상태를 읽지 않는다)
   const usb = document.getElementById('usOnlyBadge');
   if (usb) usb.style.display = ((tab === 'channel' && !ctyCaChannel_()) || tab === 'ads' || tab === 'onsite') ? '' : 'none';   // 유입 탭은 캐나다 유입 자료가 없을 때만 (2026-10-12)
