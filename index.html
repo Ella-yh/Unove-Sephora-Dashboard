@@ -1366,7 +1366,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
   <div class="foot">SKU명 클릭 → 세포라닷컴 상품 페이지 · <b>🌐</b> = 닷컴 전용(B&amp;M 미배치, 음수는 반품 처리분) · <span class="alert">빨간 숫자</span> = In-Stock 80% 미만 또는 세포라 창고 여유 4주 미만</div>
 </div>
 
-<div class="sec-hdr"><span class="bar"></span>이상 징후 <span class="cty-badge us" title="국가 칩과 무관하게 미국 값입니다. 캐나다 자료는 있으나 이번 국가 분리 범위가 아닙니다.">미국 기준</span> <span class="note">기준값 자동 판정 — In-Stock 80% · 세포라 창고 여유 4주 · 닷컴 실보유 2주 · 전주 대비 ±30%</span></div>
+<div class="sec-hdr"><span class="bar"></span>이상 징후 <span class="cty-badge us" title="국가 칩과 무관하게 미국 값입니다. 캐나다 자료는 있으나 이번 국가 분리 범위가 아닙니다.">미국 기준</span> <span class="note">기준값 자동 판정 — 결품 심각(In-Stock 80% 미만 + 닷컴 실보유 2주 미만) · In-Stock 80% · 세포라 창고 여유 4주 · 닷컴 실보유 2주 · 전주 대비 ±30%</span></div>
 <div class="chart-card" style="padding:0"><div id="signals"></div></div>
 
 <div class="sec-hdr"><span class="bar"></span>B&amp;M 매장별 실적
@@ -1482,6 +1482,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 #tabBm .sig:last-child{border-bottom:none}
 #tabBm .grade{font-size:8.5px;font-weight:700;padding:2px 7px;border-radius:9px;white-space:nowrap;flex:none;margin-top:1px}
 #tabBm .g-crit{background:#FBEAEC;color:#c8102e}
+#tabBm .g-sev{background:#c8102e;color:#fff}   /* 2026-10-12 결품 심각 */
 #tabBm .g-warn{background:#FDF3E0;color:#B27A00}
 #tabBm .g-ok{background:#E8F3EC;color:#1E7C43}
 #tabBm .gloss{background:#fff;border:.5px solid #E8E8EC;border-radius:14px;box-shadow:0 1px 6px rgba(0,0,0,.04);padding:12px 15px;font-size:10px;color:#666;line-height:1.95}
@@ -1745,6 +1746,14 @@ BMQ('btnAll').onclick=function(){this.classList.add('on');BMQ('btnTop').classLis
 (function(){
   const sig=[];
   D.skus.forEach(s=>{
+    // ⓪ 결품 심각 (2026-10-12 MJ 결정 · IMC 10/12 「심각할 때만 알람」) — 매장 In-Stock 80% 미만 이면서 닷컴 실보유 2주 미만
+    //    이 SKU 는 아래 ①② 대신 이 한 줄로만 표시한다(같은 SKU 가 두 번 뜨지 않게)
+    if(s.isp!=null&&s.isp<80&&!s.co&&s.cwNow!=null&&s.cwNow>=0&&s.cwNow<2){
+      sig.push({g:'sev',t:'결품 심각 — '+s.n,
+        d:'매장 In-Stock '+s.isp.toFixed(1)+'% (80% 미만) · 품절 '+s.oos+'개 매장 · 닷컴 실보유 '+s.cwNow+'주 (2주 미만) · 물류센터 실보유 '+(s.dcOH||0).toLocaleString()+'개 · 닷컴 현재고 '+(s.coh||0).toLocaleString()+'개',
+        a:'세포라 MD 알람 대상 (매장·닷컴 동시 악화)',v:s.isp});
+      return;
+    }
     if(s.isp!=null&&s.isp<80){
       const perStore=s.oos>0?(s.dcOH||0)/s.oos:Infinity;
       if(perStore>=1){
@@ -1789,13 +1798,13 @@ BMQ('btnAll').onclick=function(){this.classList.add('on');BMQ('btnTop').classLis
     sig.push({g:d>0?'ok':'warn',t:'권역 매장 생산성 '+(d>0?'급등':'급락')+' — '+r.region,
       d:'매장당 주간 매출 $'+r.spd24.toFixed(0)+' → $'+r.spd25.toFixed(0)+' ('+(d>0?'▲':'▼')+Math.abs(d).toFixed(0)+'%) · 판매매장 '+r.stores+'개',
       a:d>0?'상승 요인 확인 후 타 권역 적용 검토':'하락 요인 점검',v:-0.5});});
-  sig.sort((a,b)=>({crit:0,warn:1,ok:2})[a.g]-({crit:0,warn:1,ok:2})[b.g]||a.v-b.v);
-  const LB={crit:'경보',warn:'주의',ok:'호조'};
+  sig.sort((a,b)=>({sev:-1,crit:0,warn:1,ok:2})[a.g]-({sev:-1,crit:0,warn:1,ok:2})[b.g]||a.v-b.v);
+  const LB={sev:'결품 심각',crit:'경보',warn:'주의',ok:'호조'};
   BMQ('signals').innerHTML=sig.map(s=>'<div class="sig">'
     +'<span class="grade g-'+s.g+'">'+LB[s.g]+'</span>'
     +'<span style="flex:1;min-width:0"><b style="color:#333">'+s.t+'</b><br><span style="color:#9ca3af;font-size:10px">'+s.d+'</span></span>'
     +'<span style="width:230px;flex:none;color:#666;font-size:10px;text-align:right">'+s.a+'</span></div>').join('')
-   +'<div class="foot" style="padding:8px 11px;margin:0">판정 규칙 — ① In-Stock 80% 미만이고 실보유로 매장당 1개 이상 보낼 수 있으면 세포라 내부 배분 지연 ② 매장당 1개도 못 보내면 세포라 물류센터 미입고 ③ 품절 전이라도 세포라 창고 여유가 4주 미만이면 미리 경보. 매장 미배치(🌐) SKU는 B&M 기준으로는 계산이 성립하지 않아, 닷컴 실보유 주수(RAW 열 이름 「닷컴재고소진주수」)로 따로 판정합니다(2주 미만 경보 · 2~4주 주의). 전주 대비 ±30%는 급변으로 표시합니다. 규칙에 걸린 항목만 자동 표시되며, 해당 없으면 비어 있는 것이 정상입니다.</div>';})();
+   +'<div class="foot" style="padding:8px 11px;margin:0">판정 규칙 — ⓪ <b>결품 심각</b> = 매장 In-Stock 80% 미만 <b>이면서</b> 닷컴 실보유 2주 미만(매장·닷컴 동시 악화 — 세포라 MD 알람 대상, 맨 위 표시) ① In-Stock 80% 미만이고 실보유로 매장당 1개 이상 보낼 수 있으면 세포라 내부 배분 지연 ② 매장당 1개도 못 보내면 세포라 물류센터 미입고 ③ 품절 전이라도 세포라 창고 여유가 4주 미만이면 미리 경보. 매장 미배치(🌐) SKU는 B&M 기준으로는 계산이 성립하지 않아, 닷컴 실보유 주수(RAW 열 이름 「닷컴재고소진주수」)로 따로 판정합니다(2주 미만 경보 · 2~4주 주의). 전주 대비 ±30%는 급변으로 표시합니다. 규칙에 걸린 항목만 자동 표시되며, 해당 없으면 비어 있는 것이 정상입니다.</div>';})();
 
 /* region */
 (function(){const R=D.regions,W=560,H=228,pl=38,pr=8,pt=12,pb=42,n=R.length,iw=W-pl-pr,ih=H-pt-pb;
