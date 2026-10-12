@@ -651,6 +651,10 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
           <button class="stgl" data-type="total" onclick="setSalesType(this)">TTL</button>
           <button class="stgl" data-type="bam" onclick="setSalesType(this)">B&M</button>
         </div>
+        <div class="sales-toggle" style="margin-left:6px;" title="매출 통화 — USD = 세포라 엑셀 원본 그대로 · KRW = 날짜별 환율(2026-08-31까지 1,500원 · 09-01부터 1,400원)">
+          <button class="stgl active" data-cur="KRW" onclick="setMainCur('KRW')">KRW</button>
+          <button class="stgl" data-cur="USD" onclick="setMainCur('USD')">USD</button>
+        </div>
       </div>
     </div>
     <div id="ctyChartNote" style="display:none"></div>
@@ -658,13 +662,14 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
     <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
     <div class="chart-note" style="line-height:1.7;">
       * CVR = 주문 수량 / Visits TY × 100<span id="kpiNoteWrap"><br>
-      <span style="color:#d97070;">— —</span> Sales KPI/일: ₩3,900,000&nbsp;&nbsp;<span id="kpiNoteRoas">
+      <span style="color:#d97070;">— —</span> Sales KPI/일: ₩3,900,000<span id="kpiNoteUsd" style="display:none;"> (USD 보기에서는 원화 목표선을 그리지 않음)</span>&nbsp;&nbsp;<span id="kpiNoteRoas">
       <span style="color:#4bc8a0;">— —</span> ROAS KPI/일: 263%</span></span>
       <br>판매 없이 반품만 발생한 날은 ROAS 계산이 성립하지 않아 점을 표시하지 않습니다.
     </div>
   </div>
   <div class="chart-card" style="margin-top:10px;">
-    <div class="chart-sec-sub" style="margin-bottom:8px;">지표 확인용 표 (현재 국가·필터·주기 기준)</div>
+    <div class="chart-sec-sub" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>지표 확인용 표 (현재 국가·필터·주기 기준)</span>
+      <span class="sales-toggle" style="margin-left:0;" title="매출 행 통화 — USD = 세포라 엑셀 원본 그대로(센트까지) · KRW = 날짜별 환율"><button class="stgl active" data-tcur="KRW" onclick="setTblCur('KRW')">KRW</button><button class="stgl" data-tcur="USD" onclick="setTblCur('USD')">USD</button></span></div>
     <div class="ads-tbl-wrap"><table class="ads-metric-tbl" id="mainDataTable"></table></div>
     <div class="chart-note" style="text-align:left;color:#999;margin-top:6px;">단위: 방문·수량은 K(천) 이상 축약, 매출·비용은 K(천)/M(백만) 축약, CVR·ROAS는 %. 페이드 외 4개 비용 지표와 전체 ROAS는 일 단위에서 데이터가 없어 '-'로 표시됩니다.</div>
     <div class="chart-note" style="text-align:left;color:#999;margin-top:2px;">국가 칩에 맞는 묶음만 표시합니다. 미국은 12개 지표, 캐나다·전체는 캐나다 자료가 있는 지표(Visits·매출·CVR)만 있습니다. Visits·CVR은 캐나다 이커머스 기준이며 캐나다 자료가 시작되기 전 기간은 「—」입니다. 캐나다 매출은 미국과 같은 환율(2026-08-31까지 1,500원 · 2026-09-01부터 1,400원, 캐나다 주 자료는 주 마감일 기준)로 환산합니다. 캐나다 매출은 주 단위 자료만 있어 일 단위는 「—」, 월 단위는 채널 구분 없이 합계만 있어 TTL만 값이 있습니다. 「전체」 월 값은 미국(일별 합산)과 캐나다(세포라 월간 원본)를 더한 것입니다. 「—」에 마우스를 올리면 이유가 보입니다.</div>
@@ -3842,8 +3847,10 @@ function renderChart() {
   if (_noteWrap) _noteWrap.style.display = (mainPeriod === 'daily') ? '' : 'none';
   if (_noteRoas) _noteRoas.style.display = (showRoas && mainPeriod === 'daily') ? '' : 'none';
   const annotations = buildAnnotations(labels);
-  // Sales(.COM) KPI 기준선 — 390만원 고정(일 목표치), 일 단위에서만 표시
-  if (mainPeriod === 'daily') {
+  // Sales(.COM) KPI 기준선 — 390만원 고정(일 목표치), 일 단위에서만 표시 · USD 보기에서는 그리지 않음(원화 목표 · 환율이 날짜마다 달라 한 줄로 환산 불가)
+  const _noteUsd = document.getElementById('kpiNoteUsd');
+  if (_noteUsd) _noteUsd.style.display = MAIN_CUR === 'USD' ? '' : 'none';
+  if (mainPeriod === 'daily' && MAIN_CUR === 'KRW') {
     annotations['salesBaseline'] = {
       type: 'line',
       value: 3900000,
@@ -3901,7 +3908,7 @@ function renderChart() {
             label: c.label,
             // 🛑 SALES_BY_DATE 는 세포라 원본 USD 다. yS 축 라벨·툴팁·KPI 기준선(₩3,900,000)이
             //    모두 원화이므로 getMainChartData 가 날짜별 환율로 미리 환산해 둔 *_krw 를 쓴다.
-            data: data.map(d => d[c.key + '_krw'] || 0),
+            data: data.map(d => (MAIN_CUR === 'USD' ? d[c.key] : d[c.key + '_krw']) || 0),   // USD 칩 = 세포라 원본 (2026-10-12)
             type: 'bar',
             backgroundColor: makeGrad('mainChart',c.color,0.85,0.45),
             hoverBackgroundColor: makeGrad('mainChart',c.color,0.95,0.6),
@@ -4029,7 +4036,7 @@ function renderChart() {
             label: ctx => {
               const v = ctx.raw;
               if (ctx.dataset.label === 'Visits') return `  Visits: ${v.toLocaleString()}`;
-              if (ctx.dataset.label.startsWith('Sales')) return '  ' + ctx.dataset.label + ': ' + (v < 0 ? '−' : '') + '₩' + Math.round(Math.abs(v)).toLocaleString('ko-KR') + (v < 0 ? ' (반품)' : '');
+              if (ctx.dataset.label.startsWith('Sales')) return '  ' + ctx.dataset.label + ': ' + curFmt_(v, MAIN_CUR) + (v < 0 ? ' (반품)' : '');
               if (ctx.dataset.label === 'CVR') return `  CVR: ${v.toFixed(2)}%`;
               if (ctx.dataset.label === '페이드 비용') return v != null ? `  페이드 비용: ₩${Math.round(v).toLocaleString('ko-KR')}` : null;
               if (ctx.dataset.label === '브랜딩 비용' || ctx.dataset.label === 'KOL 비용' || ctx.dataset.label === '채널마케팅 비용' || ctx.dataset.label === '광고비(총계)') return v != null ? '  ' + ctx.dataset.label + ': ₩' + Math.round(v).toLocaleString('ko-KR') : null;
@@ -4065,8 +4072,8 @@ function renderChart() {
           type: 'linear', position: 'right',
           grid: { drawOnChartArea: false },
           min: 0, beginAtZero: true,
-          ticks: { font:{size:9}, color:'#888', callback: v => v>=1000000?'₩'+(v/1000000).toFixed(1)+'M':v>=1000?'₩'+(v/1000).toFixed(0)+'K':'₩'+v },
-          title: { display:true, text:'Sales (₩)', font:{size:9}, color:'#d97070' }
+          ticks: { font:{size:9}, color:'#888', callback: v => { const u = MAIN_CUR === 'USD' ? '$' : '₩'; return v>=1000000?u+(v/1000000).toFixed(1)+'M':v>=1000?u+(v/1000).toFixed(0)+'K':u+v; } },
+          title: { display:true, text: MAIN_CUR === 'USD' ? 'Sales ($)' : 'Sales (₩)', font:{size:9}, color:'#d97070' }
         },
         yC: {
           type: 'linear', position: 'right', display: showCvr,
@@ -4092,6 +4099,7 @@ function renderChart() {
     }
   };
   ctyMainChart_(cfg, data);   // 국가 분리 2차 — 캐나다·전체 계열 · 누적 막대 · 진입 점선 · 잠금 (미국이면 무변경)
+  if (MAIN_CUR === 'USD') { const _lg = document.getElementById('salesLegLabel'); if (_lg) _lg.textContent += ' · USD'; }   // 매출 통화 칩 (2026-10-12) — 범례 문구는 ctyMainChart_ 가 매번 다시 씀
   const ctx = document.getElementById('mainChart').getContext('2d');
   if (chart) chart.destroy();
   chart = new Chart(ctx, cfg);
@@ -4100,6 +4108,29 @@ function renderChart() {
   renderMainDataTable(data);
 }
 // ─── MAIN CHART DATA TABLE (지표 확인용 표, 퍼포먼스 광고 탭 표와 동일 패턴) ───────
+// 매출 통화 칩 (2026-10-12 IMC 회의 · 실장 요구) — 그래프(MAIN_CUR)와 지표 표(TBL_CUR)가 따로. 기본 KRW
+// USD = 세포라 엑셀 원본(SALES_BY_DATE · 캐나다 CADATA) 그대로 · KRW = 날짜별 환율(fxRate)로 환산한 *_krw. 비용·ROAS 는 그대로 원화
+var MAIN_CUR = 'KRW', TBL_CUR = 'KRW';
+function curFmt_(v, cur) {   // 툴팁용 전체 금액 — USD 는 센트까지(원본 그대로), KRW 는 원 단위
+  var a = Math.abs(v), sg = v < 0 ? '−' : '';
+  return cur === 'USD' ? sg + '$' + a.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })
+                       : sg + '₩' + Math.round(a).toLocaleString('ko-KR');
+}
+function mtblUsd(v) { return v == null ? '-' : curFmt_(v, 'USD'); }
+function mtblSales_(v) { return TBL_CUR === 'USD' ? mtblUsd(v) : mtblMoney(v); }
+function salesLbl_(name) { return name + (TBL_CUR === 'USD' ? ' (USD)' : ''); }
+window.setMainCur = function(c) {
+  if (MAIN_CUR === c) return;
+  MAIN_CUR = c;
+  document.querySelectorAll('.stgl[data-cur]').forEach(function(b){ b.classList.toggle('active', b.dataset.cur === c); });
+  renderChart();
+};
+window.setTblCur = function(c) {
+  if (TBL_CUR === c) return;
+  TBL_CUR = c;
+  document.querySelectorAll('.stgl[data-tcur]').forEach(function(b){ b.classList.toggle('active', b.dataset.tcur === c); });
+  renderMainDataTable(getMainChartData());
+};
 function mtblMoney(v) {
   if (v == null) return '-';
   return v>=1000000 ? '₩'+(v/1000000).toFixed(1)+'M' : v>=1000 ? '₩'+(v/1000).toFixed(0)+'K' : '₩'+Math.round(v);
@@ -4114,9 +4145,9 @@ function mtblPct(v, isRatio) {
 }
 const MAIN_TABLE_METRICS = [
   {label:'Visits',       fmt:mtblCount, get:function(d){ return d.visits; }},
-  {label:'Sales .COM',   fmt:mtblMoney, get:function(d){ return d.sales_com == null ? null : d.sales_com_krw; }},   // *_krw = 날짜별 환율로 환산한 원화(getMainChartData)
-  {label:'Sales B&M',    fmt:mtblMoney, get:function(d){ return d.sales_bam == null ? null : d.sales_bam_krw; }},
-  {label:'Sales TTL',    fmt:mtblMoney, get:function(d){ return d.sales == null ? null : d.sales_krw; }},
+  {get label(){ return salesLbl_('Sales .COM'); }, fmt:mtblSales_, get:function(d){ return d.sales_com == null ? null : (TBL_CUR === 'USD' ? d.sales_com : d.sales_com_krw); }},   // *_krw = 날짜별 환율로 환산한 원화(getMainChartData) · USD = 원본
+  {get label(){ return salesLbl_('Sales B&M'); },  fmt:mtblSales_, get:function(d){ return d.sales_bam == null ? null : (TBL_CUR === 'USD' ? d.sales_bam : d.sales_bam_krw); }},
+  {get label(){ return salesLbl_('Sales TTL'); },  fmt:mtblSales_, get:function(d){ return d.sales == null ? null : (TBL_CUR === 'USD' ? d.sales : d.sales_krw); }},
   {label:'CVR',          fmt:function(v){ return mtblPct(v, false); }, get:function(d){ return d.cvr; }},
   {label:'페이드 비용',   fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? d.spend : costVal(mainPeriod, '퍼포먼스 비용', d.date); }},
   {label:'채널마케팅 비용', fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? null : costVal(mainPeriod, channelLabel(mainPeriod), d.date); }},
@@ -4167,8 +4198,8 @@ function caRowWhy_(part) {
 // withUs = true 이면 「전체」 = 미국(위 12행과 같은 값) + 캐나다
 function caMetric_(name, part, withUs) {
   return {
-    get label() { return '<span class="ca-lbl">' + name + '</span>' + caRowWhy_(part); },
-    fmt: function(v) { return v == null ? '<span class="ca-na" title="' + this._why + '">—</span>' : mtblMoney(v); },
+    get label() { return '<span class="ca-lbl">' + salesLbl_(name) + '</span>' + caRowWhy_(part); },
+    fmt: function(v) { return v == null ? '<span class="ca-na" title="' + this._why + '">—</span>' : mtblSales_(v); },
     get: function(d) {
       var r = caPart_(d, part);
       this._why = r.why;
@@ -4177,6 +4208,7 @@ function caMetric_(name, part, withUs) {
       if (typeof us !== 'number') { this._why = '이 기간의 미국 값이 없습니다'; return null; }
       // 캐나다 = 그 기간(주 마감일·월) 환율 · 미국 = 날짜별 환율로 환산한 원화(*_krw) — 각각 환산한 뒤 더한다
       var usK = withUs ? (part === 'com' ? d.sales_com_krw : d.sales_krw) : 0;
+      if (TBL_CUR === 'USD') return r.v + us;   // USD = 캐나다 원본 + 미국 원본 (2026-10-12)
       return r.v * r.fx + usK;
     }
   };
@@ -4416,7 +4448,7 @@ function ctyMainChart_(cfg, data) {
   var notes = [];
   var caSeries = function(t, color, stack) {
     var why = [];
-    var vals = data.map(function(d, i){ var r = caPart_(d, partOf[t]); why[i] = r.why; return r.v == null ? null : r.v * r.fx; });   // 그 기간 환율
+    var vals = data.map(function(d, i){ var r = caPart_(d, partOf[t]); why[i] = r.why; return r.v == null ? null : (MAIN_CUR === 'USD' ? r.v : r.v * r.fx); });   // 그 기간 환율 · USD 칩 = 원본
     var o = { label:'Sales ' + labelMap[t] + ' (캐나다)', data: vals, type:'bar', _cty:true, _why: why,
               backgroundColor: color, hoverBackgroundColor: color, yAxisID:'yS', order:2, categoryPercentage:0.85,
               barPercentage: stack ? 0.5 : (types.length > 1 ? 0.35 : 0.5) };
@@ -4430,7 +4462,7 @@ function ctyMainChart_(cfg, data) {
   } else {
     var t = types[0];
     ds.push({ label:'Sales ' + labelMap[t] + ' (미국)', type:'bar', _cty:true, _why:[], stack:'cty',
-              data: data.map(function(d){ return d[keyOf[t] + '_krw'] || 0; }),   // 날짜별 환율로 환산한 원화(getMainChartData)
+              data: data.map(function(d){ return (MAIN_CUR === 'USD' ? d[keyOf[t]] : d[keyOf[t] + '_krw']) || 0; }),   // 날짜별 환율로 환산한 원화(getMainChartData) · USD 칩 = 원본
               backgroundColor: hexToRgba(CTY_COLOR.US, 0.85), hoverBackgroundColor: CTY_COLOR.US,
               yAxisID:'yS', order:2, barPercentage:0.5, categoryPercentage:0.85 });
     ds.push(caSeries(t, hexToRgba(CTY_COLOR.CA, 0.85), 'cty'));
@@ -4462,7 +4494,7 @@ function ctyMainChart_(cfg, data) {
     if (!ctx.dataset._cty) return origLabel(ctx);
     var v = ctx.raw;
     if (v == null) return '  ' + ctx.dataset.label + ': — (' + (ctx.dataset._why[ctx.dataIndex] || '') + ')';
-    return '  ' + ctx.dataset.label + ': ' + (v < 0 ? '−' : '') + '₩' + Math.round(Math.abs(v)).toLocaleString('ko-KR') + (v < 0 ? ' (반품)' : '');
+    return '  ' + ctx.dataset.label + ': ' + curFmt_(v, MAIN_CUR) + (v < 0 ? ' (반품)' : '');
   };
   // 「전체」 누적 — 툴팁 아래 합계 = 음수(반품) 포함 실제 합. 막대 높이·축(min:0)은 그대로 (B&M 탭 채널별 매출 추이와 같은 원칙)
   if (CTY === 'ALL') tt.footer = function(items) {
@@ -4470,7 +4502,7 @@ function ctyMainChart_(cfg, data) {
     var i = items[0].dataIndex, sum = 0, miss = '';
     items[0].chart.data.datasets.forEach(function(d){ if (!d._cty) return; var v = d.data[i]; if (v == null) miss = d._why[i] || '값 없음'; else sum += v; });
     if (miss) return '합계 (미국+캐나다): — (' + miss + ')';
-    return '합계 (미국+캐나다): ' + (sum < 0 ? '−' : '') + '₩' + Math.round(Math.abs(sum)).toLocaleString('ko-KR');
+    return '합계 (미국+캐나다): ' + curFmt_(sum, MAIN_CUR);
   };
   if (CTY === 'ALL' && mainPeriod === 'daily') notes.unshift('일 단위 매출은 캐나다 자료가 없어 미국만 표시합니다 (캐나다 매출은 주 단위 자료뿐)');
   if (note) {
