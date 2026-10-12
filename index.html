@@ -3669,6 +3669,12 @@ function evCty_(o) { var c = String((o && o.country) || '').trim(); return EV_CT
 function evCtyOk_(o) { if (CTY === 'ALL') return true; var c = evCty_(o); return c === '공통' || c === (CTY === 'CA' ? '캐나다' : '미국'); }
 function evCtyTag_(o) { var c = evCty_(o); return '<span class="ev-cty' + (c === '캐나다' ? ' ca' : c === '공통' ? ' both' : '') + '">' + c + '</span>'; }
 function evCtyOpts_(sel) { return EV_CTY.map(function(c){ return '<option value="' + c + '"' + (c === sel ? ' selected' : '') + '>' + c + '</option>'; }).join(''); }
+// 마커 칸 찾기 (2026-10-12) — 주 보기 = 그 날짜가 든 주(일요일 키 getWeekKey)의 칸. 같은 주의 이벤트는 전부 나열
+// 일·월 보기는 기존 그대로(「월-일」 라벨 일치 — 월 보기는 결과적으로 마커 없음. 월 보기 마커는 MJ 결정 대기)
+function mkIdx_(date, labels) {
+  if (mainPeriod === 'weekly') return (window._mkKeys || []).indexOf(getWeekKey(date));
+  return labels.indexOf(date.slice(5));
+}
 function buildAnnotations(labels) {
   if (!showMarkers) return {}; // 마커 숨김 시 점선 전부 제거
   const annotations = {};
@@ -3698,7 +3704,7 @@ function buildAnnotations(labels) {
   // Group by startIndex so we can stagger overlapping labels
   const byIdx = {};
   unique.forEach(ev => {
-    const sIdx = labels.indexOf(ev.start.slice(5));
+    const sIdx = mkIdx_(ev.start, labels);
     if (sIdx < 0) return;
     if (!byIdx[sIdx]) byIdx[sIdx] = [];
     byIdx[sIdx].push(ev);
@@ -3710,7 +3716,7 @@ function buildAnnotations(labels) {
       const col = TYPES[ev.type] || '#888';
       const sLbl = ev.start.slice(5).replace('-','/');
       const eLbl = ev.end.slice(5).replace('-','/');
-      const eIdx = labels.indexOf(ev.end.slice(5));
+      const eIdx = mkIdx_(ev.end, labels);
       const text = sLbl === eLbl ? `${ev.type}(${sLbl})` : `${ev.type}(${sLbl}-${eLbl})`;
       if (ev.start === ev.end || eIdx < 0) {
         // Single vertical line — label drawn in marker zone
@@ -3794,6 +3800,7 @@ function renderChart() {
     if (b) { b.disabled = (mainPeriod === 'daily'); b.title = b.disabled ? '월/주 단위에서만 표시됩니다' : ''; }
   });
   const labels = data.map(d => d.label || d.date.slice(5));
+  window._mkKeys = data.map(d => d.date);   // 주 보기 마커 칸 찾기용 (mkIdx_) — 주 보기 d.date = 주 시작 일요일
   // KPI 기준선 각주 — 선이 그려지는 조건과 똑같이 맞춘다. 선이 없으면 범례도 없다.
   // Sales KPI/일(₩3,900,000)·ROAS KPI/일(263%) 은 둘 다 「닷컴 일 목표」라 월·주에는 뜻이 없다.
   const _noteWrap = document.getElementById('kpiNoteWrap');
@@ -4895,9 +4902,9 @@ function positionMarkers() {
   // Separate single-day vs range events
   const singles = [], ranges = [];
   unique.forEach(ev => {
-    const sIdx = labels.indexOf(ev.start.slice(5));
+    const sIdx = mkIdx_(ev.start, labels);
     if (sIdx < 0) return;
-    const eIdx = labels.indexOf(ev.end.slice(5));
+    const eIdx = mkIdx_(ev.end, labels);
     if (ev.start === ev.end || eIdx < 0) singles.push({ ...ev, sIdx });
     else ranges.push({ ...ev, sIdx, eIdx });
   });
