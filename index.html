@@ -4921,7 +4921,17 @@ function positionMarkers() {
   const hasRanges = ranges.length > 0;
   const SINGLE_H = 20; // px per single row
   const RANGE_H  = 20;
-  const totalH = maxStack * SINGLE_H + (hasRanges ? RANGE_H : 0) + 4;
+  // 기간 막대 줄 나누기 (2026-10-12) — 시작 칸 순(같으면 긴 막대 먼저)으로 놓고, 앞 막대와 겹치거나 맞닿으면 아래 줄로
+  const laneEnd = [];
+  ranges.slice().sort((a, b) => a.sIdx - b.sIdx || (b.eIdx - b.sIdx) - (a.eIdx - a.sIdx)).forEach(ev => {
+    const x0 = scale.getPixelForValue(ev.sIdx);
+    const x1 = x0 + Math.max(scale.getPixelForValue(ev.eIdx) - x0, 40);   // 아래 그리기와 같은 너비(최소 40px)
+    let k = laneEnd.findIndex(L => L < x0);
+    if (k < 0) { k = laneEnd.length; laneEnd.push(0); }
+    laneEnd[k] = x1 + 1;
+    ev.lane = k;
+  });
+  const totalH = maxStack * SINGLE_H + (hasRanges ? RANGE_H * laneEnd.length : 0) + 4;
   zone.style.height = totalH + 'px';
   // Draw single-day labels
   const tip = document.getElementById('mTooltip');
@@ -4977,7 +4987,7 @@ function positionMarkers() {
       el.style.border = `1px solid ${col}`;
       el.style.left = xS + 'px';
       el.style.width = w + 'px';
-      el.style.top = rangeTop + 'px';
+      el.style.top = (rangeTop + ev.lane * RANGE_H) + 'px';
       bindTip(el, ev);
       zone.appendChild(el);
     });
