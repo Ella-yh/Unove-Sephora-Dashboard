@@ -76,6 +76,10 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
   padding:3px 9px;border:0.5px solid #D8D8DC;background:#fff;color:#777;cursor:pointer;border-radius:3px;transition:all .15s;}
 .stgl:hover{border-color:#1D2847;color:#1D2847;}
 .stgl.active{background:#1D2847;border-color:#1D2847;color:#fff;}
+/* 매출 통화 스위치 (2026-10-12) — 매출 범례 옆 · 매출 색 알약 */
+.cur-sw{display:inline-flex;border:1.5px solid #d97070;border-radius:12px;overflow:hidden;flex-shrink:0;vertical-align:middle;}
+.cur-sw button{font-size:10px;font-weight:600;padding:2px 9px;border:0;background:#fff;color:#b4554f;cursor:pointer;font-family:inherit;line-height:1.5;white-space:nowrap;}
+.cur-sw button.on{background:#d97070;color:#fff;}
 .ads-p-btn{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border:0.5px solid #D8D8DC;background:#fff;color:#9ca3af;cursor:pointer;border-radius:3px;transition:all .15s;}
 .ads-p-btn:hover{border-color:#1D2847;color:#1D2847;}
 .ads-p-btn.active{background:#1D2847;border-color:#1D2847;color:#fff;}
@@ -599,6 +603,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
   <div class="chart-card" style="position:relative;">
     <div class="leg-row" style="align-items:center;flex-wrap:wrap;gap:6px;">
       <div class="leg"><div class="leg-dot" style="background:#d97070;"></div><span id="salesLegLabel">Sales (.COM)</span></div>
+      <span class="cur-sw" title="매출 통화 — 달러 = 세포라 엑셀 원본 그대로 · 원화 = 날짜별 환율(2026-08-31까지 1,500원 · 09-01부터 1,400원)"><button class="on" data-cur="KRW" onclick="setMainCur('KRW')">₩ 원화</button><button data-cur="USD" onclick="setMainCur('USD')">$ 달러</button></span>
       <button class="mkr-btn" id="btnCvrToggle" onclick="toggleCvr(this)" style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#8878d0;"></span>CVR</button>
       <button class="mkr-btn active" id="btnVisitsToggle" onclick="toggleVisits(this)" style="display:flex;align-items:center;gap:4px;">
         <span style="font-size:12px;font-weight:700;line-height:1;color:#6aadd5;">+</span><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#6aadd5;"></span>Visits
@@ -651,10 +656,6 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
           <button class="stgl" data-type="total" onclick="setSalesType(this)">TTL</button>
           <button class="stgl" data-type="bam" onclick="setSalesType(this)">B&M</button>
         </div>
-        <div class="sales-toggle" style="margin-left:6px;" title="매출 통화 — USD = 세포라 엑셀 원본 그대로 · KRW = 날짜별 환율(2026-08-31까지 1,500원 · 09-01부터 1,400원)">
-          <button class="stgl active" data-cur="KRW" onclick="setMainCur('KRW')">KRW</button>
-          <button class="stgl" data-cur="USD" onclick="setMainCur('USD')">USD</button>
-        </div>
       </div>
     </div>
     <div id="ctyChartNote" style="display:none"></div>
@@ -669,7 +670,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
   </div>
   <div class="chart-card" style="margin-top:10px;">
     <div class="chart-sec-sub" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>지표 확인용 표 (현재 국가·필터·주기 기준)</span>
-      <span class="sales-toggle" style="margin-left:0;" title="매출 행 통화 — USD = 세포라 엑셀 원본 그대로(센트까지) · KRW = 날짜별 환율"><button class="stgl active" data-tcur="KRW" onclick="setTblCur('KRW')">KRW</button><button class="stgl" data-tcur="USD" onclick="setTblCur('USD')">USD</button></span></div>
+      <span class="cur-sw" title="매출 행 통화 — 달러 = 세포라 엑셀 원본 그대로(센트까지) · 원화 = 날짜별 환율"><button class="on" data-tcur="KRW" onclick="setTblCur('KRW')">₩ 원화</button><button data-tcur="USD" onclick="setTblCur('USD')">$ 달러</button></span></div>
     <div class="ads-tbl-wrap"><table class="ads-metric-tbl" id="mainDataTable"></table></div>
     <div class="chart-note" style="text-align:left;color:#999;margin-top:6px;">단위: 방문·수량은 K(천) 이상 축약, 매출·비용은 K(천)/M(백만) 축약, CVR·ROAS는 %. 페이드 외 4개 비용 지표와 전체 ROAS는 일 단위에서 데이터가 없어 '-'로 표시됩니다.</div>
     <div class="chart-note" style="text-align:left;color:#999;margin-top:2px;">국가 칩에 맞는 묶음만 표시합니다. 미국은 12개 지표, 캐나다·전체는 캐나다 자료가 있는 지표(Visits·매출·CVR)만 있습니다. Visits·CVR은 캐나다 이커머스 기준이며 캐나다 자료가 시작되기 전 기간은 「—」입니다. 캐나다 매출은 미국과 같은 환율(2026-08-31까지 1,500원 · 2026-09-01부터 1,400원, 캐나다 주 자료는 주 마감일 기준)로 환산합니다. 캐나다 매출은 주 단위 자료만 있어 일 단위는 「—」, 월 단위는 채널 구분 없이 합계만 있어 TTL만 값이 있습니다. 「전체」 월 값은 미국(일별 합산)과 캐나다(세포라 월간 원본)를 더한 것입니다. 「—」에 마우스를 올리면 이유가 보입니다.</div>
@@ -4122,13 +4123,13 @@ function salesLbl_(name) { return name + (TBL_CUR === 'USD' ? ' (USD)' : ''); }
 window.setMainCur = function(c) {
   if (MAIN_CUR === c) return;
   MAIN_CUR = c;
-  document.querySelectorAll('.stgl[data-cur]').forEach(function(b){ b.classList.toggle('active', b.dataset.cur === c); });
+  document.querySelectorAll('.cur-sw [data-cur]').forEach(function(b){ b.classList.toggle('on', b.dataset.cur === c); });
   renderChart();
 };
 window.setTblCur = function(c) {
   if (TBL_CUR === c) return;
   TBL_CUR = c;
-  document.querySelectorAll('.stgl[data-tcur]').forEach(function(b){ b.classList.toggle('active', b.dataset.tcur === c); });
+  document.querySelectorAll('.cur-sw [data-tcur]').forEach(function(b){ b.classList.toggle('on', b.dataset.tcur === c); });
   renderMainDataTable(getMainChartData());
 };
 function mtblMoney(v) {
