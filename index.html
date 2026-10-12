@@ -3491,6 +3491,15 @@ function getFilteredForPeriod(monthSet, weekSet) {
   });
   return Object.values(byDate).map(d => ({...d, sales: (SALES_BY_DATE[d.date] || {}).total || 0, cvr: d.visits > 0 ? d.orders/d.visits*100 : 0}));
 }
+// 매출 카드 USD 한 줄 (2026-10-12 · IMC 회의 실장 요구 · MJ 결정 b) — 통화 스위치와 무관하게 늘 표시. 세포라 엑셀 원본 USD 그대로(센트까지)
+function kpiUsdLine_(t, com, bm) {
+  if (t == null) return '';
+  var lb = function(x){ return '<span style="color:#b4554f;font-weight:700;">' + x + '</span> '; };
+  return '<div style="font-size:9.5px;color:#7a5450;margin-top:2px;line-height:1.7;display:flex;gap:12px;flex-wrap:wrap;">'
+    + '<span>' + lb('USD') + curFmt_(t, 'USD') + '</span>'
+    + (com == null ? '' : '<span>' + lb('.COM') + curFmt_(com, 'USD') + '</span><span>' + lb('B&M') + curFmt_(bm, 'USD') + '</span>')
+    + '</div>';
+}
 function sumData(arr) {
   const v = arr.reduce((a,b) => a+b.visits, 0);
   const s = arr.reduce((a,b) => a+b.sales, 0);
@@ -3678,7 +3687,7 @@ function renderKPI() {
   const items = [
     { key:'visits',    label:'TOTAL VISITS',                 wide:false, val: cur.visits.toLocaleString(),
       badge:_dV?.badge,  badgeCls:_dV?.cls,  vs:_dV?.vs },
-    { key:'sales',     label:'TOTAL Sales (₩) · 단위:백만 원', wide:true,  val: salesVal + salesBreakdown,
+    { key:'sales',     label:'TOTAL Sales (₩) · 단위:백만 원', wide:true,  val: salesVal + salesBreakdown + kpiUsdLine_(cur.sales, cur.com, cur.bam),   // USD 병기 (2026-10-12)
       badge:_dS?.badge,  badgeCls:_dS?.cls,  vs:_dS?.vs },
     { key:'cvr',       label:'CVR (주문/방문)',                wide:false, val: cur.cvr.toFixed(2) + '%',
       badge:_dC?.badge,  badgeCls:_dC?.cls,  vs:_dC?.vs },
@@ -4383,7 +4392,7 @@ function ctyMainKpi_(items, data, prevDates, cmpLbl) {
     ? '<span><span style="color:#888;font-weight:700;">.COM</span> — · <span style="color:#888;font-weight:700;">B&M</span> — <span style="color:#ccc;">(' + CA_WHY.monCh + ')</span></span>'
     : '<span><span style="color:#888;font-weight:700;">.COM</span> ' + mk(curK.com) + ' <span style="color:#ccc;">(' + (cur.t ? (cur.com / cur.t * 100).toFixed(1) : '0.0') + '%)</span></span>'
     + '<span><span style="color:#888;font-weight:700;">B&M</span> ' + mk(curK.bm) + ' <span style="color:#ccc;">(' + (cur.t ? (cur.bm / cur.t * 100).toFixed(1) : '0.0') + '%)</span></span>';
-  s.val = mk(curK.t) + '<div style="font-size:9px;color:#aaa;margin-top:6px;line-height:1.8;display:flex;gap:12px;flex-wrap:wrap;">' + br + '</div>';
+  s.val = mk(curK.t) + '<div style="font-size:9px;color:#aaa;margin-top:6px;line-height:1.8;display:flex;gap:12px;flex-wrap:wrap;">' + br + '</div>' + kpiUsdLine_(cur.t, cur.com, cur.bm);   // USD 병기 (2026-10-12)
   var prevT = null;   // 원화 — 증감도 표시값과 같은 원화 기준
   if (pv && pv.v != null) prevT = CTY === 'CA' ? pv.vK : (usPrev ? usPrev.salesK + pv.vK : null);
   if (prevT != null && prevT !== 0) {
