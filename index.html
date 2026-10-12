@@ -231,6 +231,10 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 .ev-stat-pct.na{font-size:10px;color:#bbb;}
 .ev-item:last-child{border-bottom:none;}
 .ev-tag{font-size:9px;font-weight:700;padding:2px 6px;border-radius:2px;flex-shrink:0;white-space:nowrap;color:#fff;}
+/* 이벤트·KOL 국가 (2026-10-12) */
+.ev-cty{font-size:9px;font-weight:700;padding:1px 6px;border-radius:9px;flex-shrink:0;white-space:nowrap;color:#1D4ED8;background:#EEF2FF;border:1px solid #C7D2FE;}
+.ev-cty.ca{color:#7B3F1D;background:#FBF3EC;border-color:#E7CDB6;}
+.ev-cty.both{color:#555;background:#F3F4F6;border-color:#E0E0E4;}
 .ev-info{flex:1;min-width:0;}
 .ev-date{font-size:9px;color:#aaa;}
 .ev-place{font-size:11px;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -677,6 +681,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
     <div class="kol-tbl-wrap" style="margin-top:10px;">
       <table class="kol-tbl">
         <thead><tr>
+          <th class="left">국가</th>
           <th class="left" onclick="sortKol('date')">날짜<span class="kol-sort" id="ks-date"></span></th>
           <th class="left" onclick="sortKol('media')">매체<span class="kol-sort" id="ks-media"></span></th>
           <th class="left" onclick="sortKol('account')">계정 / 콘텐츠<span class="kol-sort" id="ks-account"></span></th>
@@ -689,7 +694,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
           <th onclick="sortKol('erShare')">ER (공유)%<span class="kol-sort" id="ks-erShare"></span></th>
           <th onclick="sortKol('erSave')">ER (저장)%<span class="kol-sort" id="ks-erSave"></span></th>
         </tr></thead>
-        <tbody id="kolTbody"><tr><td colspan="11" class="kol-empty">—</td></tr></tbody>
+        <tbody id="kolTbody"><tr><td colspan="12" class="kol-empty">—</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -710,6 +715,11 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
   <div class="ev-card">
     <div class="ev-card-ttl">이벤트 마커 등록</div>
     <div class="type-leg" id="typeLegend"></div>
+    <div class="fgrid1">
+      <div class="fel"><label>국가 <span class="req">*</span></label>
+        <select id="evCountry"><option value="미국" selected>미국</option><option value="캐나다">캐나다</option><option value="공통">공통</option></select>
+      </div>
+    </div>
     <div class="fgrid2">
       <div class="fel"><label>시작일 <span class="req">*</span></label><input type="date" id="evStart"></div>
       <div class="fel"><label>종료일 <span class="req">*</span></label><input type="date" id="evEnd"></div>
@@ -3651,18 +3661,26 @@ function renderKPI() {
     </div>`).join('');
 }
 // ─── ANNOTATION: deduplicate + stagger ────────────────────────────────────────
+// ═══ 이벤트·KOL 국가 (2026-10-12) — Raw_이벤트 country 열 · KOL 은 국가 열이 생기면 r.country 로 읽는다
+// 값은 미국 · 캐나다 · 공통. 빈칸·모르는 값 = 미국 (기존 자료는 모두 미국)
+// 🛑 CTY ⑩ — 국가 칩: 미국 = 미국+공통 · 캐나다 = 캐나다+공통 · 전체 = 모두 (통합 탭 마커·이벤트 목록·KOL 표만. 이벤트 관리 탭은 전부 표시)
+const EV_CTY = ['미국', '캐나다', '공통'];
+function evCty_(o) { var c = String((o && o.country) || '').trim(); return EV_CTY.indexOf(c) >= 0 ? c : '미국'; }
+function evCtyOk_(o) { if (CTY === 'ALL') return true; var c = evCty_(o); return c === '공통' || c === (CTY === 'CA' ? '캐나다' : '미국'); }
+function evCtyTag_(o) { var c = evCty_(o); return '<span class="ev-cty' + (c === '캐나다' ? ' ca' : c === '공통' ? ' both' : '') + '">' + c + '</span>'; }
+function evCtyOpts_(sel) { return EV_CTY.map(function(c){ return '<option value="' + c + '"' + (c === sel ? ' selected' : '') + '>' + c + '</option>'; }).join(''); }
 function buildAnnotations(labels) {
   if (!showMarkers) return {}; // 마커 숨김 시 점선 전부 제거
   const annotations = {};
   // Deduplicate: one entry per (type, start)
   const dedupMap = {};
-  EVENTS.forEach(ev => {
+  EVENTS.filter(evCtyOk_).forEach(ev => {
     const key = `${ev.type}|||${ev.start}`;
     if (!dedupMap[key]) dedupMap[key] = { ...ev };
     else if (ev.end > dedupMap[key].end) dedupMap[key].end = ev.end;
   });
   // KOL_RAW 유가 → 가상 이벤트로 추가
-  KOL_RAW.filter(k => (k.type||'').indexOf('유가') !== -1).forEach(k => {
+  KOL_RAW.filter(k => (k.type||'').indexOf('유가') !== -1 && evCtyOk_(k)).forEach(k => {
     if (!k.date) return;
     var d = k.date.slice(0,10); // YYYY-MM-DD
     var rawAcc = k.account || '';
@@ -4154,6 +4172,7 @@ MAIN_TABLE_METRICS.push(
 //   ⑤ ctySkuKpi_  — SKU 최근 구간 요약  ⑥ ctyStoreRows_·ctyStoreAfter_ — B&M 매장별 표 (3차)
 //   ⑦ ctyChannelFill_ — 유입 탭  ⑧ ctyCaVisitKpi_·ctyCaInflowSeries_ — 통합 Visits·CVR (2026-10-12)
 //   ⑨ renderMainDataTable — 지표 확인용 표는 국가 칩에 맞는 묶음만 (2026-10-12)
+//   ⑩ evCtyOk_ — 통합 탭 이벤트 마커·이벤트 목록·KOL 표 (2026-10-12)
 // 「미국」(기본값)일 때 ①~⑤는 숫자를 바꾸지 않는다. 바꾸는 것은 닷컴 ROAS 카드 제목·부제(승인 문구)뿐이다.
 var CTY = 'US';
 const CTY_WHY = {
@@ -4190,6 +4209,7 @@ window.setCty = function(c) {
   try { if (window.BMDATA && typeof window.refreshBM === 'function') window.refreshBM(true); } catch(e) { console.warn('[CTY] B&M', e); }
   try { if (typeof window._skuRedraw === 'function') window._skuRedraw(); } catch(e) { console.warn('[CTY] SKU', e); }
   try { ctyChannelApply_(); } catch(e) { console.warn('[CTY] 유입', e); }   // 2026-10-12 유입 탭
+  try { renderEventList(); } catch(e) { console.warn('[CTY] 이벤트', e); }   // 2026-10-12 이벤트 목록·KOL 표 (마커는 renderChart 가 다시 그린다)
 };
 // ③ 「전체」일 때 채널 칩을 단일 선택으로 — 미국·캐나다에서는 기존 multi-select 그대로
 (function(){
@@ -4851,13 +4871,13 @@ function positionMarkers() {
   const labels = chart.data.labels;
   // Deduplicate same as buildAnnotations
   const dedupMap = {};
-  EVENTS.forEach(ev => {
+  EVENTS.filter(evCtyOk_).forEach(ev => {
     const key = `${ev.type}|||${ev.start}`;
     if (!dedupMap[key]) dedupMap[key] = { ...ev };
     else if (ev.end > dedupMap[key].end) dedupMap[key].end = ev.end;
   });
   // KOL_RAW 유가 → 가상 이벤트로 추가
-  KOL_RAW.filter(k => (k.type||'').indexOf('유가') !== -1).forEach(k => {
+  KOL_RAW.filter(k => (k.type||'').indexOf('유가') !== -1 && evCtyOk_(k)).forEach(k => {
     if (!k.date) return;
     var d = k.date.slice(0,10);
     var rawAcc = k.account || '';
@@ -4969,6 +4989,7 @@ async function addEvent() {
   const type    = document.getElementById('evType').value;
   const place   = document.getElementById('evPlacement').value.trim();
   const product = document.getElementById('evProduct').value.trim();
+  const country = document.getElementById('evCountry').value || '미국';
   // All required
   const checks = [['evStart',start],['evType',type],['evPlacement',place],['evProduct',product]];
   let ok = true;
@@ -4983,13 +5004,14 @@ async function addEvent() {
     return;
   }
   if (end < start) { alert('종료일이 시작일보다 이전입니다.'); return; }
-  const _ok = await evPost_('add', { start: start, end: end, type: type, placement: place, product: product });
+  const _ok = await evPost_('add', { country: country, start: start, end: end, type: type, placement: place, product: product });
   if (!_ok) return;
   ['evStart','evEnd','evPlacement','evProduct'].forEach(id => {
     document.getElementById(id).value = '';
     document.getElementById(id).classList.remove('err');
   });
   document.getElementById('evType').value = '';
+  document.getElementById('evCountry').value = '미국';
   renderEventListFull(); renderEventList(); renderChart();
 }
 // ─── EVENT STATS HELPERS ──────────────────────────────────────────────────────
@@ -5063,8 +5085,8 @@ function statRowHtml(lbl, cur, prev, fmtFn) {
 // ─── EVENT LIST ───────────────────────────────────────────────────────────────
 function renderEventList() {
   const el = document.getElementById('evList');
-  document.getElementById('evCount').textContent = `(${EVENTS.length})`;
-  let list = [...EVENTS].sort((a,b) => b.start.localeCompare(a.start));
+  let list = EVENTS.filter(evCtyOk_).sort((a,b) => b.start.localeCompare(a.start));   // 국가 칩 (2026-10-12)
+  document.getElementById('evCount').textContent = `(${list.length})`;
   if (selEvType.size > 0) list = list.filter(ev => selEvType.has(ev.type));
   // KOL 섹션: early return 전에 처리 (EVENTS에 KOL 없어도 실행되어야 함)
   var kolSec = document.getElementById('kolSection');
@@ -5103,6 +5125,7 @@ function renderEventList() {
       statsHtml = `<div class="ev-stats"><div class="ev-stat-pct na" style="padding-top:6px;text-align:center;">데이터 범위 외</div></div>`;
     }
     return `<div class="ev-item" data-evid="${ri}">
+      ${evCtyTag_(ev)}
       <span class="ev-tag" style="background:${col};">${ev.type}</span>
       <div class="ev-info">
         <div class="ev-date">${ds}</div>
@@ -5165,7 +5188,7 @@ function renderEventListFull() {
     var ev = o.ev, origIdx = o.idx;
     var col = TYPES[ev.type] || '#888';
     var ds = ev.start === ev.end ? ev.start.slice(5) : ev.start.slice(5) + ' ~ ' + ev.end.slice(5);
-    return '<div class="ev-item" data-evidfull="' + origIdx + '">' +
+    return '<div class="ev-item" data-evidfull="' + origIdx + '">' + evCtyTag_(ev) +
       '<span class="ev-tag" style="background:' + col + ';">' + ev.type + '</span>' +
       '<div class="ev-info"><div class="ev-date">' + ds + '</div>' +
       '<div class="ev-place">' + (ev.placement||'-') + '</div>' +
@@ -5192,6 +5215,7 @@ window.editEventFull = function(origIdx) {
   item.innerHTML =
     '<div class="ev-edit-form" style="width:100%;">' +
     '<div class="ev-edit-row">' +
+    '<select class="ev-edit-field short" id="efC' + origIdx + '">' + evCtyOpts_(evCty_(ev)) + '</select>' +
     '<input type="date" class="ev-edit-field short" id="efS' + origIdx + '" value="' + ev.start + '">' +
     '<span style="color:#bbb;font-size:11px;flex-shrink:0;">~</span>' +
     '<input type="date" class="ev-edit-field short" id="efE' + origIdx + '" value="' + ev.end + '">' +
@@ -5211,6 +5235,7 @@ window.saveEventFull = async function(origIdx) {
   if (end < start) { alert('종료일이 시작일보다 이전입니다.'); return; }
       const _ok = await evPost_('update', {
         id:        EVENTS[origIdx].id,
+        country:   document.getElementById('efC' + origIdx).value,
         start:     start,
         end:       end,
         type:      document.getElementById('efT' + origIdx).value,
@@ -5230,6 +5255,7 @@ function editEvent(idx) {
   item.innerHTML = `
     <div class="ev-edit-form" style="width:100%;">
       <div class="ev-edit-row">
+        <select class="ev-edit-field short" id="eeC${idx}">${evCtyOpts_(evCty_(ev))}</select>
         <input type="date" class="ev-edit-field short" id="eeS${idx}" value="${ev.start}">
         <span style="color:#bbb;font-size:11px;flex-shrink:0;">~</span>
         <input type="date" class="ev-edit-field short" id="eeE${idx}" value="${ev.end}">
@@ -5254,6 +5280,7 @@ async function saveEvent(idx) {
   if (end < start) { alert('종료일이 시작일보다 이전입니다.'); return; }
       const _ok = await evPost_('update', {
         id:        EVENTS[idx].id,
+        country:   document.getElementById(`eeC${idx}`).value,
         start:     start,
         end:       end,
         type:      document.getElementById(`eeT${idx}`).value,
@@ -5573,6 +5600,7 @@ function renderKolTable() {
   var fMonth = (document.getElementById('kolFMonth')  || {}).value || '';
   var rows = KOL_RAW.map(function(r) {
     return {
+      country:   evCty_(r),   // 2026-10-12 — KOL 국가 열이 생기기 전까지는 모두 미국
       date:      r.date      || '',
       media:     (r.media || '').trim().toLowerCase(),
       account:   r.account   || '',
@@ -5587,6 +5615,7 @@ function renderKolTable() {
       erSave:    parseFloat(r.erSave)    || 0,
     };
   });
+  rows = rows.filter(evCtyOk_);   // 국가 칩 (2026-10-12)
   if (fMedia)  rows = rows.filter(function(r){ return r.media === fMedia; });
   if (fType)   rows = rows.filter(function(r){ return r.type.indexOf(fType) !== -1; });
   if (fMonth)  rows = rows.filter(function(r){ return r.date.slice(0,7) === fMonth; });
@@ -5609,7 +5638,7 @@ function renderKolTable() {
   var tbody = document.getElementById('kolTbody');
   if (!tbody) return;
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="11" class="kol-empty">데이터 없음</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" class="kol-empty">데이터 없음</td></tr>';
     return;
   }
   function fmt(v) { return v === 0 ? '0' : Number(v).toLocaleString('ko-KR'); }
@@ -5645,6 +5674,7 @@ function renderKolTable() {
         ? '<span class="kol-badge free">무가</span>'
         : '<span style="color:#aaa;font-size:10px;">' + (r.type || '—') + '</span>';
     return '<tr>' +
+      '<td class="left">' + evCtyTag_(r) + '</td>' +
       '<td class="left">' + (r.date || '—') + '</td>' +
       '<td class="left">' + (r.media || '—') + '</td>' +
       '<td class="left">' + acct + '</td>' +
