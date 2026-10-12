@@ -4109,7 +4109,6 @@ function renderChart() {
     }
   };
   ctyMainChart_(cfg, data);   // 국가 분리 2차 — 캐나다·전체 계열 · 누적 막대 · 진입 점선 · 잠금 (미국이면 무변경)
-  if (MAIN_CUR === 'USD') { const _lg = document.getElementById('salesLegLabel'); if (_lg) _lg.textContent += ' · USD'; }   // 매출 통화 칩 (2026-10-12) — 범례 문구는 ctyMainChart_ 가 매번 다시 씀
   const ctx = document.getElementById('mainChart').getContext('2d');
   if (chart) chart.destroy();
   chart = new Chart(ctx, cfg);
