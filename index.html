@@ -268,6 +268,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 /* Marker Zone */
 .marker-zone{position:relative;width:100%;overflow:visible;min-height:24px;margin-bottom:4px;}
 .m-lbl{position:absolute;transform:translateX(-50%);font-size:7px;font-weight:700;color:#fff;padding:1px 4px;border-radius:2px;white-space:nowrap;line-height:1.4;cursor:default;z-index:10;pointer-events:auto;}
+.m-stem{position:absolute;width:0;border-left:1px dashed;z-index:5;pointer-events:none;}   /* 2026-10-12 라벨 → 그래프 연결선 */
 .m-lbl-range{position:absolute;font-size:7px;font-weight:700;color:#fff;padding:1px 4px;border-radius:2px;white-space:nowrap;line-height:1.4;cursor:default;z-index:10;text-align:center;overflow:hidden;text-overflow:ellipsis;pointer-events:auto;}
 .m-tick{position:absolute;width:1px;background:rgba(0,0,0,0.06);top:0;bottom:0;}
 /* Hover tooltip */
@@ -652,8 +653,8 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
         </div>
       </div>
     </div>
-    <div id="markerZone" class="marker-zone hidden"></div>
     <div id="ctyChartNote" style="display:none"></div>
+    <div id="markerZone" class="marker-zone hidden"></div>
     <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
     <div class="chart-note" style="line-height:1.7;">
       * CVR = 주문 수량 / Visits TY × 100<span id="kpiNoteWrap"><br>
@@ -823,7 +824,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
   <div class="chart-card">
     <div class="leg-row">
       <div class="leg"><div class="leg-dot" style="background:rgba(47,84,150,0.25);border:1.5px solid rgba(47,84,150,0.6);"></div>Visits (Area)</div>
-      <div class="leg"><div class="leg-dot" style="background:#c8102e;border-radius:1px;"></div>Sales (백만원) (Bar)</div>
+      <div class="leg" id="chComboSalesLeg"><div class="leg-dot" style="background:#c8102e;border-radius:1px;"></div><span>Sales (백만원) (Bar)</span></div>
       <div class="leg" id="chComboCtyLeg" style="display:none;"><div class="leg-dot" style="background:rgba(217,112,112,0.85);border-radius:1px;"></div>미국(아래)<div class="leg-dot" style="background:rgba(123,63,29,0.85);border-radius:1px;margin-left:6px;"></div>캐나다(위) 누적</div>
       <div class="leg"><div class="leg-dot" style="background:#F4B942;border-radius:50%;"></div>CVR % (Line)</div>
     </div>
@@ -5020,6 +5021,14 @@ function positionMarkers() {
       bindTip(el, ev);
       zone.appendChild(el);
     });
+    // 맨 아래 라벨 밑에서 그래프 그림 영역 위 끝까지 점선 — 같은 칸 그래프 점선과 이어져 보이게 (2026-10-12)
+    const stem = document.createElement('div');
+    stem.className = 'm-stem';
+    stem.style.left = xPx + 'px';
+    stem.style.top = ((maxStack - 1) * SINGLE_H + 12) + 'px';
+    stem.style.height = Math.max(totalH - ((maxStack - 1) * SINGLE_H + 12) + 4 + ((chart.chartArea && chart.chartArea.top) || 0), 0) + 'px';   // + 마커 영역 아래 여백 4px + 그래프 위 여백
+    stem.style.borderLeftColor = hexToRgba(TYPES[evList[groupSize - 1].type] || '#888', 0.55);
+    zone.appendChild(stem);
   });
   // Draw range labels at bottom row
   if (hasRanges) {
@@ -6192,6 +6201,8 @@ function renderComboChart(weeks, channels, pivot) {
   const ctyStack = ctyChComboSplit_(weeks, channels, totSales);
   const _cl = document.getElementById('chComboCtyLeg');
   if (_cl) _cl.style.display = ctyStack ? '' : 'none';
+  const _sl = document.getElementById('chComboSalesLeg');   // 「전체」 — 빨간 합계 막대 대신 누적 막대를 그리므로 범례 문구를 바꾼다 (2026-10-12)
+  if (_sl) _sl.querySelector('span').textContent = ctyStack ? 'Sales (백만원) = 막대 전체 높이(미국+캐나다)' : 'Sales (백만원) (Bar)';
   comboChartInstance = new Chart(ctx, {
     data: {
       labels: weeks.map(w => CH_WEEK_RANGES[w] || w),
