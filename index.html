@@ -4877,7 +4877,9 @@ function ctyChannelApply_() {   // 국가 칩을 바꿀 때
   selChMonths.clear(); selChWeeks.clear(); selChChans.clear();
   rebuildChannelAgg();
   buildChMonthOptions(); buildChWeekOptions(); buildChChanOptions(); buildChSecOptions();
-  refreshChannel();
+  // 2026-10-13 속도 — 유입 탭이 화면에 없으면 그리지 않는다(데이터·필터만 바꿔 둠). 탭을 열 때 switchTab 이 refreshChannel 을 부른다
+  var _ct = document.getElementById('tabChannel');
+  if (_ct && _ct.style.display !== 'none') refreshChannel();
 }
 // ── ⑧ 통합 탭 — 캐나다 이커머스 행을 통합 필터(월·주·상품 구분·SKU)로 거른다
 function ctyCaComRows_() {
