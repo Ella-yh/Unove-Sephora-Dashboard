@@ -3718,10 +3718,10 @@ function evCty_(o) { var c = String((o && o.country) || '').trim(); return EV_CT
 function evCtyOk_(o) { if (CTY === 'ALL') return true; var c = evCty_(o); return c === '공통' || c === (CTY === 'CA' ? '캐나다' : '미국'); }
 function evCtyTag_(o) { var c = evCty_(o); return '<span class="ev-cty' + (c === '캐나다' ? ' ca' : c === '공통' ? ' both' : '') + '">' + c + '</span>'; }
 function evCtyOpts_(sel) { return EV_CTY.map(function(c){ return '<option value="' + c + '"' + (c === sel ? ' selected' : '') + '>' + c + '</option>'; }).join(''); }
-// 마커 칸 찾기 (2026-10-12) — 주 보기 = 그 날짜가 든 주(일요일 키 getWeekKey)의 칸. 같은 주의 이벤트는 전부 나열
-// 일·월 보기는 기존 그대로(「월-일」 라벨 일치 — 월 보기는 결과적으로 마커 없음. 월 보기 마커는 MJ 결정 대기)
+// 마커 칸 찾기 — 이벤트 마커는 「일 보기」에서만 (MJ 결정 2026-10-13 · 주·월 보기는 표시가 복잡해져 그리지 않음)
+//   (2026-10-12 #65 의 주 보기 마커는 이 결정으로 거둔다. 줄 나누기·연결 점선은 일 보기에 그대로 적용)
 function mkIdx_(date, labels) {
-  if (mainPeriod === 'weekly') return (window._mkKeys || []).indexOf(getWeekKey(date));
+  if (mainPeriod !== 'daily') return -1;
   return labels.indexOf(date.slice(5));
 }
 function buildAnnotations(labels) {
@@ -3849,7 +3849,6 @@ function renderChart() {
     if (b) { b.disabled = (mainPeriod === 'daily'); b.title = b.disabled ? '월/주 단위에서만 표시됩니다' : ''; }
   });
   const labels = data.map(d => d.label || d.date.slice(5));
-  window._mkKeys = data.map(d => d.date);   // 주 보기 마커 칸 찾기용 (mkIdx_) — 주 보기 d.date = 주 시작 일요일
   // KPI 기준선 각주 — 선이 그려지는 조건과 똑같이 맞춘다. 선이 없으면 범례도 없다.
   // Sales KPI/일(₩3,900,000)·ROAS KPI/일(263%) 은 둘 다 「닷컴 일 목표」라 월·주에는 뜻이 없다.
   const _noteWrap = document.getElementById('kpiNoteWrap');
