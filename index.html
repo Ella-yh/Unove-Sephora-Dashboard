@@ -5781,6 +5781,11 @@ function renderKolTable() {
   if (cnt) cnt.textContent = rows.length + '개' + filterDesc;
   var tbody = document.getElementById('kolTbody');
   if (!tbody) return;
+  // 2026-10-13 속도 — 보여줄 행·필터·정렬이 지난번과 같으면 표를 다시 만들지 않는다
+  //   (국가 「전체」↔「미국」 전환 때 KOL 1,300여 행을 매번 다시 그리던 것 — 지금 KOL 은 모두 미국이라 두 국가의 표가 같다)
+  var _sig = [fMedia, fType, fMonth, sk, asc, rows.length, rows.map(function(r){ return [r.date, r.media, r.account, r.url, r.type, r.views, r.cpv, r.erTotal, r.erLike, r.erComment, r.erShare, r.erSave].join('|'); }).join('~')].join('#');
+  if (_sig === renderKolTable._sig && tbody.children.length) return;
+  renderKolTable._sig = _sig;
   if (!rows.length) {
     tbody.innerHTML = '<tr><td colspan="12" class="kol-empty">데이터 없음</td></tr>';
     return;
