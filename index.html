@@ -1290,6 +1290,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
   </div>
 
   <div id="onsBody">
+    <div id="onsCampRow" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
     <div class="sec-hdr" style="display:flex;align-items:center;gap:10px;">Banner · PLA · Total 성과 요약 <span class="cur-sw" title="원화 = 달러 원본 × 기간 환율(2026-08-31까지 1,500원 · 09-01부터 1,400원) · 달러 = 세포라 브랜드포털 원본"><button class="on" data-onscur="KRW" onclick="setOnsCur('KRW')">₩ 원화</button><button data-onscur="USD" onclick="setOnsCur('USD')">$ 달러</button></span></div>
     <div class="kpi-row" id="onsSummary" style="grid-template-columns:repeat(3,1fr);padding:0"></div>
     <div class="chart-card" id="onsBudget" style="margin-top:12px"></div>
@@ -1304,17 +1305,17 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
         <span class="ons-chip" data-k="CTR" style="color:#45818E"><span class="d"></span>CTR</span>
         <span class="ons-chip" data-k="전환율" style="color:#A64D79"><span class="d"></span>전환율(CVR)</span>
         <span class="ons-chip on" data-k="BM유입" style="color:#6aadd5"><span class="d"></span>Brand Media 유입</span>
-        <span class="ons-chip on" data-k="세일즈원본" style="color:#e4e6e8"><span class="d"></span>세일즈 원본(7/11~13 이상치)</span>
+        <span class="ons-chip on ons-out" data-k="세일즈원본" style="color:#e4e6e8"><span class="d"></span>세일즈 원본(7/11~13 이상치)</span>
       </div>
       <div style="position:relative;height:330px"><canvas id="onsIntegrated"></canvas></div>
-      <div style="font-size:9px;color:#bbb;margin-top:6px">첫 구간(~날짜) = 캠페인 누적(6/22~), 이후 일별 · Brand Media = 방문(visit) 기준</div>
-      <div style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div>
+      <div style="font-size:9px;color:#bbb;margin-top:6px">첫 구간(~날짜) = 캠페인 누적(캠페인 시작일~), 이후 일별 · Brand Media = 방문(visit) 기준</div>
+      <div class="ons-out" style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div>
     </div>
 
     <div class="sec-hdr" style="margin-top:22px">Banner · PLA 일별 추이</div>
     <div class="ons-two">
-      <div class="chart-card"><div class="chart-sec-title">Banner 일별 Spend·Sales·ROAS</div><div style="position:relative;height:290px"><canvas id="onsBanner"></canvas></div><div style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div></div>
-      <div class="chart-card"><div class="chart-sec-title">PLA 일별 Spend·Sales·ROAS</div><div style="position:relative;height:290px"><canvas id="onsPla"></canvas></div><div style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div></div>
+      <div class="chart-card"><div class="chart-sec-title">Banner 일별 Spend·Sales·ROAS</div><div style="position:relative;height:290px"><canvas id="onsBanner"></canvas></div><div class="ons-out" style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div></div>
+      <div class="chart-card"><div class="chart-sec-title">PLA 일별 Spend·Sales·ROAS</div><div style="position:relative;height:290px"><canvas id="onsPla"></canvas></div><div class="ons-out" style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div></div>
     </div>
 
     <div class="sec-hdr" style="margin-top:22px">PLA SKU별 성과</div>
@@ -7125,6 +7126,25 @@ window.setOnsCur = function(c) {
   document.querySelectorAll('.cur-sw [data-onscur]').forEach(function(b){ b.classList.toggle('on', b.dataset.onscur === c); });
   refreshOnsite();
 };
+// 온사이트 캠페인 (2026-10-14) — 캠페인마다 예산·기간이 달라 따로 본다.
+//   Code.gs parseOnsite_ 가 campaigns[](시작일 순)를 내보낸다. 없으면(이전 Code) 최상위 하나를 6~7월 캠페인으로 본다.
+//   예산·기간 = 포털 Campaign Performance 기준 — 새 캠페인이 생기면 여기에 한 줄 추가(없으면 예산 게이지만 「예산 정보 없음」)
+var ONS_CAMP = null;
+var ONS_CAMP_META = {
+  'Onsite Ads: UNOVE hair June 26':    { label: '6~7월 캠페인', start: '2026-06-22', end: '2026-07-28', budgetUsd: 50000 },
+  'Onsite Ads: UNOVE hair October 26': { label: '10월 캠페인',  start: '2026-10-12', end: '2026-10-31', budgetUsd: 75000 }
+};
+window.setOnsCamp = function(n) {
+  if (ONS_CAMP === n) return;
+  ONS_CAMP = n;
+  refreshOnsite();
+};
+function onsCampaigns_(R) {
+  if (!R) return [];
+  if (R.campaigns && R.campaigns.length) return R.campaigns;
+  return (R.periods && R.periods.length) ? [Object.assign({ name: 'Onsite Ads: UNOVE hair June 26' }, R)] : [];
+}
+function onsDate_(s) { var m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; }
 function onsUsd_(O) {
   if (!O || !O.periods) return O;
   var M = ['spend', 'sales', 'cpm', 'cpc', 'cpa'];
@@ -7138,7 +7158,10 @@ function onsUsd_(O) {
     brandMedia: Object.assign({}, bm, { sales: (bm.sales || []).map(function(v, i){ return v / fxRate(O.periods[i]); }) }) });
 }
 function refreshOnsite() {
-  var O = ONS_CUR === 'USD' ? onsUsd_(window.ONSITE) : window.ONSITE;
+  var CAMPS = onsCampaigns_(window.ONSITE);
+  var CUR = CAMPS.filter(function(c){ return c.name === ONS_CAMP; })[0] || CAMPS[CAMPS.length - 1] || null;
+  if (CUR) ONS_CAMP = CUR.name;
+  var O = ONS_CUR === 'USD' ? onsUsd_(CUR) : CUR;
   var root = document.getElementById('tabOnsite');
   if (!root) return;
   var ph = document.getElementById('onsPlaceholder');
@@ -7149,6 +7172,15 @@ function refreshOnsite() {
   }
   if (ph) ph.style.display = 'none';
   var body = document.getElementById('onsBody'); if (body) body.style.display = '';
+  var META = ONS_CAMP_META[CUR.name] || {};
+  var mmdd = function(v){ return v ? String(v).slice(5).replace('-', '/') : ''; };
+  var esc = function(v){ return String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); };
+  document.getElementById('onsCampRow').innerHTML = '<span style="font-size:10px;font-weight:700;letter-spacing:.5px;color:#9ca3af">캠페인</span><span class="cur-sw">'
+    + CAMPS.map(function(c){
+        var m = ONS_CAMP_META[c.name] || {};
+        var rng = m.start ? mmdd(m.start) + '~' + mmdd(m.end) : mmdd(c.periods[0]) + '~';
+        return '<button class="' + (c.name === CUR.name ? 'on' : '') + '" title="' + esc(c.name) + '" data-n="' + esc(c.name) + '" onclick="setOnsCamp(this.dataset.n)">' + esc(m.label || c.name) + ' · ' + rng + '</button>';
+      }).join('') + '</span>';
 
   var SALES='#d97070', VISITS='#6aadd5', SPEND='#F4B942', CLICKS='#3D85C6',
       IMPR='#999999', CTR='#45818E', CVR='#A64D79', NAVY='#1D2847', ROSE='#D9A89A',
@@ -7202,10 +7234,11 @@ function refreshOnsite() {
   }).join('');
   document.getElementById('onsSummary').innerHTML = kpiHtml;
 
-  // 예산 소진 게이지 (예산 ₩75,000,000 고정)
-  var BUDGET = USD ? 50000 : 75000000;   // 달러 보기 = $50,000
-  var PSTART=new Date(2026,5,22), PEND=new Date(2026,6,21), _pd=Math.floor((new Date()-PSTART)/86400000)+1, _pn=Math.floor((PEND-PSTART)/86400000)+1; var pace=Math.max(0,Math.min(100,Math.round(_pd/_pn*100))); // 기간 진행율(표시용)
-  var soji = Math.min(100, Math.round(s.total.spend / BUDGET * 100));
+  // 예산 소진 게이지 — 캠페인별 예산(달러) × 캠페인 시작일 환율 (2026-10-14)
+  var BUD_USD = META.budgetUsd || 0, BUD_FX = fxRate(META.start || periods[0]);
+  var BUDGET = USD ? BUD_USD : BUD_USD * BUD_FX;
+  var PSTART=onsDate_(META.start) || onsDate_(periods[0]), PEND=onsDate_(META.end) || onsDate_(periods[periods.length-1]), _pd=Math.floor((new Date()-PSTART)/86400000)+1, _pn=Math.floor((PEND-PSTART)/86400000)+1; var pace=Math.max(0,Math.min(100,Math.round(_pd/_pn*100))); // 기간 진행율(표시용)
+  var soji = BUDGET ? Math.min(100, Math.round(s.total.spend / BUDGET * 100)) : 0;
   document.getElementById('onsBudget').innerHTML =
       '<div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">'
     + '<div style="min-width:110px"><div style="font-size:20px;font-weight:700;color:#111827">'+soji+'%</div>'
@@ -7215,7 +7248,7 @@ function refreshOnsite() {
     + '<div style="position:absolute;top:-3px;bottom:-3px;left:'+pace+'%;width:2px;background:#c8102e"></div></div>'
     + '<div style="display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;margin-top:6px">'
     + '<span>'+(USD?'$0':'₩0')+'</span>'
-    + '<span>예산 ₩75,000,000 ($50,000)</span></div></div></div>';
+    + '<span>' + (BUD_USD ? '예산 ₩' + Math.round(BUD_USD * BUD_FX).toLocaleString() + ' ($' + BUD_USD.toLocaleString() + ')' : '예산 정보 없음') + '</span></div></div></div>';
 
   // ---- 2) 통합 광고 지표 ----
   var arr = function(f){ return dt.map(function(x){ return x[f]; }); };
@@ -7223,6 +7256,7 @@ function refreshOnsite() {
   // ===== 7/11~13 이상치 B보정(클릭비례 재배분) + 축 baseline 정렬 =====
   var GREYO='#e4e6e8', GREYO_LABEL='세일즈 원본(7/11~13 이상치)';
   var OUT_I=[]; periods.forEach(function(p,i){ if(p==='2026-07-11'||p==='2026-07-12'||p==='2026-07-13') OUT_I.push(i); });
+  document.querySelectorAll('#tabOnsite .ons-out').forEach(function(e){ e.style.display = OUT_I.length ? '' : 'none'; });   // 7/11~13 보정 안내는 그 날짜가 있는 캠페인에서만
   function bMapOns(series){ var sumS=0,sumC=0; OUT_I.forEach(function(i){ sumS+=series[i].sales; sumC+=series[i].clicks; }); var m={}; OUT_I.forEach(function(i){ m[i]= sumC? Math.round(sumS*series[i].clicks/sumC):0; }); return m; }
   function adoptedOns(series){ var b=bMapOns(series); return series.map(function(x,i){ return (i in b)? b[i] : x.sales; }); }
   function greyOns(series){ var b=bMapOns(series); return series.map(function(x,i){ return (i in b)? x.sales : null; }); }
@@ -7290,7 +7324,7 @@ function refreshOnsite() {
       options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
         plugins:{ legend:{position:'bottom',
             onClick:function(e,item,legend){ if(item.datasetIndex==null||item.datasetIndex<0) return; Chart.defaults.plugins.legend.onClick.call(this,e,item,legend); },
-            labels:{boxWidth:10,boxHeight:10,padding:9,font:{size:10}, generateLabels:function(chart){ var items=Chart.defaults.plugins.legend.labels.generateLabels(chart); items.push({text:GREYO_LABEL,fillStyle:GREYO,strokeStyle:GREYO,lineWidth:0,hidden:false,datasetIndex:-1}); return items; }}},
+            labels:{boxWidth:10,boxHeight:10,padding:9,font:{size:10}, generateLabels:function(chart){ var items=Chart.defaults.plugins.legend.labels.generateLabels(chart); if (OUT_I.length) items.push({text:GREYO_LABEL,fillStyle:GREYO,strokeStyle:GREYO,lineWidth:0,hidden:false,datasetIndex:-1}); return items; }}},
           tooltip:{ callbacks:{ label:function(c){ return c.dataset.label==='ROAS' ? 'ROAS '+c.parsed.y.toFixed(2)+'×' : c.dataset.label+' '+won(c.parsed.y); } } } },
         scales:{ y:{position:'left',min:yMinC,max:yMaxC,grid:{color:GRID},ticks:{callback:axT}},
           y1:{position:'right',min:r1MinC,max:rMaxC,grid:{display:false},ticks:{callback:function(v){return v.toFixed(1)+'×';}}},
