@@ -124,6 +124,9 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 .cty-row .cty-chip{font-size:11px;font-weight:600;padding:3px 13px;border:1px solid #D8D8DC;border-radius:14px;background:#fff;color:#555;cursor:pointer;}
 .cty-row .cty-chip.on{background:#1D2847;color:#fff;border-color:#1D2847;}
 .cty-row .cty-hint{font-size:10px;color:#9ca3af;}
+.cty-row .cty-fx{color:#6b7280;font-weight:600;}
+.note-row{padding:1px 0;}
+.note-tag{display:inline-block;min-width:52px;text-align:center;font-size:9px;padding:0 6px;margin-right:6px;border:1px solid #e5e7eb;border-radius:8px;color:#555;background:#f8f8fa;}
 .cty-badge.us{color:#555;background:#F3F4F6;border-color:#E0E0E4;}
 .cty-locked{text-decoration:line-through;opacity:.45;cursor:not-allowed !important;}
 .cty-na{color:#7b8194;}
@@ -673,7 +676,11 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
       <span class="cur-sw" title="매출 행 통화 — 달러 = 세포라 엑셀 원본 그대로(센트까지) · 원화 = 날짜별 환율"><button class="on" data-tcur="KRW" onclick="setTblCur('KRW')">₩ 원화</button><button data-tcur="USD" onclick="setTblCur('USD')">$ 달러</button></span></div>
     <div class="ads-tbl-wrap"><table class="ads-metric-tbl" id="mainDataTable"></table></div>
     <div class="chart-note" style="text-align:left;color:#999;margin-top:6px;">단위: 방문·수량은 K(천) 이상 축약, 매출·비용은 K(천)/M(백만) 축약, CVR·ROAS는 %. 페이드 외 4개 비용 지표와 전체 ROAS는 일 단위에서 데이터가 없어 '-'로 표시됩니다.</div>
-    <div class="chart-note" style="text-align:left;color:#999;margin-top:2px;">국가 칩에 맞는 묶음만 표시합니다. 미국은 12개 지표, 캐나다·전체는 캐나다 자료가 있는 지표(Visits·매출·CVR)만 있습니다. Visits·CVR은 캐나다 이커머스 기준이며 캐나다 자료가 시작되기 전 기간은 「—」입니다. 캐나다 매출은 미국과 같은 환율(2026-08-31까지 1,500원 · 2026-09-01부터 1,400원, 캐나다 주 자료는 주 마감일 기준)로 환산합니다. 캐나다 매출은 주 단위 자료만 있어 일 단위는 「—」, 월 단위는 채널 구분 없이 합계만 있어 TTL만 값이 있습니다. 「전체」 월 값은 미국(일별 합산)과 캐나다(세포라 월간 원본)를 더한 것입니다. 「—」에 마우스를 올리면 이유가 보입니다.</div>
+    <div class="chart-note" style="text-align:left;color:#999;margin-top:2px;" title="「전체」 월 값 = 미국(일별 합산) + 캐나다(세포라 월간 원본) · Visits·CVR은 캐나다 이커머스 기준 · 캐나다 주 자료는 주 마감일 기준 환율">
+      <div class="note-row"><span class="note-tag">지표</span>미국 12개 · 캐나다·전체 3개(Visits·매출·CVR) — 「—」 = 자료 없음, 마우스를 올리면 이유</div>
+      <div class="note-row"><span class="note-tag">캐나다 매출</span>주 단위만 (일 「—」 · 월은 TTL만)</div>
+      <div class="note-row"><span class="note-tag">통화</span>원본 USD → ₩1,500 (~8/31) · ₩1,400 (9/1~) · 유입 탭 캐나다는 C$ 기준이라 다름</div>
+    </div>
   </div>
 </div>
 <div style="padding:0 28px 20px;">
@@ -4853,7 +4860,10 @@ function ctyChannelFill_() {
   var hint = document.getElementById('ctyChHint');
   if (hint) {
     if (!ca) hint.innerHTML = '<span class="cty-na">캐나다 유입 자료가 아직 연결되지 않았습니다 (Apps Script 반영 후 표시) — 캐나다·전체를 골라도 아래는 미국 값</span>';
-    else { var sp = ctyDateSpan_(ca); hint.textContent = '캐나다는 첫 매출일 ' + sp.from + '부터 (' + sp.to + '까지 · 그 전 방문만 있는 날은 제외) · 「전체」는 캐나다 자료가 있는 날짜만 미국+캐나다로 합산 · 캐나다 매출은 브랜드포털 C$ × 1,000원'; }
+    else { var sp = ctyDateSpan_(ca); hint.innerHTML = '캐나다는 첫 매출일 ' + sp.from + '부터 (' + sp.to + '까지 · 그 전 방문만 있는 날은 제외) · 「전체」는 캐나다 자료가 있는 날짜만 미국+캐나다로 합산'
+      + '<br><span class="cty-fx">' + (CH_CUR === 'USD'   // 2026-10-14 통화 스위치에 맞춘 환율 안내
+        ? '달러 기준 — 미국 원본 $ / 캐나다 C$ × 0.667(8/31까지) · 0.714(9/1부터) = 1,000원 ÷ 미국 환율 → 미국 $와 합산'
+        : '원화 기준 — 미국 $ × 1,500원(8/31까지) · 1,400원(9/1부터) / 캐나다 C$ × 1,000원') + '</span>'; }
   }
   var usb = document.getElementById('usOnlyBadge');
   var chOn = document.getElementById('tabChannel') && document.getElementById('tabChannel').style.display !== 'none';
