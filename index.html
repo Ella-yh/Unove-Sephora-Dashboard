@@ -7175,12 +7175,14 @@ function refreshOnsite() {
   var META = ONS_CAMP_META[CUR.name] || {};
   var mmdd = function(v){ return v ? String(v).slice(5).replace('-', '/') : ''; };
   var esc = function(v){ return String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); };
-  document.getElementById('onsCampRow').innerHTML = '<span style="font-size:10px;font-weight:700;letter-spacing:.5px;color:#9ca3af">캠페인</span><span class="cur-sw">'
-    + CAMPS.map(function(c){
+  // 캠페인 선택 = 드롭다운 (2026-10-14 · KOL 필터와 같은 .kol-fsel)
+  document.getElementById('onsCampRow').innerHTML = '<span style="font-size:10px;font-weight:700;letter-spacing:.5px;color:#9ca3af">캠페인</span>'
+    + '<select class="kol-fsel" id="onsCampSel" title="' + esc(CUR.name) + '" onchange="setOnsCamp(this.value)">'
+    + CAMPS.slice().reverse().map(function(c){   // 최근 캠페인이 위
         var m = ONS_CAMP_META[c.name] || {};
         var rng = m.start ? mmdd(m.start) + '~' + mmdd(m.end) : mmdd(c.periods[0]) + '~';
-        return '<button class="' + (c.name === CUR.name ? 'on' : '') + '" title="' + esc(c.name) + '" data-n="' + esc(c.name) + '" onclick="setOnsCamp(this.dataset.n)">' + esc(m.label || c.name) + ' · ' + rng + '</button>';
-      }).join('') + '</span>';
+        return '<option value="' + esc(c.name) + '"' + (c.name === CUR.name ? ' selected' : '') + '>' + esc(m.label || c.name) + ' · ' + rng + '</option>';
+      }).join('') + '</select>';
 
   var SALES='#d97070', VISITS='#6aadd5', SPEND='#F4B942', CLICKS='#3D85C6',
       IMPR='#999999', CTR='#45818E', CVR='#A64D79', NAVY='#1D2847', ROSE='#D9A89A',
