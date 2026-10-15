@@ -5184,9 +5184,10 @@ function koBmRender_() {
     + '</div>';
   // 주간 추이 — 매장(진한 보라) · 닷컴(연한 보라) 쌓기, 입점 점선
   var wv = k.wk, mx = Math.max.apply(null, wv.map(function(x){ return ((x.store || 0) + (x.dig || 0)) * fxRate(x.we); }).concat([1])) * 1.12;
-  var SW = 760, SH = 170, pl = 52, pr = 10, pt2 = 10, pb = 22, iw = SW - pl - pr, ih = SH - pt2 - pb, n = wv.length, bw = Math.min(30, iw / n * 0.62);
+  // 실제 화면 폭으로 그린다(고정 크기를 늘리면 글자도 커진다 — 2026-10-15 MJ) · B&M 다른 차트와 같은 9px
+  var SW = Math.max(360, Math.round((host.getBoundingClientRect().width || 792) - 34)), SH = 210, pl = 52, pr = 10, pt2 = 10, pb = 22, iw = SW - pl - pr, ih = SH - pt2 - pb, n = wv.length, bw = Math.min(30, iw / n * 0.62);
   var X = function(i){ return pl + iw * ((i + 0.5) / n); }, Y = function(v){ return pt2 + ih * (1 - v / mx); };
-  var svg = '<svg viewBox="0 0 ' + SW + ' ' + SH + '" width="100%" style="display:block">';
+  var svg = '<svg viewBox="0 0 ' + SW + ' ' + SH + '" width="' + SW + '" height="' + SH + '" style="display:block;max-width:100%">';
   for (var g = 0; g <= 4; g++) { var gv = mx * g / 4; svg += '<line x1="' + pl + '" x2="' + (SW - pr) + '" y1="' + Y(gv) + '" y2="' + Y(gv) + '" stroke="rgba(0,0,0,0.07)"/><text x="' + (pl - 5) + '" y="' + (Y(gv) + 3) + '" font-size="9" fill="#9ca3af" text-anchor="end">' + koFmtM_(gv) + '</text>'; }
   wv.forEach(function(x, i){
     var f = fxRate(x.we), s = (x.store || 0) * f, d = (x.dig || 0) * f;
@@ -5196,7 +5197,7 @@ function koBmRender_() {
     if (x.w === KO_ENTRY) svg += '<line x1="' + (X(i) - iw / n / 2) + '" x2="' + (X(i) - iw / n / 2) + '" y1="' + pt2 + '" y2="' + (SH - pb) + '" stroke="' + KO_COLOR.store + '" stroke-dasharray="4 3" opacity=".6"/>';
   });
   svg += '</svg>';
-  html += '<div class="chart-card" style="margin-top:9px"><div class="chart-sec-title"><span>콜스 주간 매출 추이 (₩ · 주 마감일 환율)</span><span class="legend"><span><i style="background:' + KO_COLOR.store + '"></i>매장</span><span><i style="background:' + KO_COLOR.dig + '"></i>닷컴</span><span style="color:#9ca3af">점선 = 입점(W25 첫 판매) · 닷컴은 W36부터(소급 대기)</span></span></div>' + svg + '</div>';
+  html += '<div class="chart-card" style="margin-top:9px"><div class="chart-sec-title"><span>콜스 주간 매출 추이 (₩ · 주 마감일 환율)</span><span class="legend"><span><i style="background:' + KO_COLOR.store + '"></i>매장</span><span><i style="background:' + KO_COLOR.dig + '"></i>닷컴</span><span style="color:#9ca3af">점선 = 입점(W25 첫 판매)' + (function(){ var f = wv.find(function(x){ return x.dig != null && x.dig > 0; }); return f ? ' · 닷컴 ' + f.w + '부터' : ''; })() + '</span></span></div>' + svg + '</div>';
   // 매장별 실적 — 금주 매출 순 (전주 · 최근 4주 · 추이)
   var rows = k.stores.map(function(s){
     var h = s.hist, c = h[i0], p = i0 > 0 ? h[i0 - 1] : null, f4 = 0;
