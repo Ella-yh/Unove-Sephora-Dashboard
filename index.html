@@ -2065,6 +2065,8 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
     <div style="display:flex;gap:5px"><button class="btn on" data-c="t">통합</button><button class="btn" data-c="b">B&amp;M</button><button class="btn" data-c="c">.COM</button></div></div>
   <div class="filter-block"><div class="filter-lbl">지표</div>
     <div style="display:flex;gap:5px"><button class="btn on" data-m="s">매출</button><button class="btn" data-m="u">판매수량</button></div></div>
+  <div class="filter-block"><div class="filter-lbl">통화</div>
+    <span class="cur-sw" style="margin-top:3px" title="금액 통화 — 달러 = 세포라 원본 · 원화 = 날짜별 환율(2026-08-31까지 1,500원 · 09-01부터 1,400원) · 요약·차트·표 모두"><button class="on sk-cur" data-c="K" onclick="skuSetCur_('K')">₩ 원화</button><button class="sk-cur" data-c="U" onclick="skuSetCur_('U')">$ 달러</button></span></div>
  </div>
  <div class="grp" style="align-self:flex-end;padding-bottom:5px"><span class="lb" id="sk_rangeLb"></span></div>
 </div>
@@ -2120,7 +2122,7 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
   const MT=DT.meta||{}, SKA=DT.skus||[], _SKSET={};SKA.forEach(function(k){_SKSET[k]=1;});
   const W=(DT.W||[]).filter(function(r){return _SKSET[r[2]];}), D=(DT.D||[]).filter(function(r){return _SKSET[r[1]];}),
         IV=DT.IV||{}, EV=DT.EV||[], WR=DT.WR||{};
-  let CUR='K';
+  let CUR=window.SKU_CUR||'K';   // 2026-10-15 — 탭 전체(요약·차트·표·콜스) 통화 = window.SKU_CUR (skuSetCur_)
   let RSEL=null;   // null=전체                       // 표 통화 K=KRW / U=USD
   const md=s=>s?s.slice(5).replace('-','/'):'';
   const WEND0={};W.forEach(r=>{WEND0[r[0]]=r[1];});
@@ -2172,7 +2174,7 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
       ds.forEach(d=>{const v=d.data[i]||0;if(v<=0)return;const h=v/top*ih,y=T+ih-(acc+v)/top*ih;acc+=v;
         s+='<rect x="'+(cx-bw/2)+'" y="'+y+'" width="'+bw+'" height="'+h+'" fill="'+d.color+'"/>';});
       const tot0=ds.reduce((x,d)=>x+(d.data[i]||0),0);
-      const tf=v=>M==='s'?mK(v*fxK(k)):nf(v)+'개';   // 그 구간(k) 환율
+      const tf=v=>M==='s'?(CUR==='K'?mK(v):'$'+nf(v)):nf(v)+'개';   // ds 는 이미 표시 통화(원화 = 그 구간 환율로 환산해 넘김)
       let tip='<b>'+esc(P==='m'?(MLB[k]||k):k)+'</b><div class="r"><span>합계</span><span>'+tf(tot0)+'</span></div><hr style="border:0;border-top:1px solid rgba(255,255,255,.2);margin:5px 0">';
       ds.forEach(d=>{const v=d.data[i]||0;if(v<=0)return;
         tip+='<div class="r"><span><i style="background:'+d.color+'"></i>'+esc(d.label)+'</span><span>'+tf(v)+(tot0>0?'  <span style="opacity:.6">'+(v/tot0*100).toFixed(0)+'%</span>':'')+'</span></div>';});
@@ -2190,19 +2192,19 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
     const mx=Math.max(...rows.map(r=>stacked?r[1]+r[2]:r[1]),1),tk=ticks(mx),top=tk[tk.length-1];
     let s='<svg viewBox="0 0 '+Wd+' '+Ht+'">';
     tk.forEach(v=>{const x=L+v/top*iw;s+='<line class="gl" x1="'+x+'" y1="'+T+'" x2="'+x+'" y2="'+(T+rows.length*rh)+'"/><text x="'+x+'" y="'+(Ht-9)+'" text-anchor="middle" font-size="10" fill="#9ca3af">'+fmt(v)+'</text>';});
+    const tf2=v=>M==='s'?(CUR==='K'?mK(v):'$'+nf(v)):nf(v)+'개';   // rows 는 이미 표시 통화 (원화 = 구간 pk 환율로 환산해 넘김 · 2026-10-15)
     rows.forEach((r,i)=>{const y=T+i*rh+4,h=rh-10;
       s+='<text x="'+(L-8)+'" y="'+(y+h/2+3.5)+'" text-anchor="end" font-size="10.5" fill="#666">'+esc(r[0])+'</text>';
       if(stacked){const w1=Math.max(0,r[1])/top*iw,w2=Math.max(0,r[2])/top*iw;
-        const tf2=v=>M==='s'?mK(v*fxK(pk)):nf(v)+'개';
         const tp='<b>'+esc(r[0])+'</b><div class="r"><span><i style="background:#1D2847"></i>B&amp;M</span><span>'+tf2(r[1])+'  <span style="opacity:.6">'+(r[1]+r[2]>0?(r[1]/(r[1]+r[2])*100).toFixed(0):0)+'%</span></span></div>'+
           '<div class="r"><span><i style="background:#D9A89A"></i>.COM</span><span>'+tf2(r[2])+'  <span style="opacity:.6">'+(r[1]+r[2]>0?(r[2]/(r[1]+r[2])*100).toFixed(0):0)+'%</span></span></div>'+
-          '<div class="r" style="border-top:1px solid rgba(255,255,255,.2);margin-top:4px;padding-top:4px"><span>합계</span><span>'+tf2(r[1]+r[2])+'</span></div>'+(M==='s'?'<div class="r" style="opacity:.65"><span>USD</span><span>$'+nf(r[1]+r[2])+'</span></div>':'');
+          '<div class="r" style="border-top:1px solid rgba(255,255,255,.2);margin-top:4px;padding-top:4px"><span>합계</span><span>'+tf2(r[1]+r[2])+'</span></div>'+(M==='s'&&CUR==='K'?'<div class="r" style="opacity:.65"><span>USD</span><span>$'+nf((r[1]+r[2])/fxK(pk))+'</span></div>':'');
         s+='<rect x="'+L+'" y="'+y+'" width="'+w1+'" height="'+h+'" fill="#1D2847" data-tip="'+encodeURIComponent(tp)+'"/>';
         s+='<rect x="'+(L+w1)+'" y="'+y+'" width="'+w2+'" height="'+h+'" fill="#D9A89A" data-tip="'+encodeURIComponent(tp)+'"/>';
         s+='<text x="'+(L+w1+w2+6)+'" y="'+(y+h/2+3.5)+'" font-size="10" fill="#9ca3af">'+fmt(r[1]+r[2])+'</text>';}
       else{const w=Math.max(0,r[1])/top*iw;
-        const tp2='<b>'+esc(r[0])+'</b><div class="r"><span>'+(M==='s'?'매출':'수량')+'</span><span>'+(M==='s'?mK(r[1]*fxK(pk)):nf(r[1])+'개')+'</span></div>'+
-          (M==='s'?'<div class="r" style="opacity:.65"><span>USD</span><span>$'+nf(r[1])+'</span></div>':'')+
+        const tp2='<b>'+esc(r[0])+'</b><div class="r"><span>'+(M==='s'?'매출':'수량')+'</span><span>'+tf2(r[1])+'</span></div>'+
+          (M==='s'&&CUR==='K'?'<div class="r" style="opacity:.65"><span>USD</span><span>$'+nf(r[1]/fxK(pk))+'</span></div>':'')+
           '<div class="r"><span>순위</span><span>'+(i+1)+'위 / '+rows.length+'</span></div>';
         s+='<rect x="'+L+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+(colors[i]||ETC)+'" data-tip="'+encodeURIComponent(tp2)+'"/>';
         s+='<text x="'+(L+w+6)+'" y="'+(y+h/2+3.5)+'" font-size="10" fill="#9ca3af">'+fmt(r[1])+'</text>';}});
@@ -2280,6 +2282,7 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
   }
   window._skuRedraw=function(){ draw(); };   // 국가 분리 2차 — 국가 칩 변경 시 요약만 다시 그리기 위해 노출
   function draw(){
+    CUR=window.SKU_CUR||'K';
     const a=agg(),per=a.per;
     const keys=RSEL?a.keys.filter(k=>RSEL.has(k)):a.keys;
     if(!keys.length){                                      // MONTH·WEEK 를 모두 해제한 상태
@@ -2293,7 +2296,8 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
     let DK=doneKeys(keys); if(!DK.length)DK=keys.slice();      // 선택 구간이 전부 진행 중이면 그대로 사용
     const OPEN=openKeys(keys);   // 표시용 — 집계에서 빼지 않는다
     const act=SKA.filter(s=>SEL.has(s));
-    const fmt=v=>M==='s'?(v>=1000?'$'+Math.round(v/1000)+'k':'$'+Math.round(v)):Math.round(v).toLocaleString('ko-KR');
+    const fmt=v=>M==='s'?(CUR==='K'?mK(v):(v>=1000?'$'+Math.round(v/1000)+'k':'$'+Math.round(v))):Math.round(v).toLocaleString('ko-KR');   // 차트 축 = 통화 칩 (2026-10-15)
+    const cvk=(v,k)=>(M==='s'&&CUR==='K'&&v!=null)?v*fxK(k):v;   // 차트 값 — 원화면 그 구간 환율로
     document.getElementById('sk_rangeLb').textContent=keys.length?keys[0]+'  ~  '+keys[keys.length-1]+'   ('+keys.length+(P==='d'?'일':P==='w'?'주':'개월')+')':'';
     const sum=k=>act.reduce((x,s)=>x+((per[s]&&per[s][k])||0),0);
     const L1=DK[DK.length-1],L2=DK[DK.length-2],L3=DK[DK.length-3],L4=DK[DK.length-4];
@@ -2306,23 +2310,24 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
       else if(P==='w')W.forEach(r=>{if(r[0]===L1&&SEL.has(r[2])&&val(r,6)!=null){v+=val(r,3);q+=val(r,6);}});
       else D.forEach(r=>{if(r[0].slice(0,7)===L1&&SEL.has(r[1])){v+=val(r,2);q+=val(r,5);}});
       if(q>0)asp='$'+(v/q).toFixed(2);}
-    const kv=(v,k)=>(M==='s'&&v!=null)?v*fxK(k):v;   // 매출이면 그 구간 환율로 원화 — 표시값과 증감률을 같은 원화 기준으로 맞춘다
+    const kv=(v,k)=>(M==='s'&&v!=null&&CUR==='K')?v*fxK(k):v;   // 달러 칩이면 원본 (2026-10-15)
+    const usdf=v=>'$'+nf(v), wonx=v=>CUR==='K'?wonf(v):usdf(v), eokx=v=>CUR==='K'?eok(v):usdf(v);   // 요약 카드 값 = 통화 칩   // 매출이면 그 구간 환율로 원화 — 표시값과 증감률을 같은 원화 기준으로 맞춘다
     const K=[
-     ['최근 '+pL+' '+uL,(M==='s'?wonf(kv(v1,L1)):nf(v1)+'개')+bd(pct(kv(v1,L1),kv(v2,L2))),
-       '<b style="color:#666">'+nmk(L1)+'</b> vs '+nmk(L2||'')+(M==='s'?'   ·   $'+nf(v1):'')+
+     ['최근 '+pL+' '+uL,(M==='s'?wonx(kv(v1,L1)):nf(v1)+'개')+bd(pct(kv(v1,L1),kv(v2,L2))),
+       '<b style="color:#666">'+nmk(L1)+'</b> vs '+nmk(L2||'')+(M==='s'?'   ·   '+(CUR==='K'?'$'+nf(v1):wonf(v1*fxK(L1))):'')+
        '<br><span style="font-size:10px">vs '+nmk(L3||'—')+' '+(v3!=null?bd(pct(kv(v1,L1),kv(v3,L3)),1):'—')+'   vs '+nmk(L4||'—')+' '+(v4!=null?bd(pct(kv(v1,L1),kv(v4,L4)),1):'—')+'</span>'],
      ['판매 SKU',act.filter(s=>per[s]&&per[s][L1]).length+' / '+act.length+'종','선택된 SKU 중 해당 구간 실판매'],
      [M==='s'?'평균 판매단가':'구간 합계',M==='s'?asp:nf(DK.reduce((x,k)=>x+sum(k),0))+'개',M==='s'?nmk(L1)+' 기준 · 매출 ÷ 판매수량':'완결 구간'],
-     ['합계',M==='s'?eok(DK.reduce((x,k)=>x+sum(k)*fxK(k),0)):nf(DK.reduce((x,k)=>x+sum(k),0))+'개',
-       (M==='s'?'$'+nf(DK.reduce((x,k)=>x+sum(k),0))+'   ·   ':'')+DK[0]+' ~ '+nmk(DK[DK.length-1])+(OPEN.length?' (진행 중 포함)':'')]];
-    if(typeof window.ctySkuKpi_==='function')window.ctySkuKpi_(K,{P:P,C:C,M:M,DK:DK,keys:keys,v1:v1,v2:v2,L1:L1,L2:L2,act:act,SKA:SKA,per:per,sum:sum,nmk:nmk,wonf:wonf,nf:nf,eok:eok,bd:bd,pct:pct,fxK:fxK});   // 국가 분리 2차 · wonf·eok 는 원화를 받는다(fxK 로 먼저 환산)
+     ['합계',M==='s'?eokx(DK.reduce((x,k)=>x+sum(k)*(CUR==='K'?fxK(k):1),0)):nf(DK.reduce((x,k)=>x+sum(k),0))+'개',
+       (M==='s'?(CUR==='K'?'$'+nf(DK.reduce((x,k)=>x+sum(k),0)):eok(DK.reduce((x,k)=>x+sum(k)*fxK(k),0)))+'   ·   ':'')+DK[0]+' ~ '+nmk(DK[DK.length-1])+(OPEN.length?' (진행 중 포함)':'')]];
+    if(typeof window.ctySkuKpi_==='function')window.ctySkuKpi_(K,{P:P,C:C,M:M,DK:DK,keys:keys,v1:v1,v2:v2,L1:L1,L2:L2,act:act,SKA:SKA,per:per,sum:sum,nmk:nmk,wonf:wonx,nf:nf,eok:eokx,bd:bd,pct:pct,fxK:(CUR==='K'?fxK:function(){return 1;})});   // 국가 분리 2차 · wonf·eok 는 원화를 받는다(fxK 로 먼저 환산)
     document.getElementById('sk_kpiRow').innerHTML=K.map(k=>'<div class="kpi"><div class="kpi-label">'+k[0]+'</div><div class="kpi-value">'+k[1]+'</div><div class="kpi-sub">'+k[2]+'</div></div>').join('');
     document.getElementById('sk_kpiNote').textContent=[OPEN.length?'진행 중인 '+(MLB[OPEN[0]]||OPEN[0])+'이 요약·순위·차트·평균에 모두 포함돼 있음':'',''].filter(Boolean).join(' · ');
     const tot={};act.forEach(s=>tot[s]=keys.reduce((x,k)=>x+((per[s]&&per[s][k])||0),0));
     const top=act.slice().sort((x,y)=>tot[y]-tot[x]).filter(s=>tot[s]!==0).slice(0,8);
-    const ds=top.map((s,i)=>({label:nmOf(s),color:PAL[i],data:keys.map(k=>(per[s]&&per[s][k])||0)}));
+    const ds=top.map((s,i)=>({label:nmOf(s),color:PAL[i],data:keys.map(k=>cvk((per[s]&&per[s][k])||0,k))}));
     const rest=act.filter(s=>top.indexOf(s)<0);
-    const etc=keys.map(k=>rest.reduce((x,s)=>x+((per[s]&&per[s][k])||0),0));
+    const etc=keys.map(k=>cvk(rest.reduce((x,s)=>x+((per[s]&&per[s][k])||0),0),k));
     if(etc.some(v=>v>0))ds.push({label:'기타 '+rest.length+'종',color:ETC,data:etc});
     document.getElementById('sk_trendTitle').textContent=(P==='m'?'월별':P==='w'?'주별':'일별')+' SKU 구성 · '+(C==='t'?'통합':C==='b'?'B&M':'.COM')+' '+uL+(act.length<SKA.length?'  (SKU '+act.length+'종 선택)':'');
     document.getElementById('sk_chTrend').innerHTML=svgStack(keys,ds,fmt);
@@ -2330,7 +2335,7 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
     document.getElementById('sk_trendFoot').textContent=P==='m'
       ?'월 집계 — 5~8월은 일자 기준(일별 원천), ⚠ 2~4월은 주 단위 배분(그 주 수요일이 속한 달)이라 월 경계가 정확하지 않습니다. 세포라 원본 W02~W13 수급 시 전 구간 일자 기준으로 통일됩니다.'
       :(P==='w'?'':'2026-05-03 ~ 2026-08-01 · 91일 연속, 결손 없음');
-    const rk=act.map(s=>[nmOf(s),(per[s]&&per[s][L1])||0]).filter(r=>r[1]>0).sort((x,y)=>y[1]-x[1]).slice(0,12);
+    const rk=act.map(s=>[nmOf(s),cvk((per[s]&&per[s][L1])||0,L1)]).filter(r=>r[1]>0).sort((x,y)=>y[1]-x[1]).slice(0,12);
     document.getElementById('sk_rankTitle').textContent=nmk(L1)+' SKU 순위 (상위 12)';
     document.getElementById('sk_chRank').innerHTML=svgBarH(rk,fmt,rk.map((r,i)=>i<8?PAL[i]:ETC),false,L1);
     const mix=[];
@@ -2338,7 +2343,7 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
       if(P==='d')D.forEach(r=>{if(r[0]===L1&&r[1]===s){b+=M==='s'?r[2]:r[5];c+=M==='s'?r[3]:r[6];}});
       else if(P==='w')W.forEach(r=>{if(r[0]===L1&&r[2]===s){b+=(M==='s'?r[3]:r[6])||0;c+=(M==='s'?r[4]:r[7])||0;}});
       else D.forEach(r=>{if(r[0].slice(0,7)===L1&&r[1]===s){b+=M==='s'?r[2]:r[5];c+=M==='s'?r[3]:r[6];}});
-      if(b>0||c>0)mix.push([nmOf(s),b,c]);});
+      if(b>0||c>0)mix.push([nmOf(s),cvk(b,L1),cvk(c,L1)]);});
     mix.sort((x,y)=>(y[1]+y[2])-(x[1]+x[2]));
     document.getElementById('sk_mixTitle').textContent=nmk(L1)+' 채널 구성 (상위 10)';
     document.getElementById('sk_chMix').innerHTML=svgBarH(mix.slice(0,10),fmt,[],true,L1);
@@ -2506,8 +2511,8 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
     document.querySelectorAll('#tabSku .dd-panel.show').forEach(x=>x.classList.remove('show'));
     document.querySelectorAll('#tabSku .dd-btn.open').forEach(x=>x.classList.remove('open'));}};
   document.addEventListener('click',window.__skDocClick);
-  document.getElementById('sk_curK').onclick=()=>{CUR='K';document.getElementById('sk_curK').classList.add('on');document.getElementById('sk_curU').classList.remove('on');draw();};
-  document.getElementById('sk_curU').onclick=()=>{CUR='U';document.getElementById('sk_curU').classList.add('on');document.getElementById('sk_curK').classList.remove('on');draw();};
+  document.getElementById('sk_curK').onclick=()=>skuSetCur_('K');   // 2026-10-15 — 필터 바 통화 칩과 같은 상태
+  document.getElementById('sk_curU').onclick=()=>skuSetCur_('U');
   document.getElementById('sk_allOn').onclick=e=>{e.stopPropagation();SEL=new Set(SKA);buildPick();syncPick();draw();};
   document.getElementById('sk_allOff').onclick=e=>{e.stopPropagation();const t=SKA[0];SEL=new Set([t]);buildPick();syncPick();draw();};
   document.getElementById('sk_top8').onclick=e=>{e.stopPropagation();const tot={};SKA.forEach(s=>tot[s]=W.filter(r=>r[2]===s).reduce((x,r)=>x+r[5],0));
@@ -5206,6 +5211,19 @@ function koBmRender_() {
   host.innerHTML = html;
 }
 
+// ── SKU 실매출 탭 통화 칩 (2026-10-15 MJ 「실매출 탭에서도 원화/달러」) ──
+//   필터 바 칩 · 표 머리 칩 · 콜스 칩이 모두 window.SKU_CUR 하나를 바꾼다 → 세포라 요약·차트·표, 캐나다 월간 SKU, 콜스 영역을 다시 그린다
+window.SKU_CUR = window.SKU_CUR || 'K';
+function skuSetCur_(c) {
+  window.SKU_CUR = c;
+  document.querySelectorAll('#tabSku .sk-cur[data-c]').forEach(function(b){ b.classList.toggle('on', b.dataset.c === c); });
+  var k = document.getElementById('sk_curK'), u = document.getElementById('sk_curU');
+  if (k) k.classList.toggle('on', c === 'K'); if (u) u.classList.toggle('on', c === 'U');
+  try { if (typeof window._skuRedraw === 'function') window._skuRedraw(); } catch(e) { console.warn('[SKU] 통화', e); }
+  try { ctySkuCaRender_(); } catch(e) {}
+  try { koSkuRender_(); } catch(e) {}
+}
+window.skuSetCur_ = skuSetCur_;
 // ── SKU 실매출 탭 콜스 영역 (#koSkuSec) ──
 // 2026-10-15 MJ 「콜스SKU시안 1:A 2:A 3:A 4:A 5:A」 — 표만 있던 영역을 세포라 SKU 탭과 같은 그래프 구성으로
 //   요약 카드 4장 · SKU 구성 추이(상위 8 + 기타) · SKU 순위(상위 12) / 채널 구성(상위 10) · 재고 건전성 · 상세 표(접힘)
@@ -5213,11 +5231,11 @@ function koBmRender_() {
 //   차트 그리는 방식(viewBox 1000 · 눈금 · 글자 크기 · 막대 폭 · 툴팁)은 renderSku 의 svgStack·svgBarH 와 같다
 //   SKU 색 = 세포라 8색(PAL) · 콜스 보라는 섹션 막대와 B&M/.COM 색에만 · 재고 신호 = 부족 4주 미만(세포라 WOS 경보와 같음) / 과잉 26주 이상
 var _koSkuWk = null;
-var _koSku = { C:'t', M:'s', B:'sku', cur:'K', open:false };   // 채널 t/b/c · 지표 s/u · 보기 sku/cls · 표 통화 K/U
+var _koSku = { C:'t', M:'s', B:'sku', open:false };   // 채널 t/b/c · 지표 s/u · 보기 sku/cls · 통화 = window.SKU_CUR (세포라와 같은 칩)
 const KO_MSG = 'background:#fff;border:.5px solid #E8E8EC;border-radius:14px;padding:18px;color:#9ca3af;font-size:12px;text-align:center;margin-bottom:9px';
 const KO_PAL = ['#1D2847','#D9A89A','#6aadd5','#d97070','#F4B942','#6AA84F','#9673A6','#45818E'], KO_ETC = '#C8C8CE';   // renderSku PAL·ETC 와 같은 값
 const KO_WOS_LOW = 4, KO_WOS_HIGH = 26;
-function koSkuSet_(key, v) { if (key === 'wk') _koSkuWk = v; else _koSku[key] = v; koSkuRender_(); }
+function koSkuSet_(key, v) { if (key === 'cur') return skuSetCur_(v); if (key === 'wk') _koSkuWk = v; else _koSku[key] = v; koSkuRender_(); }
 function koSkuRender_() {
   var host = document.getElementById('koSkuSec'); if (!host) return;
   if (CHS === 'SEPHORA') { host.innerHTML = ''; return; }
@@ -5228,7 +5246,8 @@ function koSkuRender_() {
   var wks = []; k.skuWk.forEach(function(r){ if (wks.indexOf(r.w) < 0) wks.push(r.w); });
   wks.sort(function(a, b){ return koWn_(a) - koWn_(b); });
   if (!_koSkuWk || wks.indexOf(_koSkuWk) < 0) _koSkuWk = wks[wks.length - 1];
-  var S = _koSku, CW = _koSkuWk, ci = wks.indexOf(CW);
+  var S = _koSku, CW = _koSkuWk, ci = wks.indexOf(CW), KRW = (window.SKU_CUR || 'K') === 'K';
+  S.cur = KRW ? 'K' : 'U';
   var FXW = {}; wks.forEach(function(w){ var x = koWk_(w); FXW[w] = fxRate(x ? x.we : null); });   // 주 마감일 환율
   var byW = {}; k.skuWk.forEach(function(r){ (byW[r.w] = byW[r.w] || []).push(r); });
   var esc = function(s){ return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); };
@@ -5239,8 +5258,10 @@ function koSkuRender_() {
   var ticks = function(mx){ if (mx <= 0) return [0, 1]; var p = Math.pow(10, Math.floor(Math.log10(mx))), s = mx / p > 5 ? p * 2 : (mx / p > 2 ? p : p / 2), o = []; for (var v = 0; v <= mx * 1.0001 + s; v += s) o.push(v); return o; };
   var vS = function(r){ return S.C === 'b' ? r.store : S.C === 'c' ? r.dig : r.store + r.dig; };
   var vU = function(r){ return S.C === 'b' ? r.storeQty : S.C === 'c' ? r.digQty : r.storeQty + r.digQty; };
-  var val = function(r){ return S.M === 's' ? vS(r) * FXW[r.w] : vU(r); };   // 매출 = 그 주 환율 원화
-  var fmt = function(v){ return S.M === 's' ? mK(v) : nf(v) + '개'; };
+  var val = function(r){ return S.M === 's' ? vS(r) * (KRW ? FXW[r.w] : 1) : vU(r); };   // 매출 = 원화면 그 주 환율 · 달러 칩이면 원본
+  var usdAx = function(v){ return v >= 1000 ? '$' + Math.round(v / 1000) + 'k' : '$' + Math.round(v); };   // 세포라 차트 달러 축과 같은 형식
+  var fmt = function(v){ return S.M === 's' ? (KRW ? mK(v) : usdAx(v)) : nf(v) + '개'; };
+  var fmtF = function(v){ return S.M === 's' ? (KRW ? mK(v) : '$' + nf(v)) : nf(v) + '개'; };   // 툴팁 값
   var chL = S.C === 't' ? '통합' : S.C === 'b' ? 'B&M' : '.COM', uL = S.M === 's' ? '매출' : '판매수량';
   var wsum = function(w){ return w ? (byW[w] || []).reduce(function(a, r){ return a + val(r); }, 0) : null; };
   var short = function(n){ return String(n).replace('Damage Repair', 'DR').replace('Frizz Calming', 'FC').replace('Conditionr', 'Cond.'); };
@@ -5254,6 +5275,7 @@ function koSkuRender_() {
     + '<div class="filter-block"><div class="filter-lbl">채널</div><div style="display:flex;gap:5px">' + btn('C', 't', '통합') + btn('C', 'b', 'B&amp;M') + btn('C', 'c', '.COM') + '</div></div>'
     + '<div class="filter-block"><div class="filter-lbl">지표</div><div style="display:flex;gap:5px">' + btn('M', 's', '매출') + btn('M', 'u', '판매수량') + '</div></div>'
     + '<div class="filter-block"><div class="filter-lbl">보기</div><div style="display:flex;gap:5px">' + btn('B', 'sku', 'SKU') + btn('B', 'cls', '분류') + '</div></div>'
+    + '<div class="filter-block"><div class="filter-lbl">통화</div><span class="cur-sw" style="margin-top:3px" title="세포라 영역과 같은 통화 칩 · 원화 = 주 마감일 환율"><button class="sk-cur' + (KRW ? ' on' : '') + '" data-c="K" onclick="skuSetCur_(\'K\')">₩ 원화</button><button class="sk-cur' + (KRW ? '' : ' on') + '" data-c="U" onclick="skuSetCur_(\'U\')">$ 달러</button></span></div>'
     + '</div><div class="grp" style="align-self:flex-end;padding-bottom:5px"><span class="lb">' + wks[0] + '  ~  ' + wks[wks.length - 1] + '   (' + wks.length + '주)</span></div></div>';
 
   // ── 요약 카드 4장 (세포라 「최근 구간 요약」과 같은 항목·형식)
@@ -5262,13 +5284,14 @@ function koSkuRender_() {
   var all = wks.reduce(function(a, w){ return a + wsum(w); }, 0), allUsd = k.skuWk.reduce(function(a, r){ return a + vS(r); }, 0);
   var span = wks[0] + ' ~ ' + wks[wks.length - 1];
   var K = [
-    ['최근 주 ' + uL, (S.M === 's' ? koFmtK_(v[0]) : nf(v[0]) + '개') + bd(pct(v[0], v[1])),
-      '<b style="color:#666">' + CW + '</b> vs ' + (L[1] || '—') + (S.M === 's' ? '   ·   $' + nf(usd) : '')
+    ['최근 주 ' + uL, (S.M === 's' ? (KRW ? koFmtK_(v[0]) : '$' + nf(v[0])) : nf(v[0]) + '개') + bd(pct(v[0], v[1])),
+      '<b style="color:#666">' + CW + '</b> vs ' + (L[1] || '—') + (S.M === 's' ? '   ·   ' + (KRW ? '$' + nf(usd) : koFmtK_(usd * FXW[CW])) : '')
       + '<br><span style="font-size:10px">vs ' + (L[2] || '—') + ' ' + (v[2] != null ? bd(pct(v[0], v[2]), 1) : '—') + '   vs ' + (L[3] || '—') + ' ' + (v[3] != null ? bd(pct(v[0], v[3]), 1) : '—') + '</span>'],
     ['판매 SKU', cur.filter(function(r){ return vU(r) > 0; }).length + ' / ' + cur.length + '종', '해당 주 실판매 (반품만 있는 SKU 제외)'],
     [S.M === 's' ? '평균 판매단가' : '구간 합계', S.M === 's' ? (q > 0 ? '$' + (usd / q).toFixed(2) : '—') : nf(all) + '개', S.M === 's' ? CW + ' 기준 · 매출 ÷ 판매수량' : span],
-    ['합계', S.M === 's' ? (all / 1e8).toFixed(2) + '억 원' : nf(all) + '개', (S.M === 's' ? '$' + nf(allUsd) + '   ·   ' : '') + span + ' (콜스 첫 판매 ' + (k.entry || wks[0]) + ')']];
-  html += '<div class="sec-hdr"><span class="bar" style="background:' + KO_COLOR.store + '"></span>콜스 최근 주 요약 <span class="note">' + chL + ' · ' + (S.M === 's' ? '₩ = 주 마감일 환율 ' + FXW[CW].toLocaleString() + '원' : '수량') + '</span></div>'
+    ['합계', S.M === 's' ? (KRW ? (all / 1e8).toFixed(2) + '억 원' : '$' + nf(all)) : nf(all) + '개',
+      (S.M === 's' ? (KRW ? '$' + nf(allUsd) : (k.skuWk.reduce(function(a, r){ return a + vS(r) * FXW[r.w]; }, 0) / 1e8).toFixed(2) + '억 원') + '   ·   ' : '') + span + ' (콜스 첫 판매 ' + (k.entry || wks[0]) + ')']];
+  html += '<div class="sec-hdr"><span class="bar" style="background:' + KO_COLOR.store + '"></span>콜스 최근 주 요약 <span class="note">' + chL + ' · ' + (S.M === 's' ? (KRW ? '₩ = 주 마감일 환율 ' + FXW[CW].toLocaleString() + '원' : '$ = 콜스 원본') : '수량') + '</span></div>'
     + '<div class="kpi-row">' + K.map(function(x){ return '<div class="kpi"><div class="kpi-label">' + x[0] + '</div><div class="kpi-value">' + x[1] + '</div><div class="kpi-sub">' + x[2] + '</div></div>'; }).join('') + '</div>';
 
   // ── SKU 구성 추이 (renderSku svgStack 과 같은 크기·글자)
@@ -5284,8 +5307,8 @@ function koSkuRender_() {
     tk.forEach(function(x){ var y = T + ih - x / tp * ih; s += '<line class="gl" x1="' + Lm + '" y1="' + y + '" x2="' + (Wd - R) + '" y2="' + y + '"/><text x="' + (Lm - 7) + '" y="' + (y + 3.5) + '" text-anchor="end" font-size="10" fill="#9ca3af">' + fmt(x) + '</text>'; });
     wks.forEach(function(w, i){ var cx = Lm + iw / wks.length * (i + 0.5), acc = 0;
       ds.forEach(function(d){ var x = d.data[i] || 0; if (x <= 0) return; var h = x / tp * ih, y = T + ih - (acc + x) / tp * ih; acc += x; s += '<rect x="' + (cx - bw / 2) + '" y="' + y + '" width="' + bw + '" height="' + h + '" fill="' + d.color + '"/>'; });
-      var t0 = tt[i], tip = '<b>' + w + '</b><div class="r"><span>합계</span><span>' + fmt(t0) + '</span></div><hr style="border:0;border-top:1px solid rgba(255,255,255,.2);margin:5px 0">';
-      ds.forEach(function(d){ var x = d.data[i] || 0; if (x <= 0) return; tip += '<div class="r"><span><i style="background:' + d.color + '"></i>' + esc(d.label) + '</span><span>' + fmt(x) + (t0 > 0 ? '  <span style="opacity:.6">' + (x / t0 * 100).toFixed(0) + '%</span>' : '') + '</span></div>'; });
+      var t0 = tt[i], tip = '<b>' + w + '</b><div class="r"><span>합계</span><span>' + fmtF(t0) + '</span></div><hr style="border:0;border-top:1px solid rgba(255,255,255,.2);margin:5px 0">';
+      ds.forEach(function(d){ var x = d.data[i] || 0; if (x <= 0) return; tip += '<div class="r"><span><i style="background:' + d.color + '"></i>' + esc(d.label) + '</span><span>' + fmtF(x) + (t0 > 0 ? '  <span style="opacity:.6">' + (x / t0 * 100).toFixed(0) + '%</span>' : '') + '</span></div>'; });
       s += '<rect x="' + (Lm + iw / wks.length * i) + '" y="' + T + '" width="' + (iw / wks.length) + '" height="' + ih + '" fill="transparent" data-tip="' + encodeURIComponent(tip) + '"/>';
       s += '<text x="' + cx + '" y="' + (Ht - B + 16) + '" text-anchor="middle" font-size="10" fill="' + (w === CW ? KO_COLOR.store : '#9ca3af') + '"' + (w === CW ? ' font-weight="700"' : '') + '>' + w + '</text>'; });
     return s + '<line class="gl" x1="' + Lm + '" y1="' + (T + ih) + '" x2="' + (Wd - R) + '" y2="' + (T + ih) + '"/></svg>';
@@ -5302,14 +5325,14 @@ function koSkuRender_() {
     rows.forEach(function(r, i){ var y = T + i * rh + 4, h = rh - 10;
       s += '<text x="' + (Lm - 8) + '" y="' + (y + h / 2 + 3.5) + '" text-anchor="end" font-size="10.5" fill="#666">' + (r[3] ? '● ' : '') + esc(r[0]) + '</text>';
       if (stacked) { var b = Math.max(0, r[1]), c = Math.max(0, r[2]), w1 = b / tp * iw, w2 = c / tp * iw, t = b + c;
-        var tp1 = '<b>' + esc(r[0]) + '</b><div class="r"><span><i style="background:' + KO_COLOR.store + '"></i>B&amp;M</span><span>' + fmt(r[1]) + '  <span style="opacity:.6">' + (t > 0 ? (b / t * 100).toFixed(0) : 0) + '%</span></span></div>'
-          + '<div class="r"><span><i style="background:' + KO_COLOR.dig + '"></i>.COM</span><span>' + fmt(r[2]) + '  <span style="opacity:.6">' + (t > 0 ? (c / t * 100).toFixed(0) : 0) + '%</span></span></div>'
-          + '<div class="r" style="border-top:1px solid rgba(255,255,255,.2);margin-top:4px;padding-top:4px"><span>합계</span><span>' + fmt(r[1] + r[2]) + '</span></div>' + (r[4] != null ? '<div class="r" style="opacity:.65"><span>USD</span><span>$' + nf(r[4]) + '</span></div>' : '');
+        var tp1 = '<b>' + esc(r[0]) + '</b><div class="r"><span><i style="background:' + KO_COLOR.store + '"></i>B&amp;M</span><span>' + fmtF(r[1]) + '  <span style="opacity:.6">' + (t > 0 ? (b / t * 100).toFixed(0) : 0) + '%</span></span></div>'
+          + '<div class="r"><span><i style="background:' + KO_COLOR.dig + '"></i>.COM</span><span>' + fmtF(r[2]) + '  <span style="opacity:.6">' + (t > 0 ? (c / t * 100).toFixed(0) : 0) + '%</span></span></div>'
+          + '<div class="r" style="border-top:1px solid rgba(255,255,255,.2);margin-top:4px;padding-top:4px"><span>합계</span><span>' + fmtF(r[1] + r[2]) + '</span></div>' + (r[4] != null && KRW ? '<div class="r" style="opacity:.65"><span>USD</span><span>$' + nf(r[4]) + '</span></div>' : '');
         s += '<rect x="' + Lm + '" y="' + y + '" width="' + w1 + '" height="' + h + '" fill="' + KO_COLOR.store + '" data-tip="' + encodeURIComponent(tp1) + '"/>';
         s += '<rect x="' + (Lm + w1) + '" y="' + y + '" width="' + w2 + '" height="' + h + '" fill="' + KO_COLOR.dig + '" data-tip="' + encodeURIComponent(tp1) + '"/>';
         s += '<text x="' + (Lm + w1 + w2 + 6) + '" y="' + (y + h / 2 + 3.5) + '" font-size="10" fill="#9ca3af">' + fmt(r[1] + r[2]) + '</text>'; }
       else { var w = Math.max(0, r[1]) / tp * iw;
-        var tp2 = '<b>' + esc(r[0]) + '</b><div class="r"><span>' + uL + '</span><span>' + fmt(r[1]) + '</span></div>' + (r[4] != null ? '<div class="r" style="opacity:.65"><span>USD</span><span>$' + nf(r[4]) + '</span></div>' : '') + '<div class="r"><span>순위</span><span>' + (i + 1) + '위 / ' + rows.length + '</span></div>';
+        var tp2 = '<b>' + esc(r[0]) + '</b><div class="r"><span>' + uL + '</span><span>' + fmtF(r[1]) + '</span></div>' + (r[4] != null && KRW ? '<div class="r" style="opacity:.65"><span>USD</span><span>$' + nf(r[4]) + '</span></div>' : '') + '<div class="r"><span>순위</span><span>' + (i + 1) + '위 / ' + rows.length + '</span></div>';
         s += '<rect x="' + Lm + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="' + (colors[i] || KO_ETC) + '" data-tip="' + encodeURIComponent(tp2) + '"/>';
         s += '<text x="' + (Lm + w + 6) + '" y="' + (y + h / 2 + 3.5) + '" font-size="10" fill="#9ca3af">' + fmt(r[1]) + '</text>'; } });
     return s + '</svg>';
@@ -5317,7 +5340,7 @@ function koSkuRender_() {
   var topS = top.map(short);
   var rk = cur.map(function(r){ return [short(r.n), val(r), 0, r.web === 'Y', S.M === 's' ? vS(r) : null]; }).filter(function(r){ return r[1] > 0; }).sort(function(a, b){ return b[1] - a[1]; }).slice(0, 12);
   var rkCol = rk.map(function(r){ var i = S.B === 'sku' ? topS.indexOf(r[0]) : -1; return i >= 0 ? KO_PAL[i] : (S.B === 'sku' ? KO_ETC : KO_PAL[0]); });   // 추이 차트와 같은 SKU = 같은 색
-  var mix = cur.map(function(r){ var f = FXW[r.w]; return S.M === 's' ? [short(r.n), r.store * f, r.dig * f, r.web === 'Y', r.store + r.dig] : [short(r.n), r.storeQty, r.digQty, r.web === 'Y', null]; })
+  var mix = cur.map(function(r){ var f = KRW ? FXW[r.w] : 1; return S.M === 's' ? [short(r.n), r.store * f, r.dig * f, r.web === 'Y', r.store + r.dig] : [short(r.n), r.storeQty, r.digQty, r.web === 'Y', null]; })
     .filter(function(r){ return r[1] > 0 || r[2] > 0; }).sort(function(a, b){ return (b[1] + b[2]) - (a[1] + a[2]); }).slice(0, 10);
   html += '<div class="two">'
     + '<div class="chart-card"><div class="chart-sec-title"><span>' + CW + ' 콜스 SKU 순위 (상위 12) · ' + chL + '</span></div>' + svgBarH(rk, rkCol, false) + '</div>'
@@ -5342,16 +5365,18 @@ function koSkuRender_() {
     pts.forEach(function(p){ var r = 5 + Math.sqrt(p.oo) / 5;
       var tip = '<b>' + esc(p.r.n) + '</b><div class="r"><span>B&amp;M 재고</span><span>' + nf(p.y) + '개</span></div><div class="r"><span>주당 판매(최근 4주)</span><span>' + p.x.toFixed(1) + '개</span></div><div class="r"><span>재고 소진</span><span>' + (p.wos == null ? '— (판매 없음)' : Math.round(p.wos) + '주') + '</span></div><div class="r"><span>발주잔량</span><span>' + nf(p.oo) + '개</span></div>';
       s += '<circle cx="' + X(p.x) + '" cy="' + Y(p.y) + '" r="' + r + '" fill="' + p.c + '" fill-opacity=".45" stroke="' + p.c + '" data-tip="' + encodeURIComponent(tip) + '"/>';
-      if (p.y > mY * 0.3 || p.oo > 500 || p.y <= 5) {   // 라벨은 큰 재고 · 큰 발주 · 재고 거의 없음만 (겹치면 위/아래로 비킴)
-        var right = X(p.x) > Wd * 0.62, lx = right ? X(p.x) - r - 4 : X(p.x) + r + 4, ly = Y(p.y) + 3.5, x0 = right ? lx - 190 : lx, x1 = right ? lx : lx + 190, stp = ly > T + ih - 30 ? -13 : 13;
-        while (placed.some(function(q){ return Math.abs(q.y - ly) < 13 && q.x0 < x1 && x0 < q.x1; })) ly += stp;
+      if (p.y > 5 && (p.y > mY * 0.3 || p.oo > 500)) {   // 라벨은 큰 재고 · 큰 발주만 (겹치면 위/아래로 비킴) · 재고 5개 이하는 차트 아래 한 줄로
+        var right = X(p.x) > Wd * 0.62, lx = right ? X(p.x) - r - 4 : X(p.x) + r + 4, ly = Y(p.y) + 3.5, x0 = right ? lx - 180 : lx, x1 = right ? lx : lx + 180, stp = ly > T + ih - 30 ? -12 : 12;
+        while (placed.some(function(q){ return Math.abs(q.y - ly) < 12 && q.x0 < x1 && x0 < q.x1; })) ly += stp;
         placed.push({ x0: x0, x1: x1, y: ly });
-        s += '<text x="' + lx + '" y="' + ly + '" font-size="10.5" fill="#666" text-anchor="' + (right ? 'end' : 'start') + '">' + esc(p.n) + (p.wos ? ' · ' + Math.round(p.wos) + '주' : p.y <= 5 ? ' · 재고 ' + p.y + '개' : '') + (p.oo ? ' · 발주 ' + nf(p.oo) : '') + '</text>'; } });
+        s += '<text x="' + lx + '" y="' + ly + '" font-size="10" fill="#666" text-anchor="' + (right ? 'end' : 'start') + '">' + esc(p.n) + (p.wos ? ' · ' + Math.round(p.wos) + '주' : '') + (p.oo ? ' · 발주 ' + nf(p.oo) : '') + '</text>'; } });
     return s + '</svg>';
   };
   html += '<div class="sec-hdr"><span class="bar" style="background:' + KO_COLOR.store + '"></span>콜스 재고 건전성 <span class="note">B&amp;M 재고 대 판매 · 점 크기 = 매장 발주잔량</span></div>'
     + '<div class="chart-card">' + svgInv()
     + '<div class="legend"><span><i style="background:#dc2626"></i>부족 — 재고 ' + KO_WOS_LOW + '주 미만(세포라 WOS 경보와 같음)</span><span><i style="background:#16a34a"></i>적정 ' + KO_WOS_LOW + '~' + KO_WOS_HIGH + '주</span><span><i style="background:#9ca3af"></i>과잉 ' + KO_WOS_HIGH + '주 이상</span></div>'
+    + (function(){ var low = pts.filter(function(p){ return p.y <= 5; }).sort(function(a, b){ return b.oo - a.oo || a.y - b.y; });
+        return low.length ? '<div class="foot" style="color:#dc2626">B&amp;M 재고 거의 없음 (5개 이하 · 원점의 빨간 점) — ' + low.map(function(p){ return esc(p.n) + ' ' + p.y + '개' + (p.oo ? '(발주 ' + nf(p.oo) + ')' : ''); }).join(' · ') + '</div>' : ''; })()
     + '<div class="foot">' + CW + ' 기준 · 최근 4주 = ' + w4[0] + '~' + w4[w4.length - 1] + ' · 닷컴 전용(B&amp;M 재고·발주 없음)은 제외 · 점에 마우스 = 상세</div></div>';
 
   // ── SKU별 상세 표 (세포라 표와 같은 머리글·합계 행·통화 전환 · 캐나다 월간 SKU처럼 접는 칸)
