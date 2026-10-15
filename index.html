@@ -5214,8 +5214,17 @@ function koBmRender_() {
 }
 
 // ── SKU 실매출 탭 콜스 영역 (#koSkuSec) ──
+// 2026-10-15 MJ 「콜스SKU시안 1:A 2:A 3:A 4:A 5:A」 — 표만 있던 영역을 세포라 SKU 탭과 같은 그래프 구성으로
+//   요약 카드 4장 · SKU 구성 추이(상위 8 + 기타) · SKU 순위(상위 12) / 채널 구성(상위 10) · 재고 건전성 · 상세 표(접힘)
+//   #koSkuSec 는 #tabSku 안에 있어 #tabSku 의 클래스(sec-hdr·ctl·btn·kpi·chart-card·legend·svg·표)를 그대로 쓴다 — 크기·글자 크기 세포라와 같음
+//   차트 그리는 방식(viewBox 1000 · 눈금 · 글자 크기 · 막대 폭 · 툴팁)은 renderSku 의 svgStack·svgBarH 와 같다
+//   SKU 색 = 세포라 8색(PAL) · 콜스 보라는 섹션 막대와 B&M/.COM 색에만 · 재고 신호 = 부족 4주 미만(세포라 WOS 경보와 같음) / 과잉 26주 이상
 var _koSkuWk = null;
+var _koSku = { C:'t', M:'s', B:'sku', cur:'K', open:false };   // 채널 t/b/c · 지표 s/u · 보기 sku/cls · 표 통화 K/U
 const KO_MSG = 'background:#fff;border:.5px solid #E8E8EC;border-radius:14px;padding:18px;color:#9ca3af;font-size:12px;text-align:center;margin-bottom:9px';
+const KO_PAL = ['#1D2847','#D9A89A','#6aadd5','#d97070','#F4B942','#6AA84F','#9673A6','#45818E'], KO_ETC = '#C8C8CE';   // renderSku PAL·ETC 와 같은 값
+const KO_WOS_LOW = 4, KO_WOS_HIGH = 26;
+function koSkuSet_(key, v) { if (key === 'wk') _koSkuWk = v; else _koSku[key] = v; koSkuRender_(); }
 function koSkuRender_() {
   var host = document.getElementById('koSkuSec'); if (!host) return;
   if (CHS === 'SEPHORA') { host.innerHTML = ''; return; }
@@ -5226,21 +5235,159 @@ function koSkuRender_() {
   var wks = []; k.skuWk.forEach(function(r){ if (wks.indexOf(r.w) < 0) wks.push(r.w); });
   wks.sort(function(a, b){ return koWn_(a) - koWn_(b); });
   if (!_koSkuWk || wks.indexOf(_koSkuWk) < 0) _koSkuWk = wks[wks.length - 1];
-  var wi = koWk_(_koSkuWk), fx = fxRate(wi ? wi.we : null);
-  var rows = k.skuWk.filter(function(r){ return r.w === _koSkuWk; }).map(function(r){ return Object.assign({ t: r.store + r.dig }, r); }).sort(function(a, b){ return b.t - a.t; });
-  var tot = rows.reduce(function(a, r){ ['store','storeQty','dig','digQty','t','eohSU','eohEU','ooSU'].forEach(function(x){ a[x] = (a[x] || 0) + r[x]; }); return a; }, {});
-  var C = function(v){ return koFmtK_(v * fx); };
-  var td = 'style="padding:6px 8px;border-bottom:.5px solid #EBEBEF;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums"';
-  var th = 'style="background:#1D2847;color:#fff;font-size:9px;font-weight:700;padding:7px 8px;text-align:right;white-space:nowrap"';
-  var html = hdr + '<div style="background:#fff;border:.5px solid #E8E8EC;border-radius:14px;padding:12px 14px">'
-    + '<div style="display:flex;gap:10px;align-items:center;margin-bottom:9px;flex-wrap:wrap"><span class="lb">주차</span><select class="kol-fsel" onchange="_koSkuWk=this.value;koSkuRender_()">'
-    + wks.map(function(w){ return '<option' + (w === _koSkuWk ? ' selected' : '') + '>' + w + '</option>'; }).join('') + '</select>'
-    + '<span style="font-size:11px;color:#9ca3af">' + (wi ? wi.we + ' 마감 · ₩ = 주 마감일 환율 ' + fx.toLocaleString() + '원' : '') + ' · 닷컴 전용 SKU 는 매장 반품(음수)만 나올 수 있음</span></div>'
-    + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr><th ' + th.replace('right', 'left') + '>제품 (콜스 표기)</th><th ' + th + '>사이즈</th><th ' + th + '>분류</th><th ' + th + '>닷컴 전용</th><th ' + th + '>정가($)</th><th ' + th + '>매장 매출</th><th ' + th + '>매장 수량</th><th ' + th + '>닷컴 매출</th><th ' + th + '>닷컴 수량</th><th ' + th + '>합계</th><th ' + th + '>매장 재고(개)</th><th ' + th + '>EFC 재고(개)</th><th ' + th + '>발주잔량(매장)</th></tr></thead><tbody>'
-    + rows.map(function(r){ return '<tr><td ' + td.replace('right', 'left') + ' title="SKU ' + r.sku + '">' + r.n + '</td><td ' + td + '>' + r.size + '</td><td ' + td + '>' + r.cls + '</td><td ' + td + '>' + (r.web === 'Y' ? '●' : '') + '</td><td ' + td + '>$' + r.p + '</td><td ' + td + '>' + C(r.store) + '</td><td ' + td + '>' + r.storeQty + '</td><td ' + td + '>' + C(r.dig) + '</td><td ' + td + '>' + r.digQty + '</td><td ' + td + ' style="font-weight:700">' + C(r.t) + '</td><td ' + td + '>' + r.eohSU.toLocaleString() + '</td><td ' + td + '>' + r.eohEU.toLocaleString() + '</td><td ' + td + '>' + (r.ooSU ? r.ooSU.toLocaleString() : '') + '</td></tr>'; }).join('')
-    + '<tr style="font-weight:700;background:#F5F5F8"><td ' + td.replace('right', 'left') + '>합계 ' + rows.length + '종</td><td ' + td + '></td><td ' + td + '></td><td ' + td + '></td><td ' + td + '></td><td ' + td + '>' + C(tot.store) + '</td><td ' + td + '>' + tot.storeQty + '</td><td ' + td + '>' + C(tot.dig) + '</td><td ' + td + '>' + tot.digQty + '</td><td ' + td + '>' + C(tot.t) + '</td><td ' + td + '>' + tot.eohSU.toLocaleString() + '</td><td ' + td + '>' + tot.eohEU.toLocaleString() + '</td><td ' + td + '>' + tot.ooSU.toLocaleString() + '</td></tr>'
-    + '</tbody></table></div><div style="font-size:9px;color:#bbb;margin-top:6px">콜스 SKU 와 세포라 SKU 는 번호·구성이 달라 한 표로 합치지 않습니다 (MJ 10/15 결정 · 세포라 표 아래 따로).</div></div>';
+  var S = _koSku, CW = _koSkuWk, ci = wks.indexOf(CW);
+  var FXW = {}; wks.forEach(function(w){ var x = koWk_(w); FXW[w] = fxRate(x ? x.we : null); });   // 주 마감일 환율
+  var byW = {}; k.skuWk.forEach(function(r){ (byW[r.w] = byW[r.w] || []).push(r); });
+  var esc = function(s){ return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); };
+  var nf = function(n){ return n == null ? '—' : Math.round(n).toLocaleString('ko-KR'); };
+  var mK = function(v){ return '₩' + (v / 1e6).toFixed(1) + 'M'; };
+  var pct = function(a, b){ return (b && b !== 0) ? ((a - b) / b * 100) : null; };
+  var bd = function(v, sm){ if (v == null) return ''; var c = v >= 0 ? 'up' : 'dn'; return '<span class="badge ' + (sm ? 'sm ' : '') + c + '">' + (v >= 0 ? '▲' : '▼') + Math.abs(v).toFixed(1) + '%</span>'; };
+  var ticks = function(mx){ if (mx <= 0) return [0, 1]; var p = Math.pow(10, Math.floor(Math.log10(mx))), s = mx / p > 5 ? p * 2 : (mx / p > 2 ? p : p / 2), o = []; for (var v = 0; v <= mx * 1.0001 + s; v += s) o.push(v); return o; };
+  var vS = function(r){ return S.C === 'b' ? r.store : S.C === 'c' ? r.dig : r.store + r.dig; };
+  var vU = function(r){ return S.C === 'b' ? r.storeQty : S.C === 'c' ? r.digQty : r.storeQty + r.digQty; };
+  var val = function(r){ return S.M === 's' ? vS(r) * FXW[r.w] : vU(r); };   // 매출 = 그 주 환율 원화
+  var fmt = function(v){ return S.M === 's' ? mK(v) : nf(v) + '개'; };
+  var chL = S.C === 't' ? '통합' : S.C === 'b' ? 'B&M' : '.COM', uL = S.M === 's' ? '매출' : '판매수량';
+  var wsum = function(w){ return w ? (byW[w] || []).reduce(function(a, r){ return a + val(r); }, 0) : null; };
+  var short = function(n){ return String(n).replace('Damage Repair', 'DR').replace('Frizz Calming', 'FC').replace('Conditionr', 'Cond.'); };
+  var btn = function(key, v, t){ return '<button class="btn' + (S[key] === v ? ' on' : '') + '" onclick="koSkuSet_(\'' + key + '\',\'' + v + '\')">' + t + '</button>'; };
+
+  // ── 필터 바 (세포라 .ctl 과 같은 모양)
+  var html = hdr + '<div class="ctl"><div class="filter-row" style="flex:1">'
+    + '<div class="filter-block"><div class="filter-lbl">주기</div><div style="display:flex;gap:5px"><button class="btn on" title="' + esc(KO_WHY.daily) + '">주</button></div></div>'
+    + '<div class="filter-block"><div class="filter-lbl">WEEK (콜스 회계주)</div><select class="dd-btn" onchange="koSkuSet_(\'wk\',this.value)">'
+    + wks.slice().reverse().map(function(w){ return '<option' + (w === CW ? ' selected' : '') + '>' + w + '</option>'; }).join('') + '</select></div>'
+    + '<div class="filter-block"><div class="filter-lbl">채널</div><div style="display:flex;gap:5px">' + btn('C', 't', '통합') + btn('C', 'b', 'B&amp;M') + btn('C', 'c', '.COM') + '</div></div>'
+    + '<div class="filter-block"><div class="filter-lbl">지표</div><div style="display:flex;gap:5px">' + btn('M', 's', '매출') + btn('M', 'u', '판매수량') + '</div></div>'
+    + '<div class="filter-block"><div class="filter-lbl">보기</div><div style="display:flex;gap:5px">' + btn('B', 'sku', 'SKU') + btn('B', 'cls', '분류') + '</div></div>'
+    + '</div><div class="grp" style="align-self:flex-end;padding-bottom:5px"><span class="lb">' + wks[0] + '  ~  ' + wks[wks.length - 1] + '   (' + wks.length + '주)</span></div></div>';
+
+  // ── 요약 카드 4장 (세포라 「최근 구간 요약」과 같은 항목·형식)
+  var L = [0, 1, 2, 3].map(function(i){ return wks[ci - i]; }), v = L.map(wsum);
+  var cur = byW[CW] || [], usd = cur.reduce(function(a, r){ return a + vS(r); }, 0), q = cur.reduce(function(a, r){ return a + vU(r); }, 0);
+  var all = wks.reduce(function(a, w){ return a + wsum(w); }, 0), allUsd = k.skuWk.reduce(function(a, r){ return a + vS(r); }, 0);
+  var span = wks[0] + ' ~ ' + wks[wks.length - 1];
+  var K = [
+    ['최근 주 ' + uL, (S.M === 's' ? koFmtK_(v[0]) : nf(v[0]) + '개') + bd(pct(v[0], v[1])),
+      '<b style="color:#666">' + CW + '</b> vs ' + (L[1] || '—') + (S.M === 's' ? '   ·   $' + nf(usd) : '')
+      + '<br><span style="font-size:10px">vs ' + (L[2] || '—') + ' ' + (v[2] != null ? bd(pct(v[0], v[2]), 1) : '—') + '   vs ' + (L[3] || '—') + ' ' + (v[3] != null ? bd(pct(v[0], v[3]), 1) : '—') + '</span>'],
+    ['판매 SKU', cur.filter(function(r){ return vU(r) > 0; }).length + ' / ' + cur.length + '종', '해당 주 실판매 (반품만 있는 SKU 제외)'],
+    [S.M === 's' ? '평균 판매단가' : '구간 합계', S.M === 's' ? (q > 0 ? '$' + (usd / q).toFixed(2) : '—') : nf(all) + '개', S.M === 's' ? CW + ' 기준 · 매출 ÷ 판매수량' : span],
+    ['합계', S.M === 's' ? (all / 1e8).toFixed(2) + '억 원' : nf(all) + '개', (S.M === 's' ? '$' + nf(allUsd) + '   ·   ' : '') + span + ' (콜스 첫 판매 ' + (k.entry || wks[0]) + ')']];
+  html += '<div class="sec-hdr"><span class="bar" style="background:' + KO_COLOR.store + '"></span>콜스 최근 주 요약 <span class="note">' + chL + ' · ' + (S.M === 's' ? '₩ = 주 마감일 환율 ' + FXW[CW].toLocaleString() + '원' : '수량') + '</span></div>'
+    + '<div class="kpi-row">' + K.map(function(x){ return '<div class="kpi"><div class="kpi-label">' + x[0] + '</div><div class="kpi-value">' + x[1] + '</div><div class="kpi-sub">' + x[2] + '</div></div>'; }).join('') + '</div>';
+
+  // ── SKU 구성 추이 (renderSku svgStack 과 같은 크기·글자)
+  var key = S.B === 'cls' ? 'cls' : 'n', tot = {};
+  k.skuWk.forEach(function(r){ tot[r[key]] = (tot[r[key]] || 0) + val(r); });
+  var names = Object.keys(tot).filter(function(x){ return tot[x] !== 0; }).sort(function(a, b){ return tot[b] - tot[a]; }), top = names.slice(0, 8), rest = names.slice(8);
+  var ds = top.map(function(nm, i){ return { label: short(nm), color: KO_PAL[i], data: wks.map(function(w){ return (byW[w] || []).filter(function(r){ return r[key] === nm; }).reduce(function(a, r){ return a + val(r); }, 0); }) }; });
+  if (rest.length) ds.push({ label: '기타 ' + rest.length + '종', color: KO_ETC, data: wks.map(function(w){ return (byW[w] || []).filter(function(r){ return rest.indexOf(r[key]) >= 0; }).reduce(function(a, r){ return a + val(r); }, 0); }) });
+  var svgStack = function(){
+    var Wd = 1000, Ht = 288, Lm = 64, R = 12, T = 12, B = 40, iw = Wd - Lm - R, ih = Ht - T - B;
+    var tt = wks.map(function(w, i){ return ds.reduce(function(x, d){ return x + (d.data[i] || 0); }, 0); });
+    var tk = ticks(Math.max.apply(null, tt.concat([1]))), tp = tk[tk.length - 1], bw = Math.min(iw / wks.length * 0.72, 58), s = '<svg viewBox="0 0 ' + Wd + ' ' + Ht + '">';
+    tk.forEach(function(x){ var y = T + ih - x / tp * ih; s += '<line class="gl" x1="' + Lm + '" y1="' + y + '" x2="' + (Wd - R) + '" y2="' + y + '"/><text x="' + (Lm - 7) + '" y="' + (y + 3.5) + '" text-anchor="end" font-size="10" fill="#9ca3af">' + fmt(x) + '</text>'; });
+    wks.forEach(function(w, i){ var cx = Lm + iw / wks.length * (i + 0.5), acc = 0;
+      ds.forEach(function(d){ var x = d.data[i] || 0; if (x <= 0) return; var h = x / tp * ih, y = T + ih - (acc + x) / tp * ih; acc += x; s += '<rect x="' + (cx - bw / 2) + '" y="' + y + '" width="' + bw + '" height="' + h + '" fill="' + d.color + '"/>'; });
+      var t0 = tt[i], tip = '<b>' + w + '</b><div class="r"><span>합계</span><span>' + fmt(t0) + '</span></div><hr style="border:0;border-top:1px solid rgba(255,255,255,.2);margin:5px 0">';
+      ds.forEach(function(d){ var x = d.data[i] || 0; if (x <= 0) return; tip += '<div class="r"><span><i style="background:' + d.color + '"></i>' + esc(d.label) + '</span><span>' + fmt(x) + (t0 > 0 ? '  <span style="opacity:.6">' + (x / t0 * 100).toFixed(0) + '%</span>' : '') + '</span></div>'; });
+      s += '<rect x="' + (Lm + iw / wks.length * i) + '" y="' + T + '" width="' + (iw / wks.length) + '" height="' + ih + '" fill="transparent" data-tip="' + encodeURIComponent(tip) + '"/>';
+      s += '<text x="' + cx + '" y="' + (Ht - B + 16) + '" text-anchor="middle" font-size="10" fill="' + (w === CW ? KO_COLOR.store : '#9ca3af') + '"' + (w === CW ? ' font-weight="700"' : '') + '>' + w + '</text>'; });
+    return s + '<line class="gl" x1="' + Lm + '" y1="' + (T + ih) + '" x2="' + (Wd - R) + '" y2="' + (T + ih) + '"/></svg>';
+  };
+  html += '<div class="sec-hdr"><span class="bar" style="background:' + KO_COLOR.store + '"></span>콜스 SKU 구성 추이</div>'
+    + '<div class="chart-card"><div class="chart-sec-title"><span>주별 ' + (S.B === 'cls' ? '분류' : 'SKU') + ' 구성 · ' + chL + ' ' + uL + '</span></div>' + svgStack()
+    + '<div class="legend">' + ds.map(function(d){ return '<span><i style="background:' + d.color + '"></i>' + esc(d.label) + '</span>'; }).join('') + '</div></div>';
+
+  // ── SKU 순위 / 채널 구성 (renderSku svgBarH 와 같은 크기·글자)
+  var svgBarH = function(rows, colors, stacked){
+    var Wd = 1000, Lm = 250, R = 76, T = 8, B = 28, rh = 25, Ht = T + B + Math.max(rows.length, 1) * rh, iw = Wd - Lm - R;
+    var tk = ticks(Math.max.apply(null, rows.map(function(r){ return stacked ? Math.max(0, r[1]) + Math.max(0, r[2]) : r[1]; }).concat([1]))), tp = tk[tk.length - 1], s = '<svg viewBox="0 0 ' + Wd + ' ' + Ht + '">';
+    tk.forEach(function(x){ var X = Lm + x / tp * iw; s += '<line class="gl" x1="' + X + '" y1="' + T + '" x2="' + X + '" y2="' + (T + rows.length * rh) + '"/><text x="' + X + '" y="' + (Ht - 9) + '" text-anchor="middle" font-size="10" fill="#9ca3af">' + fmt(x) + '</text>'; });
+    rows.forEach(function(r, i){ var y = T + i * rh + 4, h = rh - 10;
+      s += '<text x="' + (Lm - 8) + '" y="' + (y + h / 2 + 3.5) + '" text-anchor="end" font-size="10.5" fill="#666">' + (r[3] ? '● ' : '') + esc(r[0]) + '</text>';
+      if (stacked) { var b = Math.max(0, r[1]), c = Math.max(0, r[2]), w1 = b / tp * iw, w2 = c / tp * iw, t = b + c;
+        var tp1 = '<b>' + esc(r[0]) + '</b><div class="r"><span><i style="background:' + KO_COLOR.store + '"></i>B&amp;M</span><span>' + fmt(r[1]) + '  <span style="opacity:.6">' + (t > 0 ? (b / t * 100).toFixed(0) : 0) + '%</span></span></div>'
+          + '<div class="r"><span><i style="background:' + KO_COLOR.dig + '"></i>.COM</span><span>' + fmt(r[2]) + '  <span style="opacity:.6">' + (t > 0 ? (c / t * 100).toFixed(0) : 0) + '%</span></span></div>'
+          + '<div class="r" style="border-top:1px solid rgba(255,255,255,.2);margin-top:4px;padding-top:4px"><span>합계</span><span>' + fmt(r[1] + r[2]) + '</span></div>' + (r[4] != null ? '<div class="r" style="opacity:.65"><span>USD</span><span>$' + nf(r[4]) + '</span></div>' : '');
+        s += '<rect x="' + Lm + '" y="' + y + '" width="' + w1 + '" height="' + h + '" fill="' + KO_COLOR.store + '" data-tip="' + encodeURIComponent(tp1) + '"/>';
+        s += '<rect x="' + (Lm + w1) + '" y="' + y + '" width="' + w2 + '" height="' + h + '" fill="' + KO_COLOR.dig + '" data-tip="' + encodeURIComponent(tp1) + '"/>';
+        s += '<text x="' + (Lm + w1 + w2 + 6) + '" y="' + (y + h / 2 + 3.5) + '" font-size="10" fill="#9ca3af">' + fmt(r[1] + r[2]) + '</text>'; }
+      else { var w = Math.max(0, r[1]) / tp * iw;
+        var tp2 = '<b>' + esc(r[0]) + '</b><div class="r"><span>' + uL + '</span><span>' + fmt(r[1]) + '</span></div>' + (r[4] != null ? '<div class="r" style="opacity:.65"><span>USD</span><span>$' + nf(r[4]) + '</span></div>' : '') + '<div class="r"><span>순위</span><span>' + (i + 1) + '위 / ' + rows.length + '</span></div>';
+        s += '<rect x="' + Lm + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="' + (colors[i] || KO_ETC) + '" data-tip="' + encodeURIComponent(tp2) + '"/>';
+        s += '<text x="' + (Lm + w + 6) + '" y="' + (y + h / 2 + 3.5) + '" font-size="10" fill="#9ca3af">' + fmt(r[1]) + '</text>'; } });
+    return s + '</svg>';
+  };
+  var topS = top.map(short);
+  var rk = cur.map(function(r){ return [short(r.n), val(r), 0, r.web === 'Y', S.M === 's' ? vS(r) : null]; }).filter(function(r){ return r[1] > 0; }).sort(function(a, b){ return b[1] - a[1]; }).slice(0, 12);
+  var rkCol = rk.map(function(r){ var i = S.B === 'sku' ? topS.indexOf(r[0]) : -1; return i >= 0 ? KO_PAL[i] : (S.B === 'sku' ? KO_ETC : KO_PAL[0]); });   // 추이 차트와 같은 SKU = 같은 색
+  var mix = cur.map(function(r){ var f = FXW[r.w]; return S.M === 's' ? [short(r.n), r.store * f, r.dig * f, r.web === 'Y', r.store + r.dig] : [short(r.n), r.storeQty, r.digQty, r.web === 'Y', null]; })
+    .filter(function(r){ return r[1] > 0 || r[2] > 0; }).sort(function(a, b){ return (b[1] + b[2]) - (a[1] + a[2]); }).slice(0, 10);
+  html += '<div class="two">'
+    + '<div class="chart-card"><div class="chart-sec-title"><span>' + CW + ' 콜스 SKU 순위 (상위 12) · ' + chL + '</span></div>' + svgBarH(rk, rkCol, false) + '</div>'
+    + '<div class="chart-card"><div class="chart-sec-title"><span>' + CW + ' 콜스 채널 구성 (상위 10)</span></div>' + svgBarH(mix, [], true)
+    + '<div class="legend"><span><i style="background:' + KO_COLOR.store + '"></i>B&amp;M (콜스 매장)</span><span><i style="background:' + KO_COLOR.dig + '"></i>.COM (콜스 닷컴)</span><span>● 닷컴 전용</span></div></div></div>';
+
+  // ── 재고 건전성 — B&M 재고 대 최근 4주 평균 B&M 판매 수량 · 점 크기 = 매장 발주잔량
+  var w4 = wks.slice(Math.max(0, ci - 3), ci + 1);
+  var wosOf = function(r){ var u = w4.reduce(function(a, w){ var x = (byW[w] || []).find(function(y){ return y.sku === r.sku; }); return a + (x ? x.storeQty : 0); }, 0) / w4.length; return { u: Math.max(0, u), wos: u > 0 ? r.eohSU / u : null }; };
+  var sigCol = function(r, o){ return (r.eohSU <= 5 || (o.wos != null && o.wos < KO_WOS_LOW)) ? '#dc2626' : (o.wos == null || o.wos >= KO_WOS_HIGH) ? '#9ca3af' : '#16a34a'; };
+  var pts = cur.filter(function(r){ return r.eohSU > 0 || r.ooSU > 0; }).map(function(r){ var o = wosOf(r); return { r: r, n: short(r.n), x: o.u, y: r.eohSU, oo: r.ooSU, wos: o.wos, c: sigCol(r, o) }; });
+  var svgInv = function(){
+    var Wd = 1000, Ht = 300, Lm = 64, R = 16, T = 12, B = 40, iw = Wd - Lm - R, ih = Ht - T - B;
+    var tx = ticks(Math.max.apply(null, pts.map(function(p){ return p.x; }).concat([1]))), ty = ticks(Math.max.apply(null, pts.map(function(p){ return p.y; }).concat([1]))), mX = tx[tx.length - 1], mY = ty[ty.length - 1];
+    var X = function(x){ return Lm + iw * x / mX; }, Y = function(y){ return T + ih * (1 - y / mY); };
+    var s = '<svg viewBox="0 0 ' + Wd + ' ' + Ht + '">';
+    ty.forEach(function(y){ s += '<line class="gl" x1="' + Lm + '" x2="' + (Wd - R) + '" y1="' + Y(y) + '" y2="' + Y(y) + '"/><text x="' + (Lm - 7) + '" y="' + (Y(y) + 3.5) + '" font-size="10" fill="#9ca3af" text-anchor="end">' + nf(y) + '</text>'; });
+    tx.forEach(function(x){ s += '<text x="' + X(x) + '" y="' + (Ht - B + 16) + '" font-size="10" fill="#9ca3af" text-anchor="middle">' + nf(x) + '</text>'; });
+    [KO_WOS_LOW, KO_WOS_HIGH].forEach(function(l){ var x2 = Math.min(mX, mY / l); s += '<line x1="' + X(0) + '" y1="' + Y(0) + '" x2="' + X(x2) + '" y2="' + Y(x2 * l) + '" stroke="#c8c8ce" stroke-dasharray="4 3"/><text x="' + (X(x2) - 4) + '" y="' + (Y(x2 * l) + 12) + '" font-size="10" fill="#9ca3af" text-anchor="end">재고 ' + l + '주</text>'; });
+    s += '<text x="' + (Lm + iw / 2) + '" y="' + (Ht - 6) + '" font-size="10" fill="#777" text-anchor="middle">최근 4주 평균 B&amp;M 판매 수량 (개/주) · 세로 = B&amp;M 재고 (개)</text>';
+    var placed = [];
+    pts.forEach(function(p){ var r = 5 + Math.sqrt(p.oo) / 5;
+      var tip = '<b>' + esc(p.r.n) + '</b><div class="r"><span>B&amp;M 재고</span><span>' + nf(p.y) + '개</span></div><div class="r"><span>주당 판매(최근 4주)</span><span>' + p.x.toFixed(1) + '개</span></div><div class="r"><span>재고 소진</span><span>' + (p.wos == null ? '— (판매 없음)' : Math.round(p.wos) + '주') + '</span></div><div class="r"><span>발주잔량</span><span>' + nf(p.oo) + '개</span></div>';
+      s += '<circle cx="' + X(p.x) + '" cy="' + Y(p.y) + '" r="' + r + '" fill="' + p.c + '" fill-opacity=".45" stroke="' + p.c + '" data-tip="' + encodeURIComponent(tip) + '"/>';
+      if (p.y > mY * 0.3 || p.oo > 500 || p.y <= 5) {   // 라벨은 큰 재고 · 큰 발주 · 재고 거의 없음만 (겹치면 위/아래로 비킴)
+        var right = X(p.x) > Wd * 0.62, lx = right ? X(p.x) - r - 4 : X(p.x) + r + 4, ly = Y(p.y) + 3.5, x0 = right ? lx - 190 : lx, x1 = right ? lx : lx + 190, stp = ly > T + ih - 30 ? -13 : 13;
+        while (placed.some(function(q){ return Math.abs(q.y - ly) < 13 && q.x0 < x1 && x0 < q.x1; })) ly += stp;
+        placed.push({ x0: x0, x1: x1, y: ly });
+        s += '<text x="' + lx + '" y="' + ly + '" font-size="10.5" fill="#666" text-anchor="' + (right ? 'end' : 'start') + '">' + esc(p.n) + (p.wos ? ' · ' + Math.round(p.wos) + '주' : p.y <= 5 ? ' · 재고 ' + p.y + '개' : '') + (p.oo ? ' · 발주 ' + nf(p.oo) : '') + '</text>'; } });
+    return s + '</svg>';
+  };
+  html += '<div class="sec-hdr"><span class="bar" style="background:' + KO_COLOR.store + '"></span>콜스 재고 건전성 <span class="note">B&amp;M 재고 대 판매 · 점 크기 = 매장 발주잔량</span></div>'
+    + '<div class="chart-card">' + svgInv()
+    + '<div class="legend"><span><i style="background:#dc2626"></i>부족 — 재고 ' + KO_WOS_LOW + '주 미만(세포라 WOS 경보와 같음)</span><span><i style="background:#16a34a"></i>적정 ' + KO_WOS_LOW + '~' + KO_WOS_HIGH + '주</span><span><i style="background:#9ca3af"></i>과잉 ' + KO_WOS_HIGH + '주 이상</span></div>'
+    + '<div class="foot">' + CW + ' 기준 · 최근 4주 = ' + w4[0] + '~' + w4[w4.length - 1] + ' · 닷컴 전용(B&amp;M 재고·발주 없음)은 제외 · 점에 마우스 = 상세</div></div>';
+
+  // ── SKU별 상세 표 (세포라 표와 같은 머리글·합계 행·통화 전환 · 캐나다 월간 SKU처럼 접는 칸)
+  var f = FXW[CW], m = function(x){ return S.cur === 'K' ? (x * f / 1e6).toFixed(1) : Math.round(x).toLocaleString('ko-KR'); };
+  var rows = cur.slice().sort(function(a, b){ return (b.store + b.dig) - (a.store + a.dig); });
+  var T0 = { store:0, storeQty:0, dig:0, digQty:0, eohSU:0, eohEU:0, ooSU:0 };
+  var tb = '<thead><tr><th class="f">제품 (콜스 표기)</th><th>사이즈</th><th>분류</th><th>닷컴 전용</th><th>정가($)</th><th>B&amp;M 매출</th><th>B&amp;M 수량</th><th>.COM 매출</th><th>.COM 수량</th><th class="th-sum">합계</th><th class="th-inv">B&amp;M 재고</th><th class="th-inv">EFC 재고</th><th class="th-inv">발주잔량</th><th class="th-inv">신호</th></tr></thead><tbody>';
+  rows.forEach(function(r){ for (var x in T0) T0[x] += r[x] || 0;
+    var o = wosOf(r), sg = (r.eohSU > 0 || r.ooSU > 0) ? '<span class="sig" style="background:' + sigCol(r, o) + '" title="' + (o.wos == null ? '판매 없음' : '재고 소진 ' + Math.round(o.wos) + '주') + '"></span>' : '';
+    tb += '<tr><td class="f" title="SKU ' + r.sku + '">' + esc(r.n) + '</td><td>' + esc(r.size) + '</td><td>' + esc(r.cls) + '</td><td>' + (r.web === 'Y' ? '●' : '') + '</td><td>' + r.p + '</td><td>' + m(r.store) + '</td><td>' + nf(r.storeQty) + '</td><td>' + m(r.dig) + '</td><td>' + nf(r.digQty) + '</td><td class="c-sum">' + m(r.store + r.dig) + '</td><td class="c-inv">' + nf(r.eohSU) + '</td><td class="c-inv">' + nf(r.eohEU) + '</td><td class="c-inv">' + (r.ooSU ? nf(r.ooSU) : '') + '</td><td class="c-inv" style="text-align:center">' + sg + '</td></tr>'; });
+  tb += '<tr class="sumrow"><td class="f">합계 ' + rows.length + '종</td><td></td><td></td><td></td><td></td><td>' + m(T0.store) + '</td><td>' + nf(T0.storeQty) + '</td><td>' + m(T0.dig) + '</td><td>' + nf(T0.digQty) + '</td><td class="c-sum">' + m(T0.store + T0.dig) + '</td><td class="c-inv">' + nf(T0.eohSU) + '</td><td class="c-inv">' + nf(T0.eohEU) + '</td><td class="c-inv">' + nf(T0.ooSU) + '</td><td class="c-inv"></td></tr></tbody>';
+  html += '<div class="sec-hdr"><span class="bar" style="background:' + KO_COLOR.store + '"></span>콜스 SKU별 상세 <span class="note">' + CW + ' · 금액 ' + (S.cur === 'K' ? '백만원 (₩ ×' + f.toLocaleString() + ')' : '달러') + '</span>'
+    + '<span style="display:flex;gap:5px;align-items:center;order:9"><span class="lb">금액</span><span class="cur-sw" title="금액 통화 — 달러 = 콜스 원본 · 원화 = 주 마감일 환율"><button' + (S.cur === 'K' ? ' class="on"' : '') + ' onclick="koSkuSet_(\'cur\',\'K\')">₩ 원화(백만원)</button><button' + (S.cur === 'U' ? ' class="on"' : '') + ' onclick="koSkuSet_(\'cur\',\'U\')">$ 달러</button></span></span></div>'
+    + '<details class="chart-card"' + (S.open ? ' open' : '') + ' ontoggle="_koSku.open=this.open"><summary style="cursor:pointer;font-size:12px;font-weight:600;color:' + KO_COLOR.store + '">콜스 SKU별 상세 표 <span style="font-weight:400;color:#9ca3af;font-size:11px">선택 주 · 콜스 SKU 와 세포라 SKU 는 번호·구성이 달라 한 표로 합치지 않습니다 (MJ 10/15 결정)</span></summary>'
+    + '<div class="tw" style="margin-top:10px"><table>' + tb + '</table></div></details>';
   host.innerHTML = html;
+
+  // 툴팁 — 세포라 SKU 탭 handler(#tabSku [data-tip])가 아직 없으면(세포라 SKU 데이터 전 · 콜스만 보기) 같은 방식으로 붙인다
+  if (!window.__skDocMove && !window.__koSkuMove) {
+    window.__koSkuMove = function(e){
+      var TIP = document.getElementById('sk_tip'); if (!TIP || window.__skDocMove) return;
+      var t = e.target.closest && e.target.closest('#tabSku [data-tip]');
+      if (t) { TIP.innerHTML = decodeURIComponent(t.getAttribute('data-tip')); TIP.style.display = 'block';
+        TIP.style.left = Math.min(e.clientX + 14, innerWidth - TIP.offsetWidth - 10) + 'px';
+        TIP.style.top = Math.max(8, Math.min(e.clientY + 14, innerHeight - TIP.offsetHeight - 10)) + 'px'; }
+      else TIP.style.display = 'none';
+    };
+    document.addEventListener('mousemove', window.__koSkuMove);
+  }
 }
 window.koBmRender_ = koBmRender_;
 
