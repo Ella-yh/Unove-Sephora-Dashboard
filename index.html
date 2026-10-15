@@ -4895,12 +4895,7 @@ window.setChs = function(c) {
   if (c === CHS) return;
   CHS = c;
   chsBarSync_();
-  // 콜스가 들어가면 채널 칩(COM·TTL·B&M)은 하나만 — 「전체」 국가와 같은 규칙(막대 하나를 쌓는다)
-  if (CHS !== 'SEPHORA' && selSalesTypes.size > 1) {
-    var keep = ['com','bam','total'].find(function(t){ return selSalesTypes.has(t); });
-    selSalesTypes.clear(); selSalesTypes.add(keep);
-    document.querySelectorAll('.stgl[data-type]').forEach(function(b){ b.classList.toggle('active', b.dataset.type === keep); });
-  }
+  // 채널 칩(COM·TTL·B&M)은 세포라와 같이 여러 개 함께 고를 수 있다 (MJ 10/15) — 국가 「전체」만 기존 규칙대로 하나
   // 「콜스」 — 일 보기 잠금(주간 자료만). 일 보기 중이었으면 주 보기로
   if (CHS === 'KOHLS' && mainPeriod === 'daily') {
     var wb = document.querySelector('[data-main-period="weekly"]');
@@ -4918,14 +4913,6 @@ window.setChs = function(c) {
   window.switchTab = switchTab;
   var origCty = window.setCty;
   window.setCty = function(c) { origCty(c); try { koBmRender_(); koSkuRender_(); } catch(e){} };
-  var origType = window.setSalesType;
-  window.setSalesType = function(btn) {
-    if (CHS === 'SEPHORA' || CTY === 'ALL') return origType(btn);   // 「전체」 국가는 위 감싸기가 이미 단일 선택
-    var t = btn.dataset.type;
-    selSalesTypes.clear(); selSalesTypes.add(t);
-    document.querySelectorAll('.stgl[data-type]').forEach(function(b){ b.classList.toggle('active', b.dataset.type === t); });
-    renderChart();
-  };
 })();
 
 // ── ① 통합 KPI — ctyMainKpi_ 다음에 호출 ──
@@ -5069,13 +5056,21 @@ function chsMainChart_(cfg, data) {
     if (leg) leg.textContent = 'Sales (' + types.map(function(x){ return labelMap[x]; }).join('+') + ') · 콜스';
     notes.push('콜스 — 매출(Demand)만 · 주 단위 · ' + KO_WHY.inflow + ' · 매장 = B&M 자리 · 닷컴 = .COM 자리');
   } else {
-    // 「전체」 — 세포라 막대(국가 칩 그대로) 위에 콜스(합계 한 색)를 쌓는다. 채널 칩 B&M/.COM 이면 콜스도 매장/닷컴만
-    var t = types[0], stk = CTY === 'ALL' ? 'cty' : 'chs';
-    ds.forEach(function(d){ if (d.type === 'bar' && d.label.indexOf('Sales') === 0) { d._chsSum = true; if (CTY !== 'ALL') d.stack = 'chs'; } });
-    var k = koSeries(t, KO_COLOR.store, stk); k._chsSum = true; ds.push(k);
+    // 「전체」 — 채널 칩마다 세포라 막대(국가 칩 그대로) 위에 콜스를 쌓는다 (2026-10-15 MJ — 세포라처럼 COM·TTL·B&M 함께)
+    //   COM 위 = 콜스 닷컴 · B&M 위 = 콜스 매장 · TTL 위 = 콜스 합계. 국가 「전체」는 기존 규칙대로 채널 하나(stack 'cty')
+    var typeOf = { '.COM':'com', 'B&M':'bam', 'TTL':'total' };
+    var bp = 0.5;
+    ds.forEach(function(d){
+      if (d.type !== 'bar' || d.label.indexOf('Sales') !== 0) return;
+      var m = d.label.match(/^Sales (\.COM|B&M|TTL)/); if (!m) return;
+      d._chsSum = true; d._t = typeOf[m[1]];
+      if (CTY !== 'ALL') d.stack = 'chs_' + d._t;
+      if (d.barPercentage) bp = d.barPercentage;
+    });
+    types.forEach(function(t){ var k = koSeries(t, KO_SHADE[t], CTY === 'ALL' ? 'cty' : 'chs_' + t); k._chsSum = true; k._t = t; k.barPercentage = bp; ds.push(k); });
     sc.x.stacked = true; sc.yS.stacked = true;
     delete ann.salesBaseline;   // 일 목표선은 세포라 닷컴 목표
-    if (leg) leg.textContent = 'Sales (' + labelMap[t] + ') · 세포라' + (CTY === 'ALL' ? '(미국+캐나다)' : '') + ' + 콜스(위) 누적';
+    if (leg) leg.textContent = 'Sales (' + types.map(function(x){ return labelMap[x]; }).join('+') + ') · 세포라' + (CTY === 'ALL' ? '(미국+캐나다)' : '') + ' + 콜스(위) 누적';
     notes.push('콜스 = 막대 맨 위 보라 · 방문·전환율·비용·ROAS 는 세포라만 (' + KO_WHY.inflow + ')');
   }
   cfg.data.datasets = ds;
@@ -5100,9 +5095,14 @@ function chsMainChart_(cfg, data) {
   if (CHS === 'KOHLS') tt.footer = function(){ return ''; };   // 국가 「전체」 합계 줄(미국+캐나다)은 콜스 단독에서 뜻이 없다
   if (CHS === 'ALL') tt.footer = function(items) {
     if (!items.length) return '';
-    var i = items[0].dataIndex, sum = 0, miss = '';
-    items[0].chart.data.datasets.forEach(function(d){ if (!d._chsSum) return; var v = d.data[i]; if (v == null) miss = (d._why && d._why[i]) || '값 없음'; else sum += v; });
-    return '합계 (세포라' + (CTY === 'ALL' ? ' 미국+캐나다' : '') + ' + 콜스): ' + curFmt_(sum, MAIN_CUR) + (miss ? ' · 일부 — (' + miss + ')' : '');
+    var i = items[0].dataIndex, by = {}, miss = {}, order = [];
+    items[0].chart.data.datasets.forEach(function(d){
+      if (!d._chsSum) return;
+      var t = d._t || 'x'; if (!(t in by)) { by[t] = 0; order.push(t); }
+      var v = d.data[i]; if (v == null) miss[t] = (d._why && d._why[i]) || '값 없음'; else by[t] += v;
+    });
+    var nm = { com:'.COM', bam:'B&M', total:'TTL', x:'' };
+    return order.map(function(t){ return '합계 ' + nm[t] + ' (세포라' + (CTY === 'ALL' ? ' 미국+캐나다' : '') + ' + 콜스): ' + curFmt_(by[t], MAIN_CUR) + (miss[t] ? ' · 일부 — (' + miss[t] + ')' : ''); });   // 배열 = 줄마다 한 채널
   };
   setNote();
 }
