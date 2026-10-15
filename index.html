@@ -4274,7 +4274,7 @@ MAIN_TABLE_METRICS.push(
 // ═══ 국가 분리 2차 (2026-10-08) — 국가 칩 1단 · 전역 국가 상태 CTY · 끄는 규칙 ═══════════
 // 🛑 CTY 를 읽는 곳은 아래 여섯 묶음뿐이다. 다른 곳에서 읽지 않는다(회귀 위험을 구조적으로 막는 장치).
 //   ① ctyMainKpi_  — 통합 KPI          ② ctyMainChart_ — 통합 성과 그래프(mainChart)
-//   ③ setSalesType 감싸기 — 「전체」일 때 채널 단일 선택   ④ ctyBmKpi_ — B&M 주간 핵심 지표
+//   ③ (해제 2026-10-15) 「전체」 채널 단일 선택   ④ ctyBmKpi_ — B&M 주간 핵심 지표
 //   ⑤ ctySkuKpi_  — SKU 최근 구간 요약  ⑥ ctyStoreRows_·ctyStoreAfter_ — B&M 매장별 표 (3차)
 //   ⑦ ctyChannelFill_ — 유입 탭  ⑧ ctyCaVisitKpi_·ctyCaInflowSeries_ — 통합 Visits·CVR (2026-10-12)
 //   ⑨ renderMainDataTable — 지표 확인용 표는 국가 칩에 맞는 묶음만 (2026-10-12)
@@ -4308,12 +4308,7 @@ window.setCty = function(c) {
   CTY = c;
   document.querySelectorAll('.cty-chip').forEach(function(b){ b.classList.toggle('on', b.dataset.cty === c); });
   ctyCurBadge_();   // 2026-10-12 제목 옆 지금 국가
-  // 「전체」 — 채널 칩 단일 선택 (승인 3 추가). 여러 개가 켜져 있으면 첫 번째만 남긴다
-  if (c === 'ALL' && selSalesTypes.size > 1) {
-    var keep = ['com','bam','total'].find(function(t){ return selSalesTypes.has(t); });
-    selSalesTypes.clear(); selSalesTypes.add(keep);
-    document.querySelectorAll('.stgl[data-type]').forEach(function(b){ b.classList.toggle('active', b.dataset.type === keep); });
-  }
+  // 「전체」 — 채널 칩(COM·TTL·B&M)도 여러 개 함께 고를 수 있다 (2026-10-15 MJ · 채널마다 미국+캐나다 막대를 나란히)
   // 「캐나다」 — 일 보기 잠금 (주 단위만). 일 보기 중이었으면 주 보기로 옮긴다
   if (c === 'CA' && mainPeriod === 'daily') {
     var wb = document.querySelector('[data-main-period="weekly"]');
@@ -4328,20 +4323,7 @@ window.setCty = function(c) {
   try { ctyChannelApply_(); } catch(e) { console.warn('[CTY] 유입', e); }   // 2026-10-12 유입 탭
   try { renderEventList(); } catch(e) { console.warn('[CTY] 이벤트', e); }   // 2026-10-12 이벤트 목록·KOL 표 (마커는 renderChart 가 다시 그린다)
 };
-// ③ 「전체」일 때 채널 칩을 단일 선택으로 — 미국·캐나다에서는 기존 multi-select 그대로
-(function(){
-  var orig = window.setSalesType;
-  window.setSalesType = function(btn) {
-    if (CTY !== 'ALL') return orig(btn);
-    var t = btn.dataset.type;
-    selSalesTypes.clear(); selSalesTypes.add(t);
-    document.querySelectorAll('.stgl[data-type]').forEach(function(b){ b.classList.toggle('active', b.dataset.type === t); });
-    var labelMap = {com:'.COM', total:'TTL', bam:'B&M'};
-    var el = document.getElementById('salesLegLabel');
-    if (el) el.textContent = 'Sales (' + labelMap[t] + ')';
-    renderChart();
-  };
-})();
+// ③ (2026-10-15 해제) 「전체」 채널 칩 단일 선택 감싸기는 없앴다 — 미국·캐나다와 같은 multi-select
 // 캐나다 매출 — 기간 집합에 대한 합계 (USD)
 //   months 가 있으면(월 필터) Raw_CA_월간_SKU 합계 = 12지표 표 월 보기와 같은 기준. 채널 구분 없음
 //   아니면 주 단위: 기간에 걸친 주(일요일 키)의 캐나다 주간 값 합
@@ -4493,14 +4475,19 @@ function ctyMainChart_(cfg, data) {
     types.forEach(function(t){ ds.push(caSeries(t, hexToRgba(CTY_CA_SHADE[t], 0.85))); });
     if (leg) leg.textContent = 'Sales (' + types.map(function(x){ return labelMap[x]; }).join('+') + ') · 캐나다';
   } else {
-    var t = types[0];
-    ds.push({ label:'Sales ' + labelMap[t] + ' (미국)', type:'bar', _cty:true, _why:[], stack:'cty',
-              data: data.map(function(d){ return (MAIN_CUR === 'USD' ? d[keyOf[t]] : d[keyOf[t] + '_krw']) || 0; }),   // 날짜별 환율로 환산한 원화(getMainChartData) · USD 칩 = 원본
-              backgroundColor: hexToRgba(CTY_COLOR.US, 0.85), hoverBackgroundColor: CTY_COLOR.US,
-              yAxisID:'yS', order:2, barPercentage:0.5, categoryPercentage:0.85 });
-    ds.push(caSeries(t, hexToRgba(CTY_COLOR.CA, 0.85), 'cty'));
+    // 채널 칩마다 막대 하나(stack 'cty_' + 채널) — 미국(아래) + 캐나다(위). 여러 개면 나란히 (2026-10-15 MJ)
+    //   하나만 고르면 지금까지와 같은 색(미국 분홍 · 캐나다 진한 갈색) · 여러 개면 미국 = 「미국」 칩 채널 색 · 캐나다 = 「캐나다」 칩 갈색 진하기
+    var multi = types.length > 1, usCol = { com:'#d97070', bam:'#6aadd5', total:'#c49ae0' };
+    types.forEach(function(t){
+      var uc = multi ? usCol[t] : CTY_COLOR.US, cc = multi ? CTY_CA_SHADE[t] : CTY_COLOR.CA;
+      ds.push({ label:'Sales ' + labelMap[t] + ' (미국)', type:'bar', _cty:true, _t:t, _why:[], stack:'cty_' + t,
+                data: data.map(function(d){ return (MAIN_CUR === 'USD' ? d[keyOf[t]] : d[keyOf[t] + '_krw']) || 0; }),   // 날짜별 환율로 환산한 원화(getMainChartData) · USD 칩 = 원본
+                backgroundColor: hexToRgba(uc, 0.85), hoverBackgroundColor: uc,
+                yAxisID:'yS', order:2, barPercentage: multi ? 0.35 : 0.5, categoryPercentage:0.85 });
+      var cs = caSeries(t, hexToRgba(cc, 0.85), 'cty_' + t); cs._t = t; cs.barPercentage = multi ? 0.35 : 0.5; ds.push(cs);
+    });
     sc.x.stacked = true; sc.yS.stacked = true;
-    if (leg) leg.textContent = 'Sales (' + labelMap[t] + ') · 미국(아래) + 캐나다(위) 누적';
+    if (leg) leg.textContent = 'Sales (' + types.map(function(x){ return labelMap[x]; }).join('+') + ') · 미국(아래) + 캐나다(위) 누적' + (multi ? ' · 채널별 나란히' : '');
   }
   cfg.data.datasets = ds;
   // 캐나다 진입 점선 — 진입 주(W28)가 들어 있는 칸의 왼쪽 경계
@@ -4532,10 +4519,14 @@ function ctyMainChart_(cfg, data) {
   // 「전체」 누적 — 툴팁 아래 합계 = 음수(반품) 포함 실제 합. 막대 높이·축(min:0)은 그대로 (B&M 탭 채널별 매출 추이와 같은 원칙)
   if (CTY === 'ALL') tt.footer = function(items) {
     if (!items.length) return '';
-    var i = items[0].dataIndex, sum = 0, miss = '';
-    items[0].chart.data.datasets.forEach(function(d){ if (!d._cty) return; var v = d.data[i]; if (v == null) miss = d._why[i] || '값 없음'; else sum += v; });
-    if (miss) return '합계 (미국+캐나다): — (' + miss + ')';
-    return '합계 (미국+캐나다): ' + curFmt_(sum, MAIN_CUR);
+    var i = items[0].dataIndex, by = {}, miss = {}, order = [], nm = { com:'.COM', bam:'B&M', total:'TTL' };
+    items[0].chart.data.datasets.forEach(function(d){
+      if (!d._cty || !d._t) return;   // 채널별 합계 (Visits 등 _t 없는 계열 제외)
+      if (!(d._t in by)) { by[d._t] = 0; order.push(d._t); }
+      var v = d.data[i]; if (v == null) miss[d._t] = d._why[i] || '값 없음'; else by[d._t] += v;
+    });
+    var line = function(t){ var h = '합계' + (order.length > 1 ? ' ' + nm[t] : '') + ' (미국+캐나다): '; return miss[t] ? h + '— (' + miss[t] + ')' : h + curFmt_(by[t], MAIN_CUR); };
+    return order.length > 1 ? order.map(line) : (order.length ? line(order[0]) : '');   // 배열 = 줄마다 한 채널
   };
   if (CTY === 'ALL' && mainPeriod === 'daily') notes.unshift('일 단위 매출은 캐나다 자료가 없어 미국만 표시합니다 (캐나다 매출은 주 단위 자료뿐)');
   if (note) {
@@ -5057,7 +5048,7 @@ function chsMainChart_(cfg, data) {
     notes.push('콜스 — 매출(Demand)만 · 주 단위 · ' + KO_WHY.inflow + ' · 매장 = B&M 자리 · 닷컴 = .COM 자리');
   } else {
     // 「전체」 — 채널 칩마다 세포라 막대(국가 칩 그대로) 위에 콜스를 쌓는다 (2026-10-15 MJ — 세포라처럼 COM·TTL·B&M 함께)
-    //   COM 위 = 콜스 닷컴 · B&M 위 = 콜스 매장 · TTL 위 = 콜스 합계. 국가 「전체」는 기존 규칙대로 채널 하나(stack 'cty')
+    //   COM 위 = 콜스 닷컴 · B&M 위 = 콜스 매장 · TTL 위 = 콜스 합계. 국가 「전체」도 채널별 스택('cty_' + 채널) 맨 위 (2026-10-15)
     var typeOf = { '.COM':'com', 'B&M':'bam', 'TTL':'total' };
     var bp = 0.5;
     ds.forEach(function(d){
@@ -5067,7 +5058,7 @@ function chsMainChart_(cfg, data) {
       if (CTY !== 'ALL') d.stack = 'chs_' + d._t;
       if (d.barPercentage) bp = d.barPercentage;
     });
-    types.forEach(function(t){ var k = koSeries(t, KO_SHADE[t], CTY === 'ALL' ? 'cty' : 'chs_' + t); k._chsSum = true; k._t = t; k.barPercentage = bp; ds.push(k); });
+    types.forEach(function(t){ var k = koSeries(t, KO_SHADE[t], (CTY === 'ALL' ? 'cty_' : 'chs_') + t); k._chsSum = true; k._t = t; k.barPercentage = bp; ds.push(k); });
     sc.x.stacked = true; sc.yS.stacked = true;
     delete ann.salesBaseline;   // 일 목표선은 세포라 닷컴 목표
     if (leg) leg.textContent = 'Sales (' + types.map(function(x){ return labelMap[x]; }).join('+') + ') · 세포라' + (CTY === 'ALL' ? '(미국+캐나다)' : '') + ' + 콜스(위) 누적';
