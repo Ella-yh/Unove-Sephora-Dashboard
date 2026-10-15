@@ -5259,7 +5259,7 @@ function koSkuRender_() {
   var vS = function(r){ return S.C === 'b' ? r.store : S.C === 'c' ? r.dig : r.store + r.dig; };
   var vU = function(r){ return S.C === 'b' ? r.storeQty : S.C === 'c' ? r.digQty : r.storeQty + r.digQty; };
   var val = function(r){ return S.M === 's' ? vS(r) * (KRW ? FXW[r.w] : 1) : vU(r); };   // 매출 = 원화면 그 주 환율 · 달러 칩이면 원본
-  var usdAx = function(v){ return v >= 1000 ? '$' + Math.round(v / 1000) + 'k' : '$' + Math.round(v); };   // 세포라 차트 달러 축과 같은 형식
+  var usdAx = function(v){ return v >= 1000 ? '$' + (v % 1000 ? (v / 1000).toFixed(1) : v / 1000) + 'k' : '$' + Math.round(v); };   // 세포라 달러 축 형식 · 콜스는 금액이 작아 $1.5k 처럼 소수 한 자리 (반올림하면 $2k 가 두 번 나옴 · 2026-10-16)
   var fmt = function(v){ return S.M === 's' ? (KRW ? mK(v) : usdAx(v)) : nf(v) + '개'; };
   var fmtF = function(v){ return S.M === 's' ? (KRW ? mK(v) : '$' + nf(v)) : nf(v) + '개'; };   // 툴팁 값
   var chL = S.C === 't' ? '통합' : S.C === 'b' ? 'B&M' : '.COM', uL = S.M === 's' ? '매출' : '판매수량';
