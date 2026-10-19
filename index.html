@@ -1325,6 +1325,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
       </div>
       <div style="position:relative;height:330px"><canvas id="onsIntegrated"></canvas></div>
       <div style="font-size:9px;color:#bbb;margin-top:6px">첫 구간(~날짜) = 캠페인 누적(캠페인 시작일~), 이후 일별 · Brand Media = 닷컴 유입(visit) 기준</div>
+      <div id="onsPostEnd" style="display:none;font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee"></div>
       <div class="ons-out" style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div>
     </div>
 
@@ -7881,6 +7882,18 @@ function refreshOnsite() {
   var GREYO='#e4e6e8', GREYO_LABEL='세일즈 원본(7/11~13 이상치)';
   var OUT_I=[]; periods.forEach(function(p,i){ if(p==='2026-07-11'||p==='2026-07-12'||p==='2026-07-13') OUT_I.push(i); });
   document.querySelectorAll('#tabOnsite .ons-out').forEach(function(e){ e.style.display = OUT_I.length ? '' : 'none'; });   // 7/11~13 보정 안내는 그 날짜가 있는 캠페인에서만
+  // 종료 후 귀속 안내 (2026-10-19 MJ) — 종료일 뒤 확인분은 같은 날짜(종료일 다음 날)로 묶여 시트에 쌓이고,
+  //   Code.gs 는 같은 날짜 행이 여러 개면 마지막 행의 증가분만 일별로 남긴다 → 상단 요약(최종 누적) ≠ 일별 합. 숫자는 그대로 두고 차이를 밝힌다
+  (function(){
+    var el = document.getElementById('onsPostEnd'); if (!el) return;
+    var post = META.end ? periods.filter(function(p){ return p > META.end; }) : [];
+    if (!post.length) { el.style.display = 'none'; return; }
+    var dSum = dt.reduce(function(a, x){ return a + (x.sales || 0); }, 0), sTot = (s.total && s.total.sales) || 0;
+    el.innerHTML = '※ ' + post.map(mmdd).join('·') + ' 막대 = 캠페인 종료일(' + mmdd(META.end) + ') 이후 귀속(최대 14일) 반영분을 한 날짜로 묶은 것입니다. '
+      + '종료 후 확인할 때마다 이 날짜로 누적돼, 일별 막대에는 <b>마지막 확인분의 증가만</b> 들어갑니다. '
+      + '그래서 상단 요약(최종 누적) 세일즈 <b>' + won(sTot) + '</b>와 일별 합 <b>' + won(dSum) + '</b>가 <b>' + won(sTot - dSum) + '</b> 차이 납니다. 캠페인 총액은 상단 요약 기준입니다.';
+    el.style.display = '';
+  })();
   function bMapOns(series){ var sumS=0,sumC=0; OUT_I.forEach(function(i){ sumS+=series[i].sales; sumC+=series[i].clicks; }); var m={}; OUT_I.forEach(function(i){ m[i]= sumC? Math.round(sumS*series[i].clicks/sumC):0; }); return m; }
   function adoptedOns(series){ var b=bMapOns(series); return series.map(function(x,i){ return (i in b)? b[i] : x.sales; }); }
   function greyOns(series){ var b=bMapOns(series); return series.map(function(x,i){ return (i in b)? x.sales : null; }); }
@@ -8861,7 +8874,7 @@ function dmPeriodKeys(){var st=window.DSTATE,p=st.period,keys=(p==='daily')?dmDa
   if(st.fMonths.size||st.fWeeks.size){keys=keys.filter(function(k){var mo=k.slice(0,7);var mOk=st.fMonths.size===0||st.fMonths.has(mo);var wOk=st.fWeeks.size===0||st.fWeeks.has(k);return mOk&&wOk;});}
   return keys;}
 function dmVisitsMap(p){var m={};try{RAW_SKU.forEach(function(r){var k=getPeriodKey(r.date,p);m[k]=(m[k]||0)+(r.visits||0);});}catch(e){}return m;}
-function dmSalesMap(p){var m={};try{Object.keys(SALES_BY_DATE).forEach(function(d){var k=getPeriodKey(d,p);m[k]=(m[k]||0)+((SALES_BY_DATE[d]||{}).total||0);});}catch(e){}return m;}
+function dmSalesMap(p){var m={};try{Object.keys(SALES_BY_DATE).forEach(function(d){var k=getPeriodKey(d,p);m[k]=(m[k]||0)+((SALES_BY_DATE[d]||{}).total||0)*fxRate(d);});}catch(e){}return m;}   // 2026-10-19 — SALES_BY_DATE 는 USD → 날짜별 환율로 원화(축·툴팁·표가 ₩ 기준). 이전엔 달러를 ₩로 표시해 축 눈금이 모두 0
 function renderDemand(){
   var sec=document.getElementById('demandSec'); if(!sec) return;
   var st=window.DSTATE, p=st.period, daily=(p==='daily');
