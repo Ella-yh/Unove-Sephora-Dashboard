@@ -7754,7 +7754,7 @@ window.setOnsCur = function(c) {
 var ONS_CAMP = null;
 var ONS_CAMP_META = {
   'Onsite Ads: UNOVE hair June 26':    { label: '6~7월 캠페인', start: '2026-06-22', end: '2026-07-28', budgetUsd: 50000 },
-  'Onsite Ads: UNOVE hair October 26': { label: '10월 캠페인',  start: '2026-10-12', end: '2026-10-31', budgetUsd: 75000 }
+  'Onsite Ads: UNOVE hair October 26': { label: '10월 캠페인',  start: '2026-10-12', end: '2026-11-11', budgetUsd: 75000 }   // 종료일 = 세포라 담당자 협의 11/11 예정(2026-10-19 MJ). 소진 속도·현황에 따라 앞당겨지거나 늘어날 수 있음 → 바뀌면 여기만 고친다
 };
 window.setOnsCamp = function(n) {
   if (ONS_CAMP === n) return;
@@ -8874,7 +8874,9 @@ function renderDemand(){
   var dm=window.DEMAND||{};
   var keys=dmPeriodKeys();
   var labels=keys.map(function(k){return daily?k.slice(5):fmtPeriodLabel(k,p);});
-  function ser(o){return keys.map(function(k){var v=o&&o[k];return (v||v===0)?v:null;});}
+  // 2026-10-19 — 시트에서 아직 비어 있는 주(Code.gs 가 빈칸을 0 으로 보냄)는 그리지 않는다: 계열마다 마지막으로 값(0 아님)이 있는 주 뒤는 null
+  function tailNull(arr){var last=-1;arr.forEach(function(v,i){if(v!=null&&v!==0)last=i;});return arr.map(function(v,i){return i>last?null:v;});}
+  function ser(o){return tailNull(keys.map(function(k){var v=o&&o[k];return (v||v===0)?v:null;}));}
   function qp(kind,lab){return dm.query&&dm.query[kind]&&dm.query[kind][p]&&dm.query[kind][p][lab];}
   function ip(lab){return dm.impr&&dm.impr[p]&&dm.impr[p][lab];}
   var vMap=dmVisitsMap(p), sMap=dmSalesMap(p);
@@ -8888,7 +8890,7 @@ function renderDemand(){
   if(st.ov.sales)ds.push({label:'매출',type:'bar',data:keys.map(function(k){return sMap[k]!=null?sMap[k]:null;}),backgroundColor:'rgba(217,112,112,0.85)',hoverBackgroundColor:'rgba(217,112,112,0.95)',borderWidth:0,borderRadius:3,categoryPercentage:0.6,barPercentage:0.9,yAxisID:'yS',order:4});
   if(!daily&&st.ov.klImpr)ds.push({label:'KOL 노출',data:ser(ip('KOL')),borderColor:'#8257c5',backgroundColor:'transparent',borderWidth:2.4,pointRadius:1.5,tension:0.25,yAxisID:'yI',order:5});
   if(!daily&&st.ov.adImpr)ds.push({label:'광고 노출',data:ser(ip('퍼포먼스')),borderColor:'#2ba7c0',backgroundColor:'transparent',borderWidth:2.4,pointRadius:1.5,tension:0.25,yAxisID:'yI',order:6});
-  if(!daily&&st.ov.imprSum){var _kl=ip('KOL'),_pf=ip('퍼포먼스');ds.push({label:'노출 합계',data:keys.map(function(k){return ((_kl&&_kl[k])||0)+((_pf&&_pf[k])||0);}),borderColor:'#6a4fb0',backgroundColor:'transparent',borderWidth:2.8,pointRadius:1.5,tension:0.25,yAxisID:'yI',order:7});}
+  if(!daily&&st.ov.imprSum){var _kl=ser(ip('KOL')),_pf=ser(ip('퍼포먼스'));ds.push({label:'노출 합계',data:keys.map(function(k,i){return (_kl[i]==null&&_pf[i]==null)?null:(_kl[i]||0)+(_pf[i]||0);}),borderColor:'#6a4fb0',backgroundColor:'transparent',borderWidth:2.8,pointRadius:1.5,tension:0.25,yAxisID:'yI',order:7});}
   function nn(v){return (v===''||v==null||isNaN(+v))?undefined:+v;}
   var ax=st.axis, showA=Object.keys(st.a).some(function(k){return st.a[k];}), showV=st.ov.visits, showS=st.ov.sales, showI=(!daily&&(st.ov.klImpr||st.ov.adImpr||st.ov.imprSum));
   window._demandChart=new Chart(cv.getContext('2d'),{type:'line',data:{labels:labels,datasets:ds},options:{
@@ -8923,8 +8925,11 @@ function renderDemandTable(keys,p,daily){
   var el=document.getElementById('demandDataTable'); if(!el) return;
   var dm=window.DEMAND||{};
   var vMap=dmVisitsMap(p), sMap=dmSalesMap(p);
-  function qv(kind,key,k){var o=dm.query&&dm.query[kind]&&dm.query[kind][p]&&dm.query[kind][p][key];var v=o&&o[k];return typeof v==='number'?v:null;}
-  function iv(lab,k){var o=dm.impr&&dm.impr[p]&&dm.impr[p][lab];var v=o&&o[k];return typeof v==='number'?v:null;}
+  // 2026-10-19 — 차트와 같은 규칙: 계열마다 마지막으로 값(0 아님)이 있는 주 뒤는 「-」
+  function lastKey(o){var last=null;keys.forEach(function(k){var v=o&&o[k];if(typeof v==='number'&&v!==0)last=k;});return last;}
+  function cut(o,k){var v=o&&o[k];if(typeof v!=='number')return null;var lk=lastKey(o);return (lk==null||k>lk)?null:v;}
+  function qv(kind,key,k){return cut(dm.query&&dm.query[kind]&&dm.query[kind][p]&&dm.query[kind][p][key],k);}
+  function iv(lab,k){return cut(dm.impr&&dm.impr[p]&&dm.impr[p][lab],k);}
   var rows=DMD_TABLE_METRICS.map(function(m){
     return {label:m.label, fmt:mtblCount, get:function(k){return daily?null:qv(m.kind,m.key,k);}};
   }).concat([
