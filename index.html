@@ -1321,18 +1321,18 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
         <span class="ons-chip" data-k="CTR" style="color:#45818E"><span class="d"></span>CTR</span>
         <span class="ons-chip" data-k="전환율" style="color:#A64D79"><span class="d"></span>전환율(CVR)</span>
         <span class="ons-chip on" data-k="BM유입" style="color:#6aadd5"><span class="d"></span>Brand Media 유입</span>
-        <span class="ons-chip on ons-out" data-k="세일즈원본" style="color:#e4e6e8"><span class="d"></span>세일즈 원본(7/11~13 이상치)</span>
+        <span class="ons-chip on ons-out" data-k="세일즈원본" style="color:#e4e6e8"><span class="d"></span><span class="ons-out-lbl">세일즈 원본(7/11~13 이상치)</span></span>
       </div>
       <div style="position:relative;height:330px"><canvas id="onsIntegrated"></canvas></div>
       <div style="font-size:9px;color:#bbb;margin-top:6px">첫 구간(~날짜) = 캠페인 누적(캠페인 시작일~), 이후 일별 · Brand Media = 닷컴 유입(visit) 기준</div>
       <div id="onsPostEnd" style="display:none;font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee"></div>
-      <div class="ons-out" style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div>
+      <div class="ons-out ons-out-note" style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div>
     </div>
 
     <div class="sec-hdr" style="margin-top:22px">Banner · PLA 일별 추이</div>
     <div class="ons-two">
-      <div class="chart-card"><div class="chart-sec-title">Banner 일별 Spend·Sales·ROAS</div><div style="position:relative;height:290px"><canvas id="onsBanner"></canvas></div><div class="ons-out" style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div></div>
-      <div class="chart-card"><div class="chart-sec-title">PLA 일별 Spend·Sales·ROAS</div><div style="position:relative;height:290px"><canvas id="onsPla"></canvas></div><div class="ons-out" style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div></div>
+      <div class="chart-card"><div class="chart-sec-title">Banner 일별 Spend·Sales·ROAS</div><div style="position:relative;height:290px"><canvas id="onsBanner"></canvas></div><div class="ons-out ons-out-note" style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div></div>
+      <div class="chart-card"><div class="chart-sec-title">PLA 일별 Spend·Sales·ROAS</div><div style="position:relative;height:290px"><canvas id="onsPla"></canvas></div><div class="ons-out ons-out-note" style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div></div>
     </div>
 
     <div class="sec-hdr" style="margin-top:22px">PLA SKU별 성과</div>
@@ -7818,8 +7818,8 @@ function refreshOnsite() {
   var STEP = USD ? 5e3 : 5e6;   // 축 눈금 단위 — 원화 500만 · 달러 5천
   var lbl = function(p,i){ var d = String(p).slice(5).replace('-','/'); return i===0 ? '~'+d : d; };
   // SKU 단가($)·표시명 매핑 (라이브 name 기준 — 데이터엔 단가 없음)
-  var PRICE = {'Deep Damage Repair Hydrating Shampoo':22,'Deep Damage Repair Hydrating Hair Mask':26,'Deep Damage Repair Mini Trio Hair Set':28,'Silk Shine Hair Oil for Damaged Hair':25,'Mini Silk Shine Hair Oil for Damaged Hair':13,'Detangling Heat Protection Spray for Damaged Hair':28,'Damage Repair & Shine Leave in Conditioner':28,'Frizz-Calming Leave in Conditioner with Heat Protectant':26,'Mini Deep Damage Repair Hydrating Hair Mask':11,'Frizz-Calming Gel Hair Taming Wand':15};
-  var DNAME = {'Deep Damage Repair Hydrating Shampoo':'Deep Damage Shampoo 290ml','Deep Damage Repair Hydrating Hair Mask':'Deep Damage Hair Mask 207ml','Deep Damage Repair Mini Trio Hair Set':'Deep Essentials Kit (Mini Trio)','Silk Shine Hair Oil for Damaged Hair':'Silk Shine Hair Oil 70ml','Mini Silk Shine Hair Oil for Damaged Hair':'Mini Silk Shine Oil 10ml','Detangling Heat Protection Spray for Damaged Hair':'Detangling Heat Protectant Spray','Damage Repair & Shine Leave in Conditioner':'Damage Repair & Shine LIC 150ml','Frizz-Calming Leave in Conditioner with Heat Protectant':'Frizz-Calming LIC 150ml','Mini Deep Damage Repair Hydrating Hair Mask':'Mini Deep Damage Hair Mask 40ml','Frizz-Calming Gel Hair Taming Wand':'Frizz-Calming Gel Taming Wand'};
+  var PRICE = {'Deep Damage Repair Hydrating Shampoo':22,'Deep Damage Repair Hydrating Hair Mask':26,'Deep Damage Repair Mini Trio Hair Set':28,'Silk Shine Hair Oil for Damaged Hair':25,'Mini Silk Shine Hair Oil for Damaged Hair':13,'Detangling Heat Protection Spray for Damaged Hair':28,'Damage Repair & Shine Leave in Conditioner':28,'Frizz-Calming Leave in Conditioner with Heat Protectant':26,'Mini Deep Damage Repair Hydrating Hair Mask':11,'Frizz-Calming Gel Hair Taming Wand':15,'Frizz-Calming Sleek Hydrating Conditioner':22,'Damage Repair Hydrating Conditioner':22};
+  var DNAME = {'Deep Damage Repair Hydrating Shampoo':'Deep Damage Shampoo 290ml','Deep Damage Repair Hydrating Hair Mask':'Deep Damage Hair Mask 207ml','Deep Damage Repair Mini Trio Hair Set':'Deep Essentials Kit (Mini Trio)','Silk Shine Hair Oil for Damaged Hair':'Silk Shine Hair Oil 70ml','Mini Silk Shine Hair Oil for Damaged Hair':'Mini Silk Shine Oil 10ml','Detangling Heat Protection Spray for Damaged Hair':'Detangling Heat Protectant Spray','Damage Repair & Shine Leave in Conditioner':'Damage Repair & Shine LIC 150ml','Frizz-Calming Leave in Conditioner with Heat Protectant':'Frizz-Calming LIC 150ml','Mini Deep Damage Repair Hydrating Hair Mask':'Mini Deep Damage Hair Mask 40ml','Frizz-Calming Gel Hair Taming Wand':'Frizz-Calming Gel Taming Wand','Frizz-Calming Sleek Hydrating Conditioner':'Sleek Conditioner 290ml','Damage Repair Hydrating Conditioner':'Damage Conditioner 290ml'};
   var dn = function(n){ return DNAME[n] || n; };
   var pr = function(n){ return PRICE[n]!=null ? '$'+PRICE[n] : '—'; };
 
@@ -7878,10 +7878,28 @@ function refreshOnsite() {
   // ---- 2) 통합 광고 지표 ----
   var arr = function(f){ return dt.map(function(x){ return x[f]; }); };
   var grad = function(ctx,rgb){ var g=ctx.createLinearGradient(0,0,0,320); g.addColorStop(0,'rgba('+rgb+',0.20)'); g.addColorStop(1,'rgba('+rgb+',0.02)'); return g; };
-  // ===== 7/11~13 이상치 B보정(클릭비례 재배분) + 축 baseline 정렬 =====
-  var GREYO='#e4e6e8', GREYO_LABEL='세일즈 원본(7/11~13 이상치)';
-  var OUT_I=[]; periods.forEach(function(p,i){ if(p==='2026-07-11'||p==='2026-07-12'||p==='2026-07-13') OUT_I.push(i); });
-  document.querySelectorAll('#tabOnsite .ons-out').forEach(function(e){ e.style.display = OUT_I.length ? '' : 'none'; });   // 7/11~13 보정 안내는 그 날짜가 있는 캠페인에서만
+  // ===== 세일즈 이상 구간 B보정(클릭비례 재배분 · 구간별 합계 불변) + 축 baseline 정렬 =====
+  //   7/11~13 = 포털 원본 세일즈 이상 계상(PR #18) · 10/17~18 = 포털 반영 지연 — 10/17분 판매·매출이 10/18 추출본에 합산 (2026-10-21 MJ, 6월과 같은 방식)
+  //   시트 값은 원본 그대로 두고 화면에서만 보정한다. 구간끼리 섞지 않고 구간마다 따로 나눈다
+  var ONS_OUT_GROUPS = [
+    { days:['2026-07-11','2026-07-12','2026-07-13'], tag:'이상치', why:'세포라 브랜드 포털 원본 리포트 내 세일즈' },
+    { days:['2026-10-17','2026-10-18'], tag:'반영 지연', why:'세포라 브랜드 포털 원본 리포트 내 세일즈(10/17분이 10/18에 늦게 합산)' }
+  ];
+  var GREYO='#e4e6e8';
+  var OUT_G=[], OUT_I=[];
+  ONS_OUT_GROUPS.forEach(function(g){
+    var ix = g.days.map(function(d){ return periods.indexOf(d); }).filter(function(i){ return i >= 0; });
+    if (ix.length < 2) return;   // 한 날짜만 있으면 나눌 대상이 없다
+    OUT_G.push({ ix:ix, g:g }); OUT_I = OUT_I.concat(ix);
+  });
+  var outRng = function(g, sep){ var a=g.days[0].slice(5).split('-'), b=g.days[g.days.length-1].slice(5).split('-');
+    return (+a[0])+'/'+(+a[1])+sep+(a[0]===b[0] ? '' : (+b[0])+'/')+(+b[1]); };
+  var GREYO_LABEL = '세일즈 원본(' + OUT_G.map(function(o){ return outRng(o.g,'~')+' '+o.g.tag; }).join(' · ') + ')';
+  document.querySelectorAll('#tabOnsite .ons-out').forEach(function(e){ e.style.display = OUT_I.length ? '' : 'none'; });   // 보정 안내는 그 날짜가 있는 캠페인에서만
+  document.querySelectorAll('#tabOnsite .ons-out-lbl').forEach(function(e){ e.textContent = GREYO_LABEL; });
+  document.querySelectorAll('#tabOnsite .ons-out-note').forEach(function(e){
+    e.innerHTML = OUT_G.map(function(o){ return '※ ' + outRng(o.g,'–') + ' 회색 막대 = ' + o.g.why + ' · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, ' + o.ix.length + '일 누적 합계는 불변)'; }).join('<br>');
+  });
   // 종료 후 귀속 안내 (2026-10-19 MJ) — 종료일 뒤 확인분은 같은 날짜(종료일 다음 날)로 묶여 시트에 쌓이고,
   //   Code.gs 는 같은 날짜 행이 여러 개면 마지막 행의 증가분만 일별로 남긴다 → 상단 요약(최종 누적) ≠ 일별 합. 숫자는 그대로 두고 차이를 밝힌다
   (function(){
@@ -7894,7 +7912,7 @@ function refreshOnsite() {
       + '그래서 상단 요약(최종 누적) 세일즈 <b>' + won(sTot) + '</b>와 일별 합 <b>' + won(dSum) + '</b>가 <b>' + won(sTot - dSum) + '</b> 차이 납니다. 캠페인 총액은 상단 요약 기준입니다.';
     el.style.display = '';
   })();
-  function bMapOns(series){ var sumS=0,sumC=0; OUT_I.forEach(function(i){ sumS+=series[i].sales; sumC+=series[i].clicks; }); var m={}; OUT_I.forEach(function(i){ m[i]= sumC? Math.round(sumS*series[i].clicks/sumC):0; }); return m; }
+  function bMapOns(series){ var m={}; OUT_G.forEach(function(o){ var sumS=0,sumC=0; o.ix.forEach(function(i){ sumS+=series[i].sales; sumC+=series[i].clicks; }); o.ix.forEach(function(i){ m[i]= sumC? Math.round(sumS*series[i].clicks/sumC):0; }); }); return m; }
   function adoptedOns(series){ var b=bMapOns(series); return series.map(function(x,i){ return (i in b)? b[i] : x.sales; }); }
   function greyOns(series){ var b=bMapOns(series); return series.map(function(x,i){ return (i in b)? x.sales : null; }); }
   function niceRng(vals){ var f=vals.filter(function(v){return v!=null&&isFinite(v);}); return [Math.floor(Math.min.apply(null,[0].concat(f))/STEP)*STEP, Math.ceil(Math.max.apply(null,f)/STEP)*STEP]; }
@@ -7938,7 +7956,7 @@ function refreshOnsite() {
     chips.__wired = true;
   }
 
-  // ---- 3) Banner / PLA 일별 콤보 (7/11~13 회색 원본 오버레이 + baseline 정렬) ----
+  // ---- 3) Banner / PLA 일별 콤보 (보정 구간 회색 원본 오버레이 + baseline 정렬) ----
   var greyOnSalesPlugin = function(series){
     var orig = series.map(function(x){return x.sales;});
     return { id:'greyOnSales', beforeDatasetsDraw:function(chart){
