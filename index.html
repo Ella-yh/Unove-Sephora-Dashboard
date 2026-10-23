@@ -550,6 +550,9 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
     <div class="sb-item" data-tab="onsite" onclick="switchTab('onsite')">
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><rect x="1" y="1" width="12" height="12" rx="1.5"/><line x1="1" y1="5" x2="13" y2="5"/><line x1="5" y1="5" x2="5" y2="13"/></svg></span><span class="sb-text">온사이트 광고</span>
     </div>
+    <div class="sb-item" data-tab="query" onclick="switchTab('query')">
+      <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><circle cx="6" cy="6" r="4.3"/><line x1="9.2" y1="9.2" x2="13" y2="13"/></svg></span><span class="sb-text">구글 쿼리</span>
+    </div>
     <div class="sb-section-lbl">System</div>
     <div class="sb-item" data-tab="events" onclick="switchTab('events')">
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><rect x="1" y="2.5" width="12" height="10" rx="1.5"/><line x1="1" y1="6" x2="13" y2="6"/><line x1="4" y1="1" x2="4" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><circle cx="4.5" cy="9" r="0.8" fill="currentColor" stroke="none"/><circle cx="7" cy="9" r="0.8" fill="currentColor" stroke="none"/><circle cx="9.5" cy="9" r="0.8" fill="currentColor" stroke="none"/></svg></span><span class="sb-text">이벤트 관리</span>
@@ -2667,6 +2670,11 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
   </div>
 </div>
 </div><!-- /tabSettings -->
+<!-- ═══ 구글 쿼리 탭 (/query-us/ 를 그대로 띄운다) ═══ -->
+<div id="tabQuery" style="display:none;height:100%;">
+  <iframe id="qusFrame" title="구글 쿼리" style="width:100%;height:100%;border:0;display:block;background:#fff;"></iframe>
+</div>
+
   </div><!-- /main-scroll -->
 </div><!-- /main-area -->
 </div><!-- /app-layout -->
@@ -6320,12 +6328,12 @@ function loadTabCache_(key) {
 }
 function switchTab(tab) {
   document.querySelectorAll('.sb-item').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  const tabs = {main:'tabMain',channel:'tabChannel',ads:'tabAds',settings:'tabSettings',events:'tabEvents',onsite:'tabOnsite',bm:'tabBm',sku:'tabSku'};
+  const tabs = {main:'tabMain',channel:'tabChannel',ads:'tabAds',settings:'tabSettings',events:'tabEvents',onsite:'tabOnsite',bm:'tabBm',sku:'tabSku',query:'tabQuery'};
   Object.entries(tabs).forEach(([k,id]) => {
     const el = document.getElementById(id);
     if (el) el.style.display = k === tab ? '' : 'none';
   });
-  const titles = {main:'통합 대시보드',channel:'유입 채널별',ads:'퍼포먼스 광고',events:'이벤트 관리',settings:'Settings',onsite:'온사이트 광고',bm:'B&M · 재고',sku:'SKU 실매출'};
+  const titles = {main:'통합 대시보드',channel:'유입 채널별',ads:'퍼포먼스 광고',events:'이벤트 관리',settings:'Settings',onsite:'온사이트 광고',bm:'B&M · 재고',sku:'SKU 실매출',query:'구글 쿼리'};
   const pt = document.getElementById('pageTitle');
   if (pt) pt.textContent = titles[tab] || '';
   try { ctyCurBadge_(); } catch(e){}
@@ -6340,6 +6348,7 @@ function switchTab(tab) {
                                  refreshBM();  } catch(e){} }
   if (tab === 'sku')     { try { if (!window.SKUDATA) window.SKUDATA = loadTabCache_('sephora_cache_sku'); refreshSKU(); } catch(e){} }
   if (tab === 'events')  { try { renderTypeLegend(); renderEventListFull(); } catch(e){} }
+  if (tab === 'query')   openQueryTab();
 }
 // ── KOL Table ─────────────────────────────────────────────────────────────────
 let kolSortKey = 'date';
@@ -6478,6 +6487,21 @@ function renderKolTable() {
   }).join('');
 }
 // ── end KOL ───────────────────────────────────────────────────────────────────
+// ═══ 구글 쿼리 탭 — /query-us/ 를 iframe 으로 띄우고, 이 대시보드 로그인 토큰(시트 읽기 전용 포함)을
+//     그 페이지 출처로만 넘긴다. 토큰으로 시트를 못 읽으면 탭 안에서 따로 로그인 화면이 뜬다.
+const QUS_URL = 'https://wyatt-biz-dashboard.vercel.app/query-us/?brand=UN';
+function openQueryTab() {
+  const f = document.getElementById('qusFrame');
+  if (f && !f.getAttribute('src')) f.setAttribute('src', QUS_URL);   // 처음 열 때만 불러온다
+}
+window.addEventListener('message', function(e) {
+  const f = document.getElementById('qusFrame');
+  if (!f || e.source !== f.contentWindow || e.origin !== new URL(QUS_URL).origin) return;
+  if (e.data && e.data.type === 'qus-ready') {
+    const t = sessionStorage.getItem('sephora_token');
+    if (t) f.contentWindow.postMessage({ type: 'qus-token', token: t }, e.origin);
+  }
+});
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('collapsed');
 }
@@ -7100,7 +7124,7 @@ window.startGoogleLogin = function() {
   if (btn) { btn.disabled = true; btn.textContent = '이동 중...'; }
   const params = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID, redirect_uri: REDIRECT_URI,
-    response_type: 'token', scope: 'email profile',
+    response_type: 'token', scope: 'email profile https://www.googleapis.com/auth/spreadsheets.readonly',   // 구글 쿼리 탭이 시트를 읽는다
     hd: ALLOWED_DOMAIN, prompt: 'select_account'
   });
   window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
