@@ -3460,8 +3460,18 @@ function buildEvTypeOptions() {
   });
 }
 // ─── DATA FILTER ──────────────────────────────────────────────────────────────
-function skuPassesCatSku(sku) {
-  const cOk = selCats.size === 0 || selCats.has(SKU_META[sku]?.cat);
+// 카테고리 일치 — 공백 차이 무시(SKU_META 의 'Shampoo ' ↔ 시트 「상품 구분」 'Shampoo')
+function catSelected_(cat) {
+  if (selCats.size === 0) return true;
+  const c = String(cat == null ? '' : cat).trim();
+  for (const s of selCats) if (String(s).trim() === c) return true;
+  return false;
+}
+// 2026-10-23 MJ — 방문은 접속한 사이트 국가 기준: 미국 데이터에 캐나다 SKU 행(미국 사이트에서 본 캐나다 번호)도 들어온다.
+//   SKU_META(미국 18종)에 없는 SKU 는 시트 「상품 구분」(행의 cat)으로 카테고리를 판정한다
+function skuPassesCatSku(sku, rowCat) {
+  const meta = SKU_META[sku];
+  const cOk = catSelected_(meta ? meta.cat : rowCat);
   const sOk = selSkus.size === 0 || selSkus.has(sku);
   return cOk && sOk;
 }
@@ -3477,7 +3487,7 @@ function getFiltered() {
   const skuFiltered = RAW_SKU.filter(d => {
     const mOk = selMonths.size === 0 || selMonths.has(d.month);
     const wOk = selWeeks.size === 0  || selWeeks.has(d.week);
-    return mOk && wOk && skuPassesCatSku(d.sku);
+    return mOk && wOk && skuPassesCatSku(d.sku, d.cat);
   });
   // 2. Aggregate by date (sales from SALES_BY_DATE lookup)
   const byDate = {};
@@ -3506,7 +3516,7 @@ function getFilteredForPeriod(monthSet, weekSet) {
   const skuFiltered = RAW_SKU.filter(d => {
     const mOk = monthSet.size === 0 || monthSet.has(d.month);
     const wOk = weekSet.size === 0  || weekSet.has(d.week);
-    return mOk && wOk && skuPassesCatSku(d.sku);
+    return mOk && wOk && skuPassesCatSku(d.sku, d.cat);
   });
   const byDate = {};
   skuFiltered.forEach(d => {
@@ -5417,7 +5427,7 @@ function koSkuRender_() {
 window.koBmRender_ = koBmRender_;
 
 // ═══ 캐나다 유입·이커머스 (2026-10-12) — 유입 탭 국가 칩 · 통합 탭 Visits·CVR ═════════════════
-// 원천 window.CADATA.channel (Raw_CA_유입, 브랜드포털 ₩ = C$ × 1,000) · window.CADATA.commerce (RAW_CA_commerce 의 국가 = CA 행)
+// 원천 window.CADATA.channel (Raw_CA_유입, 브랜드포털 ₩ = C$ × 1,000) · window.CADATA.commerce (RAW_CA_commerce 전 행 — 2026-10-23 접속 사이트 국가 기준, 캐나다 사이트에서 본 미국 번호 행 포함)
 // 두 키가 없으면(구버전 캐시·Apps Script 반영 전) 지금처럼 잠금을 유지한다.
 // 정의는 미국과 같다 — 방문 = SKU 행 방문 합 · CVR = 주문 수량 ÷ 방문 × 100 · 「전체」 CVR = (미국 주문 + 캐나다 주문) ÷ (미국 방문 + 캐나다 방문)
 // 캐나다 자료가 없는 기간(진입 전)은 0 이 아니라 「값 없음」 — 「전체」도 그 기간은 「값 없음」
@@ -5517,7 +5527,7 @@ function ctyCaComRows_() {
   var rows = cm.filter(function(r){
     var mOk = selMonths.size === 0 || selMonths.has(r.date.slice(5, 7));
     var wOk = selWeeks.size === 0 || selWeeks.has(getWeekNum(r.date));
-    var cOk = selCats.size === 0 || selCats.has(r.cat);
+    var cOk = catSelected_(r.cat);
     return mOk && wOk && cOk;
   });
   return { rows: rows, span: ctyDateSpan_(cm) };
@@ -5538,10 +5548,10 @@ function ctyCaVisitKpi_(it, data, prevDates, cmpLbl, lock) {
   // 직전 기간 — renderKPI 가 정한 비교 날짜(prevDates)와 같은 날짜. 캐나다 자료가 없으면 증감을 표시하지 않는다
   var prev = null;
   if (prevDates) {
-    var pc = ctySumVO_(ctyCaCom_().filter(function(r){ return prevDates.has(r.date) && (selCats.size === 0 || selCats.has(r.cat)); }));
+    var pc = ctySumVO_(ctyCaCom_().filter(function(r){ return prevDates.has(r.date) && catSelected_(r.cat); }));
     if (pc.n) {
       var uv = 0, uo = 0;   // 「전체」의 미국 몫 — renderKPI 의 prev 와 같은 행(같은 날짜 · 같은 상품 필터)
-      if (CTY === 'ALL') RAW_SKU.forEach(function(d){ if (prevDates.has(d.date) && skuPassesCatSku(d.sku)) { uv += d.visits; uo += d.orders; } });
+      if (CTY === 'ALL') RAW_SKU.forEach(function(d){ if (prevDates.has(d.date) && skuPassesCatSku(d.sku, d.cat)) { uv += d.visits; uo += d.orders; } });
       prev = { v: pc.v + uv, o: pc.o + uo };
     }
   }
@@ -5789,7 +5799,7 @@ async function addEvent() {
 // ─── EVENT STATS HELPERS ──────────────────────────────────────────────────────
 function getAggByDate() {
   const byDate = {};
-  RAW_SKU.filter(d => skuPassesCatSku(d.sku)).forEach(d => {
+  RAW_SKU.filter(d => skuPassesCatSku(d.sku, d.cat)).forEach(d => {
     if (!byDate[d.date]) byDate[d.date] = {visits:0, sales:0, orders:0};
     byDate[d.date].visits += d.visits;
     byDate[d.date].sales  += d.sales;
