@@ -1323,6 +1323,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
         <span class="ons-chip" data-k="클릭" style="color:#3D85C6"><span class="d"></span>클릭</span>
         <span class="ons-chip" data-k="CTR" style="color:#45818E"><span class="d"></span>CTR</span>
         <span class="ons-chip" data-k="전환율" style="color:#A64D79"><span class="d"></span>전환율(CVR)</span>
+        <span class="ons-chip" data-k="ROAS" style="color:#1D2847"><span class="d"></span>ROAS</span>
         <span class="ons-chip on" data-k="BM유입" style="color:#6aadd5"><span class="d"></span>Brand Media 유입</span>
         <span class="ons-chip on ons-out" data-k="세일즈원본" style="color:#e4e6e8"><span class="d"></span><span class="ons-out-lbl">세일즈 원본(7/11~13 이상치)</span></span>
       </div>
@@ -7958,6 +7959,8 @@ function refreshOnsite() {
   function alignMM(av,f0,head){ head=head||1.08; var mx=Math.max.apply(null,av.filter(function(v){return v!=null&&isFinite(v);}))*head; return {min:f0*mx/(f0-1), max:mx}; }
   var _wr=niceRng(adoptedOns(dt).concat(greyOns(dt)).concat(arr('spend'))), wMinO=_wr[0], wMaxO=_wr[1], f0O=(0-wMinO)/(wMaxO-wMinO);
   var visA=alignMM(O.brandMedia.visits,f0O,1.1), imprA=alignMM(arr('impr'),f0O,1.05), clkA=alignMM(arr('clicks'),f0O,1.05), ctrA=alignMM(arr('ctr'),f0O,1.1), cvrA=alignMM(arr('cvr').map(function(v){return Math.abs(v);}),f0O,1.1);
+  // ROAS = 표시 세일즈(보정값) ÷ 광고비 — 아래 Banner·PLA 콤보의 ROAS 선과 같은 계산 (2026-10-26 MJ)
+  var roasO = adoptedOns(dt).map(function(v,i){ var sp=dt[i].spend; return sp ? v/sp : null; }), roasAx=alignMM(roasO.map(function(v){return v==null?v:Math.abs(v);}),f0O,1.1);
   var ictx = document.getElementById('onsIntegrated').getContext('2d');
   window.__onsCharts['onsIntegrated'] = new Chart(ictx, {
     data:{ labels:labels, datasets:[
@@ -7968,18 +7971,20 @@ function refreshOnsite() {
       { key:'클릭', type:'line', label:'클릭', data:arr('clicks'), borderColor:CLICKS, backgroundColor:CLICKS, borderWidth:2, tension:.3, pointRadius:2, yAxisID:'yClick', order:4, hidden:true },
       { key:'CTR', type:'line', label:'CTR(%)', data:arr('ctr'), borderColor:CTR, backgroundColor:CTR, borderWidth:2, tension:.3, pointRadius:2, yAxisID:'yCTR', order:3, hidden:true },
       { key:'전환율', type:'line', label:'전환율(CVR,%)', data:arr('cvr'), borderColor:CVR, backgroundColor:CVR, borderWidth:2, tension:.3, pointRadius:2, yAxisID:'yCVR', order:2, hidden:true },
+      { key:'ROAS', type:'line', label:'ROAS', data:roasO, borderColor:NAVY, backgroundColor:NAVY, borderWidth:2, tension:.3, pointRadius:2, spanGaps:true, yAxisID:'yROAS', order:2, hidden:true },
       { key:'BM유입', type:'line', label:'Brand Media 유입', data:O.brandMedia.visits, borderColor:VISITS, backgroundColor:grad(ictx,'106,173,213'), borderWidth:1.6, fill:true, tension:.25, pointRadius:0, yAxisID:'yVis', order:1 }
     ]},
     options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
       plugins:{ legend:{display:false},
         tooltip:{ callbacks:{ label:function(c){ var l=c.dataset.label;
           if(l.indexOf('%')>=0) return l+' '+c.parsed.y.toFixed(1)+'%';
+          if(l==='ROAS') return 'ROAS '+c.parsed.y.toFixed(2)+'×';
           if(l==='세일즈'||l==='광고비') return l+' '+won(c.parsed.y);
           return l+' '+Math.round(c.parsed.y).toLocaleString(); } } } },
       scales:{
         yWon:{position:'left',min:wMinO,max:wMaxO,grid:{color:GRID},ticks:{callback:axT}},
         yVis:{position:'right',min:visA.min,max:visA.max,grid:{display:false},title:{display:true,text:'닷컴 유입'},ticks:{callback:function(v){return v.toLocaleString();}}},
-        yImpr:{display:false,min:imprA.min,max:imprA.max}, yClick:{display:false,min:clkA.min,max:clkA.max}, yCTR:{display:false,min:ctrA.min,max:ctrA.max}, yCVR:{display:false,min:cvrA.min,max:cvrA.max},
+        yImpr:{display:false,min:imprA.min,max:imprA.max}, yClick:{display:false,min:clkA.min,max:clkA.max}, yCTR:{display:false,min:ctrA.min,max:ctrA.max}, yCVR:{display:false,min:cvrA.min,max:cvrA.max}, yROAS:{display:false,min:roasAx.min,max:roasAx.max},
         x:{grid:{color:GRID}}
       } }
   });
