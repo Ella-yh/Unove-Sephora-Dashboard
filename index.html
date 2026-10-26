@@ -2164,10 +2164,14 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
         const v=MM==='s'?val(r,3):val(r,6);
         if(MM==='u'&&v==null){if(!per[r[2]])per[r[2]]={};if(per[r[2]][k]===undefined)per[r[2]][k]=null;}else add(k,r[2],v);});
       keys.sort((a,b)=>+a.slice(1)-(+b.slice(1)));}
-    else{D.forEach(r=>{const k=r[0].slice(0,7);if(!seen[k]){seen[k]=1;keys.push(k);}add(k,r[1],MM==='s'?val(r,2):val(r,5));});
+    else{const DD={};D.forEach(r=>{DD[r[0]]=1;const k=r[0].slice(0,7);if(!seen[k]){seen[k]=1;keys.push(k);}add(k,r[1],MM==='s'?val(r,2):val(r,5));});
+      // 2026-10-26 — 일간이 없는 주(W38~ · 포털 VBS 원본엔 SKU×일 없음)는 주간 값을 「주 마감일 −3일」의 달에 넣는다.
+      //   예전엔 일간이 있는 달이면 그 달의 주간을 통째로 건너뛰어, 10월이 10/1~17 일간만으로 잡혔다
+      const p2=n=>String(n).padStart(2,'0');
+      const inD=e=>{for(let j=0;j<7;j++){const d=new Date(e);d.setDate(e.getDate()-j);if(DD[d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())])return true;}return false;};
       W.forEach(r=>{const e=new Date(r[1]+'T00:00:00'),wd=new Date(e.getTime()-3*864e5);
         const k=wd.getFullYear()+'-'+String(wd.getMonth()+1).padStart(2,'0');
-        if(seen[k])return;if(keys.indexOf(k)<0)keys.push(k);
+        if(inD(e))return;if(keys.indexOf(k)<0)keys.push(k);
         const v=MM==='s'?val(r,3):val(r,6);
         if(MM==='u'&&v==null){if(!per[r[2]])per[r[2]]={};if(per[r[2]][k]===undefined)per[r[2]][k]=null;}else add(k,r[2],v);});
       keys.sort();}
@@ -2189,7 +2193,8 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
       ds.forEach(d=>{const v=d.data[i]||0;if(v<=0)return;
         tip+='<div class="r"><span><i style="background:'+d.color+'"></i>'+esc(d.label)+'</span><span>'+tf(v)+(tot0>0?'  <span style="opacity:.6">'+(v/tot0*100).toFixed(0)+'%</span>':'')+'</span></div>';});
       s+='<rect x="'+(L+iw/keys.length*i)+'" y="'+T+'" width="'+(iw/keys.length)+'" height="'+ih+'" fill="transparent" data-tip="'+encodeURIComponent(tip)+'"/>';
-      const ev=P==='d'?1:Math.ceil(keys.length/26);
+      // 일 보기 라벨 — 날짜가 많으면(전체 기간 259일 등) 세로 라벨이 겹치므로 약 40개만 남긴다 (2026-10-26)
+      const ev=P==='d'?(keys.length>45?Math.ceil(keys.length/40):1):Math.ceil(keys.length/26);
       if(i%ev===0||keys.length<=26){const t=P==='m'?(MLB[k]||k):P==='d'?k.slice(5):k;
         const col=WARNM[k]?'#c2703a':'#9ca3af', ly=Ht-B+14;
         s+= P==='d'
