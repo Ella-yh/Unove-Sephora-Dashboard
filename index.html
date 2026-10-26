@@ -7988,6 +7988,15 @@ function refreshOnsite() {
         x:{grid:{color:GRID}}
       } }
   });
+  // 캠페인을 바꿔 차트를 다시 그릴 때 칩 켜짐 상태를 그대로 따른다 (2026-10-26 — 예전엔 칩은 켜진 색인데 선은 기본값(숨김)으로 그려졌다)
+  (function(){
+    var ch = window.__onsCharts['onsIntegrated'], n = 0;
+    document.querySelectorAll('#onsChips .ons-chip').forEach(function(c){
+      var ds = ch.data.datasets.filter(function(d){ return d.key===c.getAttribute('data-k'); })[0]; if(!ds) return;
+      var h = !c.classList.contains('on'); if (!!ds.hidden !== h) { ds.hidden = h; n++; }
+    });
+    if (n) ch.update('none');
+  })();
   // 칩 토글
   var chips = document.getElementById('onsChips');
   if (chips && !chips.__wired) {
