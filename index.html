@@ -2798,8 +2798,9 @@ function evApiUrl_() {
 
 // 서버 쓰기 (add / update / delete) → 성공 시 EVENTS를 서버 응답으로 교체
 async function evPost_(action, event) {
-  const token = sessionStorage.getItem('sephora_token');
+  const token = authGet_();
   if (!token) { alert('로그인이 필요합니다. 새로고침 후 다시 로그인해주세요.'); return false; }
+  window._authBusy = true;   // 저장 중에는 세션 자동 연장(페이지 이동)을 미룬다
   try {
     const r = await fetch(evApiUrl_() + '?token=' + encodeURIComponent(token), {
       method: 'POST',
@@ -2814,12 +2815,12 @@ async function evPost_(action, event) {
   } catch (e) {
     alert('서버에 저장하지 못했습니다. 네트워크를 확인해주세요.\n' + e.message);
     return false;
-  }
+  } finally { window._authBusy = false; }
 }
 
 // 서버에서 이벤트 로드 (실패 시 시드 유지)
 async function loadEventsFromServer() {
-  const token = sessionStorage.getItem('sephora_token');
+  const token = authGet_();
   if (!token) return;
   try {
     const r = await fetch(evApiUrl_() + '?token=' + encodeURIComponent(token) + '&only=events', { cache: 'no-store' });
@@ -6514,7 +6515,7 @@ window.addEventListener('message', function(e) {
   const f = document.getElementById('qusFrame');
   if (!f || e.source !== f.contentWindow || e.origin !== new URL(QUS_URL).origin) return;
   if (e.data && e.data.type === 'qus-ready') {
-    const t = sessionStorage.getItem('sephora_token');
+    const t = authGet_();
     if (t) f.contentWindow.postMessage({ type: 'qus-token', token: t }, e.origin);
   }
 });
@@ -7104,6 +7105,76 @@ refresh();
 const GOOGLE_CLIENT_ID = '209428467221-2e8e38d23fo4uaorjo5l5s3epkjbla3u.apps.googleusercontent.com';
 const ALLOWED_DOMAIN   = 'wyattcorp.com';
 const REDIRECT_URI     = 'https://ella-yh.github.io/Unove-Sephora-Dashboard/';
+// ── 2026-11-02 세션 연장 ─────────────────────────────────────────────
+// 구글 토큰은 1시간짜리라 그냥 두면 「세션 만료」가 잦다.
+//  · 토큰·만료 시각·사용자를 localStorage에 둬서 새 탭에서도 바로 열린다(만료된 토큰은 안 쓰고 지운다)
+//  · 만료 7분 전부터, 입력·저장 중이 아니고 (탭이 숨겨졌거나 1분간 조작이 없거나 만료 직전이면) prompt=none 으로 페이지를 넘겨 조용히 새 토큰을 받는다
+//    구글 로그인이 살아 있으면 클릭 없이 돌아오고, 보던 탭·주기·스크롤을 되살린다
+//  · prompt=none 이 거절되면(로그인 필요 등) 그때만 로그인 화면. 같은 탭에서 2분 안에 다시 시도하지 않아 반복 이동이 없다
+const AUTH_TOK_KEY = 'sephora_token', AUTH_USER_KEY = 'sephora_auth', AUTH_EXP_KEY = 'sephora_token_exp';
+const AUTH_SILENT_KEY = 'sephora_silent_try', AUTH_VIEW_KEY = 'sephora_view_restore';
+const AUTH_RENEW_BEFORE_MS = 7 * 60 * 1000;
+function authGet_() {
+  try { const t = localStorage.getItem(AUTH_TOK_KEY), e = +localStorage.getItem(AUTH_EXP_KEY) || 0; if (t && e > Date.now() + 60000) return t; } catch (e) {}
+  return null;
+}
+function authUser_() { try { return JSON.parse(localStorage.getItem(AUTH_USER_KEY) || 'null'); } catch (e) { return null; } }
+function authSave_(token, expSec, user) {
+  try {
+    localStorage.setItem(AUTH_TOK_KEY, token);
+    localStorage.setItem(AUTH_EXP_KEY, String(Date.now() + (expSec || 3600) * 1000));
+    if (user) localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+  } catch (e) {}
+}
+function authClear_(keepUser) {
+  [AUTH_TOK_KEY, AUTH_EXP_KEY].concat(keepUser ? [] : [AUTH_USER_KEY]).forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+  try { sessionStorage.removeItem(AUTH_TOK_KEY); sessionStorage.removeItem(AUTH_USER_KEY); } catch (e) {}   // 구버전 저장분
+}
+function authUrl_(extra) {
+  const p = Object.assign({
+    client_id: GOOGLE_CLIENT_ID, redirect_uri: REDIRECT_URI,
+    response_type: 'token', scope: 'email profile https://www.googleapis.com/auth/spreadsheets.readonly',   // 구글 쿼리 탭이 시트를 읽는다
+    hd: ALLOWED_DOMAIN
+  }, extra || {});
+  return 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams(p).toString();
+}
+function authBusy_() {
+  if (window._authBusy) return true;
+  const a = document.activeElement;
+  return !!(a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) && a.offsetParent !== null);
+}
+function authSilentRenew_() {
+  const u = authUser_();
+  if (!u || !u.email || authBusy_()) return false;
+  let last = 0; try { last = +sessionStorage.getItem(AUTH_SILENT_KEY) || 0; } catch (e) {}
+  if (Date.now() - last < 120000) return false;
+  try {
+    sessionStorage.setItem(AUTH_SILENT_KEY, String(Date.now()));
+    const act = document.querySelector('.sb-item.active');
+    sessionStorage.setItem(AUTH_VIEW_KEY, JSON.stringify({ tab: act ? act.getAttribute('data-tab') : '', period: (typeof mainPeriod !== 'undefined' ? mainPeriod : ''), y: window.scrollY || 0 }));
+  } catch (e) {}
+  window.location.href = authUrl_({ prompt: 'none', login_hint: u.email });
+  return true;
+}
+function authRestoreView_() {
+  let v = null; try { v = JSON.parse(sessionStorage.getItem(AUTH_VIEW_KEY) || 'null'); sessionStorage.removeItem(AUTH_VIEW_KEY); } catch (e) {}
+  if (!v) return;
+  setTimeout(function () {
+    try { if (v.tab && typeof switchTab === 'function') switchTab(v.tab); } catch (e) {}
+    try { if (v.period && v.period !== mainPeriod) { const b = document.querySelector('[data-main-period="' + v.period + '"]'); if (b) window.setMainPeriod(b, v.period); } } catch (e) {}
+    [300, 1500].forEach(function (ms) { setTimeout(function () { window.scrollTo(0, v.y || 0); }, ms); });
+  }, 200);
+}
+let _authLastAct = Date.now();
+['mousemove', 'keydown', 'scroll', 'click', 'touchstart'].forEach(function (ev) { window.addEventListener(ev, function () { _authLastAct = Date.now(); }, { passive: true }); });
+function authTick_() {
+  if (!currentUser) return;
+  const e = +localStorage.getItem(AUTH_EXP_KEY) || 0;   // 다른 탭이 먼저 연장했으면 그 시각을 본다
+  if (!e || e - Date.now() > AUTH_RENEW_BEFORE_MS) return;
+  if (document.hidden || Date.now() - _authLastAct > 60000 || e - Date.now() < 90000) authSilentRenew_();
+}
+setInterval(authTick_, 20000);
+document.addEventListener('visibilitychange', authTick_);
 const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxdVtqIozPiUEO25dmTjb_9BD-KikjEtfChYI2FGXDt6OkeOZRT65Tliq7bsmyLYw06Mg/exec';
 let _prefetchPromise = null; // 로그인 검증과 병렬로 시작되는 데이터 프리페치
 let currentUser = null;
@@ -7116,7 +7187,15 @@ window.addEventListener('load', function() {
     const params = new URLSearchParams(hash.substring(1));
     const token  = params.get('access_token');
     history.replaceState(null, '', window.location.pathname);
-    if (token) { verifyGoogleToken(token); return; }
+    if (token) { verifyGoogleToken(token, +params.get('expires_in') || 3600); return; }
+  }
+  // 조용한 연장(prompt=none)이 거절됨 → 지금처럼 로그인 화면 (같은 탭에서 2분 안에 다시 시도하지 않아 반복 이동 없음)
+  if (hash && hash.includes('error=')) {
+    const err = new URLSearchParams(hash.substring(1)).get('error');
+    history.replaceState(null, '', window.location.pathname);
+    authClear_(true);
+    document.getElementById('loginErr').textContent = (err === 'access_denied') ? '로그인이 취소되었습니다.' : '로그인 시간이 지나 다시 로그인이 필요합니다.';
+    return;
   }
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('error')) {
@@ -7124,28 +7203,22 @@ window.addEventListener('load', function() {
     history.replaceState(null, '', window.location.pathname);
     return;
   }
-  const cached = sessionStorage.getItem('sephora_auth');
-  if (cached) {
-    try {
-      currentUser = JSON.parse(cached);
-      const token = sessionStorage.getItem('sephora_token');
-      if (token) { onAuthSuccess(currentUser); return; }
-    } catch(e) {}
-    sessionStorage.removeItem('sephora_auth');
-    sessionStorage.removeItem('sephora_token');
+  const cachedUser = authUser_();
+  if (cachedUser) {
+    currentUser = cachedUser;
+    if (authGet_()) { onAuthSuccess(currentUser); authRestoreView_(); return; }   // 새 탭·다시 열기 — 토큰이 살아 있으면 바로
+    authClear_(true);
+    if (authSilentRenew_()) return;   // 만료 → 클릭 없이 연장
+    currentUser = null;
   }
 });
 window.startGoogleLogin = function() {
   const btn = document.getElementById('btnGoogleLogin');
   if (btn) { btn.disabled = true; btn.textContent = '이동 중...'; }
-  const params = new URLSearchParams({
-    client_id: GOOGLE_CLIENT_ID, redirect_uri: REDIRECT_URI,
-    response_type: 'token', scope: 'email profile https://www.googleapis.com/auth/spreadsheets.readonly',   // 구글 쿼리 탭이 시트를 읽는다
-    hd: ALLOWED_DOMAIN, prompt: 'select_account'
-  });
-  window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
+  try { sessionStorage.removeItem(AUTH_SILENT_KEY); } catch (e) {}
+  window.location.href = authUrl_({ prompt: 'select_account' });
 };
-async function verifyGoogleToken(token) {
+async function verifyGoogleToken(token, expSec) {
   document.getElementById('loginErr').textContent = '인증 확인 중...';
   // ── 워터폴 제거: userinfo 검증과 동시에 데이터 페치 시작 ──
   try {
@@ -7165,10 +7238,10 @@ async function verifyGoogleToken(token) {
         (info.email || '알 수 없는 계정') + ' — @' + ALLOWED_DOMAIN + ' 계정만 접근 가능합니다.';
       return;
     }
-    sessionStorage.setItem('sephora_token', token);
     currentUser = { name: info.name || info.email, email: info.email, picture: info.picture || '' };
-    sessionStorage.setItem('sephora_auth', JSON.stringify(currentUser));
+    authSave_(token, expSec, currentUser);
     onAuthSuccess(currentUser);
+    authRestoreView_();
   } catch(e) {
     document.getElementById('loginErr').textContent = '로그인 오류: ' + e.message;
   }
@@ -7241,8 +7314,8 @@ function onAuthSuccess(user) {
   }
 }
 window.signOut = function() {
-  sessionStorage.removeItem('sephora_auth');
-  sessionStorage.removeItem('sephora_token');
+  authClear_(false);
+  try { sessionStorage.removeItem(AUTH_SILENT_KEY); sessionStorage.removeItem(AUTH_VIEW_KEY); } catch (e) {}
   if (autoRefreshTimer) clearInterval(autoRefreshTimer);
   location.reload();
 };
@@ -7276,7 +7349,8 @@ function ldRetry() {
   if (url) loadFromAppsScript(url);
 }
 async function loadFromAppsScript(appsScriptUrl, isSilent) {
-  const token = sessionStorage.getItem('sephora_token');
+  const token = authGet_();
+  if (!token && authSilentRenew_()) return;   // 만료 → 조용한 연장 먼저
   if (!token) {
     showStgStatus('❌ 로그인이 필요합니다. 새로고침 후 다시 로그인해주세요.', 'err');
     return;
@@ -7304,9 +7378,9 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     }
     if (data.error) {
       if (data.error === 'INVALID_TOKEN' || data.error === 'NO_TOKEN') {
-        // Token expired: clear cache and return to login
-        sessionStorage.removeItem('sephora_auth');
-        sessionStorage.removeItem('sephora_token');
+        // Token expired: 조용한 연장을 한 번 먼저 시도하고, 안 되면 로그인 화면
+        authClear_(true);
+        if (authSilentRenew_()) return;
         if (autoRefreshTimer) clearInterval(autoRefreshTimer);
         const lo = document.getElementById('loadingOverlay');
         if (lo) lo.style.display = 'none';
