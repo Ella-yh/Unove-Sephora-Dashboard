@@ -118,6 +118,8 @@ body{font-family:'Pretendard','Helvetica Neue',Arial,sans-serif;background:#F2F2
 #mainDataTable th.mt-cty,#mainDataTable td.mt-cty{position:sticky;left:0;background:#fff;z-index:2;text-align:left;font-weight:700;color:#1D2847;width:52px;min-width:52px;max-width:52px;box-sizing:border-box;vertical-align:top;}
 #mainDataTable td.mt-cty.ca{color:#7B3F1D;}
 #mainDataTable th.mt-lbl,#mainDataTable td.ads-metric-lbl{position:sticky;left:52px;background:#fff;z-index:1;text-align:left;}
+/* 2026-11-02 지난주 강조 · 진행 중인 주 옅게 — 쿼리 현황 표(#demandDataTable)와 같은 모양 */
+#mainDataTable th.dmd-hl,#mainDataTable td.dmd-hl{background:rgba(255,196,0,0.18);}#mainDataTable th.dmd-hl{color:#8a5a00;}#mainDataTable .dmd-hl-badge{display:inline-block;margin-left:4px;padding:0 5px;border-radius:8px;background:#f2a900;color:#fff;font-size:8px;letter-spacing:0;text-transform:none;vertical-align:1px;}#mainDataTable td.dmd-ing,#mainDataTable th.dmd-ing{color:#b8bcc6;}#mainDataTable .dmd-ing-badge{display:inline-block;margin-left:4px;padding:0 5px;border-radius:8px;border:1px solid #c9ccd4;color:#9ca3af;font-size:8px;letter-spacing:0;text-transform:none;vertical-align:1px;}
 /* 국가 분리 2차 (2026-10-08) — 국가 칩 1단 · 잠금 표시 */
 .cty-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .cty-row .cty-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;color:#9ca3af;margin-right:2px;}
@@ -4171,6 +4173,8 @@ function renderChart() {
   };
   ctyMainChart_(cfg, data);   // 국가 분리 2차 — 캐나다·전체 계열 · 누적 막대 · 진입 점선 · 잠금 (미국이면 무변경)
   chsMainChart_(cfg, data);   // 판매채널 (2026-10-15) — 콜스 막대 · 입점 점선 · 잠금 (세포라면 무변경)
+  // 2026-11-02 지난주 노란 음영 · 진행 중인 주 회색 — 쿼리 현황과 같은 기준(dmWeekMarks · PT). 주 보기에서만
+  if (mainPeriod === 'weekly' && typeof dmWeekHlPlugin_ === 'function') cfg.plugins = (cfg.plugins || []).concat([dmWeekHlPlugin_(data.map(d => d.date), dmWeekMarks())]);
   const ctx = document.getElementById('mainChart').getContext('2d');
   if (chart) chart.destroy();
   chart = new Chart(ctx, cfg);
@@ -5608,7 +5612,10 @@ function renderMainDataTable(data) {
   _mtCaIn = CTY === 'US' ? null : ctyCaInflowSeries_(data);
   _mtCaInWhy = _mtCaIn ? '' : (ctyCaComRows_().why || '');
   let html = '<thead><tr><th class="mt-cty">국가</th><th class="mt-lbl">지표</th>';
-  data.forEach(function(d){ html += '<th>' + (d.label || d.date.slice(5)) + '</th>'; });
+  // 2026-11-02 지난주 강조 · 진행 중인 주 옅게 (주 보기만 · 쿼리 현황 표와 같은 클래스)
+  const _wm = (mainPeriod === 'weekly' && typeof dmWeekMarks === 'function') ? dmWeekMarks() : null;
+  const _wc = function(k){ return !_wm ? '' : k === _wm.last ? ' class="dmd-hl"' : k >= _wm.cur ? ' class="dmd-ing"' : ''; };
+  data.forEach(function(d){ html += '<th' + _wc(d.date) + '>' + (d.label || d.date.slice(5)) + (!_wm ? '' : d.date === _wm.last ? '<span class="dmd-hl-badge">지난주</span>' : d.date >= _wm.cur ? '<span class="dmd-ing-badge">진행 중</span>' : '') + '</th>'; });
   html += '</tr></thead><tbody>';
   const ctyName = { US:'미국', CA:'캐나다', ALL:'전체' }[CTY] + (CHS === 'KOHLS' ? '<br><span style="font-size:9px;color:#5B2C83">콜스</span>' : CHS === 'ALL' ? '<br><span style="font-size:9px;color:#5B2C83">세포라+콜스</span>' : '');
   rows.forEach(function(m, ri){
@@ -5616,12 +5623,13 @@ function renderMainDataTable(data) {
           + '<td class="ads-metric-lbl">' + m.label + '</td>';
     data.forEach(function(d, i){
       const v = m.get(d, i);
-      html += '<td>' + m.fmt(typeof v === 'number' ? v : null) + '</td>';
+      html += '<td' + _wc(d.date) + '>' + m.fmt(typeof v === 'number' ? v : null) + '</td>';
     });
     html += '</tr>';
   });
   html += '</tbody>';
   el.innerHTML = html;
+  if (typeof dmScrollRight_ === 'function') dmScrollRight_(el.parentElement);   // 최신 주(오른쪽 끝)가 보이게
 }
 // Reposition on resize
 let _roTimer;
@@ -8936,6 +8944,19 @@ window.DSTART_WK='2026-02-08'; window.DSTART_MO='2026-02';
 window.DSTATE=window.DSTATE&&window.DSTATE.period?window.DSTATE:{ g:{'합계':true}, a:{}, ov:{visits:true,sales:true,klImpr:false,adImpr:false,imprSum:false}, axis:{qmin:'',qmax:'',vmin:'',vmax:'',rmin:'',rmax:'',imin:'',imax:''}, period:'weekly', fMonths:new Set(), fWeeks:new Set(), collapsed:true };
 // 2026-11-02 — 「지난주」 = 미국 서부(PT) 기준으로 토요일이 끝난 가장 최근 주(일~토). 진행 중인 주 = 그 다음 주. 매일 자동으로 바뀐다
 function dmWeekMarks(){var t=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));t.setHours(0,0,0,0);var cur=new Date(t);cur.setDate(t.getDate()-t.getDay());var prev=new Date(cur);prev.setDate(cur.getDate()-7);function f(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}return {last:f(prev),cur:f(cur)};}
+// 2026-11-02 공용 — 그래프 플러그인: 지난주 칸 노란 음영+「지난주」, 진행 중인 주부터 오른쪽 끝까지 회색+「진행 중」. keys = x축 칸의 주 키(일요일 YYYY-MM-DD)
+function dmWeekHlPlugin_(keys,wm){var hlI=keys.indexOf(wm.last),ingI=keys.findIndex(function(k){return k>=wm.cur;});
+  return {id:'dmWeekHlMain',beforeDatasetsDraw:function(c){if(hlI<0&&ingI<0)return;var xs=c.scales.x,ca=c.chartArea,n=keys.length;if(!xs||!n)return;var w=(ca.right-ca.left)/n,g=c.ctx;g.save();
+    if(hlI>=0){var x=xs.getPixelForValue(hlI);g.fillStyle='rgba(255,196,0,0.16)';g.fillRect(x-w/2,ca.top,w,ca.bottom-ca.top);g.fillStyle='#b07800';g.font='bold 9px sans-serif';g.textAlign='center';g.fillText('지난주',x,ca.top+10);}
+    if(ingI>=0){var x2=xs.getPixelForValue(ingI);g.fillStyle='rgba(150,155,165,0.10)';g.fillRect(x2-w/2,ca.top,ca.right-(x2-w/2),ca.bottom-ca.top);g.fillStyle='#9ca3af';g.font='9px sans-serif';g.textAlign='center';g.fillText('진행 중',Math.min(x2,ca.right-g.measureText('진행 중').width/2-2),ca.top+(hlI>=0?22:10));}
+    g.restore();}};}
+// 2026-11-02 공용 — 표를 그린 뒤 오른쪽 끝(최신)으로. 화면 밖이라 아직 폭이 없으면 보일 때 한 번 더. 사람이 직접 스크롤하면 다음에 다시 그릴 때까지 그대로 둔다
+function dmScrollRight_(wrap){if(!wrap)return;wrap._dmAuto=true;
+  function go(){if(!wrap._dmAuto)return;var t=wrap.scrollWidth-wrap.clientWidth;if(t>0&&Math.abs(wrap.scrollLeft-t)>1){wrap._dmProg=true;wrap.scrollLeft=t;}}
+  if(!wrap._dmInit){wrap._dmInit=true;
+    wrap.addEventListener('scroll',function(){if(wrap._dmProg){wrap._dmProg=false;return;}wrap._dmAuto=false;},{passive:true});
+    if(window.IntersectionObserver)new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)requestAnimationFrame(wrap._dmGo);});}).observe(wrap);}
+  wrap._dmGo=go;requestAnimationFrame(go);}
 function dmQueryKeys(p){var dm=window.DEMAND||{},q=dm.query||{},set={};
   ['google','amazon'].forEach(function(kind){var b=q[kind]&&q[kind][p];if(!b)return;Object.keys(b).forEach(function(lab){Object.keys(b[lab]||{}).forEach(function(k){set[k]=1;});});});
   var keys=Object.keys(set).sort();
