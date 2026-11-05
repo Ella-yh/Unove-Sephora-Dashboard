@@ -554,6 +554,9 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
     <div class="sb-item" data-tab="onsite" onclick="switchTab('onsite')">
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><rect x="1" y="1" width="12" height="12" rx="1.5"/><line x1="1" y1="5" x2="13" y2="5"/><line x1="5" y1="5" x2="5" y2="13"/></svg></span><span class="sb-text">온사이트 광고</span>
     </div>
+    <div class="sb-item" data-tab="online" onclick="switchTab('online')">
+      <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><polyline points="1,10 5,6 8,8.5 13,3"/><line x1="1" y1="13" x2="13" y2="13"/></svg></span><span class="sb-text">온라인매출(sell-out)</span>
+    </div>
     <div class="sb-item" data-tab="query" onclick="switchTab('query')">
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><circle cx="6" cy="6" r="4.3"/><line x1="9.2" y1="9.2" x2="13" y2="13"/></svg></span><span class="sb-text">구글 쿼리</span>
     </div>
@@ -2680,6 +2683,49 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
   </div>
 </div>
 </div><!-- /tabSettings -->
+<!-- ═══ 온라인매출(sell-out) 탭 — 매출 = 세포라 브랜드포털 이커머스 (실매출 아님) ═══ -->
+<style id="onlStyle">#onlineDataTable th.dmd-hl,#onlineDataTable td.dmd-hl{background:rgba(255,196,0,0.18);}#onlineDataTable th.dmd-hl{color:#8a5a00;}#onlineDataTable .dmd-hl-badge{display:inline-block;margin-left:4px;padding:0 5px;border-radius:8px;background:#f2a900;color:#fff;font-size:8px;letter-spacing:0;text-transform:none;vertical-align:1px;}#onlineDataTable td.dmd-ing,#onlineDataTable th.dmd-ing{color:#b8bcc6;}#onlineDataTable .dmd-ing-badge{display:inline-block;margin-left:4px;padding:0 5px;border-radius:8px;border:1px solid #c9ccd4;color:#9ca3af;font-size:8px;letter-spacing:0;text-transform:none;vertical-align:1px;}.onl-sel{font-size:12px;padding:5px 8px;border:1px solid #d5d5da;border-radius:6px;background:#fff;color:#333;font-family:inherit;}.onl-note{margin:0 28px 10px;padding:8px 12px;border-radius:6px;font-size:11px;line-height:1.6;background:#fff8e6;color:#7a5a00;border:1px solid #f0dca8;}</style>
+<div id="tabOnline" style="display:none;">
+<div class="kpi-row" id="onlKpiRow"></div>
+<div class="filter-row">
+  <div class="filter-block"><div class="filter-lbl">Month</div><select class="onl-sel" id="onlMonth" onchange="setOnlFilter()"><option value="">ALL</option></select></div>
+  <div class="filter-block"><div class="filter-lbl">Week (Sun–Sat)</div><select class="onl-sel" id="onlWeek" onchange="setOnlFilter()"><option value="">ALL</option></select></div>
+</div>
+<div id="onlSrcNote" class="onl-note" style="display:none;"></div>
+<div class="chart-sec">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <div class="sec-hdr" style="margin-bottom:0;flex:1;">온라인매출 그래프 <span class="cty-badge" title="미국 브랜드포털 이커머스 파일(RAW_commerce) 기준입니다.">미국 · 포털 매출 기준</span></div>
+    <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+      <button class="ads-p-btn" data-onl-period="monthly" onclick="setOnlPeriod('monthly')">월</button>
+      <button class="ads-p-btn active" data-onl-period="weekly" onclick="setOnlPeriod('weekly')">주</button>
+      <button class="ads-p-btn" data-onl-period="daily" onclick="setOnlPeriod('daily')">일</button>
+    </div>
+  </div>
+  <div class="chart-card" style="position:relative;">
+    <div class="leg-row" style="align-items:center;flex-wrap:wrap;gap:6px;">
+      <div class="leg"><div class="leg-dot" style="background:#d97070;"></div><span>Sales (포털)</span></div>
+      <span class="cur-sw" title="달러 = 포털 원본 · 원화 = 날짜별 환율(2026-08-31까지 1,500원 · 09-01부터 1,400원)"><button class="on" data-ocur="KRW" onclick="setOnlCur('KRW')">₩ 원화</button><button data-ocur="USD" onclick="setOnlCur('USD')">$ 달러</button></span>
+      <button class="mkr-btn active" data-onl-show="visits" onclick="toggleOnl(this)">Visits</button>
+      <button class="mkr-btn" data-onl-show="cvr" onclick="toggleOnl(this)">CVR</button>
+      <button class="mkr-btn" data-onl-show="ad" onclick="toggleOnl(this)">페이드 비용</button>
+      <button class="mkr-btn" data-onl-show="brand" onclick="toggleOnl(this)">브랜딩 비용</button>
+      <button class="mkr-btn" data-onl-show="kol" onclick="toggleOnl(this)">KOL 비용</button>
+      <button class="mkr-btn" data-onl-show="ch" onclick="toggleOnl(this)">채널마케팅 비용</button>
+      <button class="mkr-btn" data-onl-show="total" onclick="toggleOnl(this)">광고비(총계)</button>
+      <button class="mkr-btn" data-onl-show="roas" onclick="toggleOnl(this)">온라인 ROAS</button>
+      <button class="mkr-btn" data-onl-show="roasT" onclick="toggleOnl(this)">전체 광고비 ROAS</button>
+    </div>
+    <div class="chart-wrap"><canvas id="onlineChart"></canvas></div>
+    <div class="chart-note" style="line-height:1.7;">* CVR = 주문 수량 / Visits TY × 100. 브랜딩·KOL·채널마케팅·광고비(총계)·전체 광고비 ROAS는 일 단위 데이터가 없어 월·주에서만 표시합니다.</div>
+  </div>
+  <div class="chart-card" style="margin-top:10px;">
+    <div class="chart-sec-sub" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>지표 확인용 표 (현재 필터·주기 기준)</span>
+      <span class="cur-sw" title="매출 행 통화"><button class="on" data-otcur="KRW" onclick="setOnlTblCur('KRW')">₩ 원화</button><button data-otcur="USD" onclick="setOnlTblCur('USD')">$ 달러</button></span></div>
+    <div class="ads-tbl-wrap"><table class="ads-metric-tbl" id="onlineDataTable"></table></div>
+    <div class="chart-note" style="text-align:left;color:#999;margin-top:6px;line-height:1.7;">매출 = 세포라 브랜드포털 이커머스 Sales TY 합계(주문일 기준 · .COM만, 매장 제외). 환불·반품을 처리일에 빼는 실매출과 정의가 달라 통합 대시보드 매출보다 크게 나옵니다.<br>온라인 ROAS = 포털 매출 ÷ (페이드 + 세포라 온사이트). 전체 광고비 ROAS = 포털 매출 ÷ 광고비(총계). 일 단위 온라인 ROAS는 페이드만 씁니다.</div>
+  </div>
+</div>
+</div>
 <!-- ═══ 구글 쿼리 탭 (/query-us/ 를 그대로 띄운다) ═══ -->
 <div id="tabQuery" style="display:none;height:100%;">
   <iframe id="qusFrame" title="구글 쿼리" style="width:100%;height:100%;border:0;display:block;background:#fff;"></iframe>
@@ -6344,12 +6390,12 @@ function loadTabCache_(key) {
 }
 function switchTab(tab) {
   document.querySelectorAll('.sb-item').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  const tabs = {main:'tabMain',channel:'tabChannel',ads:'tabAds',settings:'tabSettings',events:'tabEvents',onsite:'tabOnsite',bm:'tabBm',sku:'tabSku',query:'tabQuery'};
+  const tabs = {main:'tabMain',channel:'tabChannel',ads:'tabAds',settings:'tabSettings',events:'tabEvents',onsite:'tabOnsite',bm:'tabBm',sku:'tabSku',query:'tabQuery',online:'tabOnline'};
   Object.entries(tabs).forEach(([k,id]) => {
     const el = document.getElementById(id);
     if (el) el.style.display = k === tab ? '' : 'none';
   });
-  const titles = {main:'통합 대시보드',channel:'유입 채널별',ads:'퍼포먼스 광고',events:'이벤트 관리',settings:'Settings',onsite:'온사이트 광고',bm:'B&M · 재고',sku:'SKU 실매출',query:'구글 쿼리'};
+  const titles = {main:'통합 대시보드',channel:'유입 채널별',ads:'퍼포먼스 광고',events:'이벤트 관리',settings:'Settings',onsite:'온사이트 광고',bm:'B&M · 재고',sku:'SKU 실매출',query:'구글 쿼리',online:'온라인매출(sell-out)'};
   const pt = document.getElementById('pageTitle');
   if (pt) pt.textContent = titles[tab] || '';
   try { ctyCurBadge_(); } catch(e){}
@@ -6365,6 +6411,7 @@ function switchTab(tab) {
   if (tab === 'sku')     { try { if (!window.SKUDATA) window.SKUDATA = loadTabCache_('sephora_cache_sku'); refreshSKU(); } catch(e){} }
   if (tab === 'events')  { try { renderTypeLegend(); renderEventListFull(); } catch(e){} }
   if (tab === 'query')   openQueryTab();
+  if (tab === 'online')  { try { refreshOnline(); } catch(e){ console.warn('[online]', e); } }
 }
 // ── KOL Table ─────────────────────────────────────────────────────────────────
 let kolSortKey = 'date';
@@ -6503,6 +6550,190 @@ function renderKolTable() {
   }).join('');
 }
 // ── end KOL ───────────────────────────────────────────────────────────────────
+// ═══ 온라인매출(sell-out) 탭 (2026-11-05) — 매출만 포털 이커머스로 바꾼 통합 대시보드 그래프·표.
+//     포털 매출(RAW_commerce Sales TY)은 대시보드 데이터에 없어 로그인 토큰(시트 읽기 전용)으로 시트에서 직접 읽는다.
+//     시트를 못 읽으면 유입 탭 데이터(Raw_유입 · NA 제외)로 대신 그리고 화면에 알린다. 실매출 탭·통합 대시보드 값은 건드리지 않는다.
+const ONL_SHEET = '1_Wbyc4AEpm_RHHhD-8yCmoXUc7AVoYjLOI1eAkuYoO0';
+const ONL = { period:'weekly', cur:'KRW', tcur:'KRW', month:'', week:'',
+  show:{ visits:true, cvr:false, ad:false, brand:false, kol:false, ch:false, total:false, roas:false, roasT:false },
+  byDate:null, src:'', at:0, loading:false, err:'' };
+let onlChart = null;
+function onlDate_(v) {
+  if (typeof v === 'number') return new Date(Date.UTC(1899, 11, 30) + Math.round(v) * 86400000).toISOString().slice(0, 10);
+  var s = String(v == null ? '' : v).trim();
+  return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : '';
+}
+function onlNum_(v) {
+  if (typeof v === 'number') return v;
+  var n = parseFloat(String(v == null ? '' : v).replace(/[^0-9.\-]/g, ''));
+  return isNaN(n) ? 0 : n;
+}
+async function onlLoad_() {
+  if (ONL.loading) return;
+  if (ONL.byDate && ONL.src === 'commerce' && Date.now() - ONL.at < 600000) return;   // 10분 안에는 다시 읽지 않는다
+  ONL.loading = true; ONL.err = '';
+  try {
+    const token = sessionStorage.getItem('sephora_token');
+    if (!token) throw new Error('로그인 토큰 없음');
+    const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + ONL_SHEET + '/values/' + encodeURIComponent('RAW_commerce!A2:I') + '?valueRenderOption=UNFORMATTED_VALUE';
+    const res = await fetch(url, { headers:{ Authorization:'Bearer ' + token } });
+    if (!res.ok) throw new Error('시트 읽기 실패 (' + res.status + ')');
+    const js = await res.json(), m = {};
+    (js.values || []).forEach(function(r) {
+      var d = onlDate_(r[0]);
+      if (d) m[d] = (m[d] || 0) + onlNum_(r[8]);
+    });
+    if (!Object.keys(m).length) throw new Error('RAW_commerce 행 없음');
+    ONL.byDate = m; ONL.src = 'commerce'; ONL.at = Date.now();
+  } catch (e) {
+    ONL.err = e.message || String(e);
+    if (ONL.src !== 'commerce') {
+      // 대체 — Raw_유입(원화 · NA 제외)을 달러로 되돌린다. 유입 탭 국가가 미국일 때만 미국 값이다.
+      var m2 = {};
+      if (typeof CTY === 'undefined' || CTY === 'US') (CH_RAW || []).forEach(function(r) { m2[r.date] = (m2[r.date] || 0) + (r.sales || 0) / fxRate(r.date); });
+      ONL.byDate = m2; ONL.src = 'channel';
+    }
+  } finally { ONL.loading = false; }
+}
+function onlDates_(period) {
+  var ds = Object.keys(ONL.byDate || {}).sort();
+  return ds.filter(function(d) {
+    return (!ONL.month || d.slice(0, 7) === ONL.month) && (!ONL.week || getWeekKey(d) === ONL.week);
+  });
+}
+function onlData_() {
+  var p = ONL.period, ds = onlDates_(), b = {}, v = {}, o = {}, sp = {};
+  RAW_SKU.forEach(function(r) { v[r.date] = (v[r.date] || 0) + (r.visits || 0); o[r.date] = (o[r.date] || 0) + (r.orders || 0); });
+  ADS_RAW.forEach(function(r) { sp[r.date] = (sp[r.date] || 0) + (r.spend || 0); });
+  ds.forEach(function(d) {
+    var k = p === 'daily' ? d : getPeriodKey(d, p);
+    var x = b[k] || (b[k] = { date:k, label:p === 'daily' ? d.slice(5) : fmtPeriodLabel(k, p), visits:0, orders:0, sales:0, sales_krw:0, spend:0 });
+    var s = ONL.byDate[d] || 0;
+    x.visits += v[d] || 0; x.orders += o[d] || 0; x.sales += s; x.sales_krw += s * fxRate(d); x.spend += sp[d] || 0;
+  });
+  return Object.values(b).sort(function(a, c) { return a.date.localeCompare(c.date); }).map(function(x) {
+    x.cvr = x.visits > 0 ? x.orders / x.visits * 100 : 0;
+    if (p === 'daily') { x.roas = roasSafe_(x.sales_krw, x.spend); x.roasT = null; }
+    else {
+      x.roas = roasSafe_(x.sales_krw, costVal(p, '퍼포먼스 비용', x.date) + costVal(p, '온사이트 비용', x.date));
+      x.roasT = roasSafe_(x.sales_krw, costVal(p, '광고비 총계', x.date));
+    }
+    return x;
+  });
+}
+function onlCost_(d, label) { return ONL.period === 'daily' ? null : costVal(ONL.period, label === '채널' ? channelLabel(ONL.period) : label, d.date); }
+function onlFillFilters_() {
+  var ds = Object.keys(ONL.byDate || {}).sort();
+  var fill = function(id, vals, lab, cur) {
+    var el = document.getElementById(id); if (!el) return;
+    el.innerHTML = '<option value="">ALL</option>' + vals.map(function(x) { return '<option value="' + x + '"' + (x === cur ? ' selected' : '') + '>' + lab(x) + '</option>'; }).join('');
+  };
+  fill('onlMonth', [...new Set(ds.map(function(d) { return d.slice(0, 7); }))], function(m) { return m; }, ONL.month);
+  var src = ONL.month ? ds.filter(function(d) { return d.slice(0, 7) === ONL.month; }) : ds;
+  var wks = [...new Set(src.map(getWeekKey))];
+  if (ONL.week && wks.indexOf(ONL.week) < 0) ONL.week = '';
+  fill('onlWeek', wks, function(w) { return fmtPeriodLabel(w, 'weekly'); }, ONL.week);
+}
+function onlRenderNote_() {
+  var el = document.getElementById('onlSrcNote'); if (!el) return;
+  if (ONL.src === 'channel') {
+    el.style.display = '';
+    el.textContent = '시트를 직접 읽지 못해(' + ONL.err + ') 유입 탭 매출(NA 채널 제외)로 표시 중입니다. 포털 이커머스 합계보다 약 10% 작게 나옵니다. RAW_매출유입 시트 접근 권한을 확인해 주세요.';
+  } else if (ONL.err) {
+    el.style.display = '';
+    el.textContent = '시트를 새로 읽지 못해(' + ONL.err + ') 마지막으로 읽은 값을 표시 중입니다.';
+  } else el.style.display = 'none';
+}
+function onlRenderKpi_(data) {
+  var el = document.getElementById('onlKpiRow'); if (!el) return;
+  var sum = function(k) { return data.reduce(function(a, d) { return a + (d[k] || 0); }, 0); };
+  var v = sum('visits'), o = sum('orders'), s = sum('sales'), sk = sum('sales_krw');
+  var card = function(t, val, sub) { return '<div class="kpi"><div class="kpi-label">' + t + '</div><div class="kpi-value">' + val + '</div><div class="kpi-sub">' + (sub || '') + '</div></div>'; };
+  el.innerHTML = card('포털 매출', curFmt_(ONL.cur === 'USD' ? s : sk, ONL.cur), ONL.cur === 'USD' ? curFmt_(sk, 'KRW') : curFmt_(s, 'USD'))
+    + card('TOTAL VISITS', Math.round(v).toLocaleString('en-US'), '포털')
+    + card('CVR', (v > 0 ? o / v * 100 : 0).toFixed(2) + '%', '주문 수량 ' + Math.round(o).toLocaleString('en-US'));
+}
+function onlRenderChart_(data) {
+  var S = ONL.show, P = ONL.period, cur = ONL.cur, n = data.length, cost = P !== 'daily';
+  var ln = function(label, vals, color, axis, order) { return { label:label, data:vals, type:'line', borderColor:color, backgroundColor:'transparent', borderWidth:1.8, pointRadius:n > 40 ? 0 : 2, pointHoverRadius:4, pointBackgroundColor:color, spanGaps:false, fill:false, yAxisID:axis, order:order == null ? 0 : order, tension:0.25 }; };
+  var ds = [];
+  ds.push({ label:'Sales (포털)', data:data.map(function(d) { return cur === 'USD' ? d.sales : d.sales_krw; }), type:'bar', backgroundColor:makeGrad('onlineChart', '#d97070', 0.85, 0.45), hoverBackgroundColor:makeGrad('onlineChart', '#d97070', 0.95, 0.6), yAxisID:'yS', order:2, barPercentage:0.5, categoryPercentage:0.85 });
+  if (S.visits) ds.push(Object.assign(ln('Visits', data.map(function(d) { return d.visits; }), '#6aadd5', 'yV', 3), { fill:true, backgroundColor:makeGrad('onlineChart', '#6aadd5', 0.15, 0), pointRadius:0 }));
+  if (S.cvr) ds.push(ln('CVR', data.map(function(d) { return d.cvr; }), '#8878d0', 'yC', 1));
+  if (S.ad) ds.push(ln('페이드 비용', data.map(function(d) { return P === 'daily' ? (d.spend || null) : costVal(P, '퍼포먼스 비용', d.date); }), '#e8c84a', 'yA'));
+  if (S.brand && cost) ds.push(ln('브랜딩 비용', data.map(function(d) { return onlCost_(d, '브랜딩 비용'); }), '#e07b39', 'yA'));
+  if (S.kol && cost) ds.push(ln('KOL 비용', data.map(function(d) { return onlCost_(d, 'KOL 비용'); }), '#1a7a4a', 'yA'));
+  if (S.ch && cost) ds.push(ln('채널마케팅 비용', data.map(function(d) { return onlCost_(d, '채널'); }), '#c2578a', 'yA'));
+  if (S.total && cost) ds.push(ln('광고비(총계)', data.map(function(d) { return onlCost_(d, '광고비 총계'); }), '#4a6fa5', 'yA'));
+  if (S.roas) ds.push(ln('온라인 ROAS', data.map(function(d) { return d.roas != null ? Math.round(d.roas * 100) : null; }), '#4bc8a0', 'yR', -1));
+  if (S.roasT && cost) ds.push(ln('전체 광고비 ROAS', data.map(function(d) { return d.roasT != null ? Math.round(d.roasT * 100) : null; }), '#1b6e63', 'yR', -1));
+  var showA = S.ad || (cost && (S.brand || S.kol || S.ch || S.total));
+  var money = function(u) { return function(v) { return v >= 1000000 ? u + (v / 1000000).toFixed(1) + 'M' : v >= 1000 ? u + (v / 1000).toFixed(0) + 'K' : u + v; }; };
+  var cfg = { type:'bar', data:{ labels:data.map(function(d) { return d.label; }), datasets:ds }, plugins:[], options:{ responsive:true, maintainAspectRatio:false, layout:{ padding:{ top:4 } }, interaction:{ mode:'index', intersect:false },
+    plugins:{ legend:{ display:false }, tooltip:{ backgroundColor:'#fff', titleColor:'#222', bodyColor:'#555', borderColor:'#E0E0E4', borderWidth:1, padding:10, callbacks:{
+      title:function(c) { return '📅 ' + data[c[0].dataIndex].label; },
+      label:function(c) { var v = c.raw, l = c.dataset.label; if (v == null) return null;
+        if (l === 'Visits') return '  Visits: ' + v.toLocaleString();
+        if (l === 'Sales (포털)') return '  ' + l + ': ' + curFmt_(v, cur);
+        if (l === 'CVR') return '  CVR: ' + v.toFixed(2) + '%';
+        if (l.indexOf('ROAS') >= 0) return '  ' + l + ': ' + v + '%';
+        return '  ' + l + ': ₩' + Math.round(v).toLocaleString('ko-KR'); } } } },
+    scales:{ x:{ grid:{ color:'rgba(0,0,0,0.07)' }, ticks:{ font:{ size:9 }, color:'#888', maxRotation:45 } },
+      yV:{ type:'linear', position:'left', display:S.visits, grid:{ color:'rgba(0,0,0,0.07)' }, ticks:{ font:{ size:9 }, color:'#888', callback:function(v) { return v >= 1000 ? (v / 1000).toFixed(0) + 'K' : v; } }, title:{ display:true, text:'Visits', font:{ size:9 }, color:'#6aadd5' } },
+      yS:{ type:'linear', position:'right', grid:{ drawOnChartArea:false }, beginAtZero:true, ticks:{ font:{ size:9 }, color:'#888', callback:money(cur === 'USD' ? '$' : '₩') }, title:{ display:true, text:cur === 'USD' ? 'Sales 포털 ($)' : 'Sales 포털 (₩)', font:{ size:9 }, color:'#d97070' } },
+      yC:{ type:'linear', position:'right', display:S.cvr, grid:{ drawOnChartArea:false }, ticks:{ font:{ size:9 }, color:'#8878d0', callback:function(v) { return v.toFixed(1) + '%'; } }, title:{ display:true, text:'CVR(%)', font:{ size:9 }, color:'#8878d0' } },
+      yA:{ type:'linear', position:'right', display:showA, grid:{ drawOnChartArea:false }, min:0, ticks:{ font:{ size:9 }, color:'#e8c84a', callback:money('₩') }, title:{ display:true, text:'비용(₩)', font:{ size:9 }, color:'#e8c84a' } },
+      yR:{ type:'linear', position:'left', display:S.roas || (S.roasT && cost), grid:{ drawOnChartArea:false }, ticks:{ font:{ size:9 }, color:'#4bc8a0', callback:function(v) { return v + '%'; } }, title:{ display:true, text:'ROAS(%)', font:{ size:9 }, color:'#4bc8a0' } } } } };
+  if (P === 'weekly' && typeof dmWeekHlPlugin_ === 'function') cfg.plugins = [dmWeekHlPlugin_(data.map(function(d) { return d.date; }), dmWeekMarks())];
+  var c = document.getElementById('onlineChart'); if (!c) return;
+  if (onlChart) onlChart.destroy();
+  onlChart = new Chart(c.getContext('2d'), cfg);
+}
+function onlRenderTable_(data) {
+  var el = document.getElementById('onlineDataTable'); if (!el) return;
+  var P = ONL.period, usd = ONL.tcur === 'USD';
+  var rows = [
+    ['Visits', mtblCount, function(d) { return d.visits; }],
+    ['Sales 포털' + (usd ? ' (USD)' : ''), usd ? mtblUsd : mtblMoney, function(d) { return usd ? d.sales : d.sales_krw; }],
+    ['CVR', function(v) { return mtblPct(v, false); }, function(d) { return d.cvr; }],
+    ['페이드 비용', mtblMoney, function(d) { return P === 'daily' ? d.spend : costVal(P, '퍼포먼스 비용', d.date); }],
+    ['채널마케팅 비용', mtblMoney, function(d) { return onlCost_(d, '채널'); }],
+    ['광고비(총계)', mtblMoney, function(d) { return onlCost_(d, '광고비 총계'); }],
+    ['브랜딩 비용', mtblMoney, function(d) { return onlCost_(d, '브랜딩 비용'); }],
+    ['KOL 비용', mtblMoney, function(d) { return onlCost_(d, 'KOL 비용'); }],
+    ['온라인 ROAS', function(v) { return mtblPct(v, true); }, function(d) { return d.roas; }],
+    ['전체 광고비 ROAS', function(v) { return mtblPct(v, true); }, function(d) { return d.roasT; }]
+  ];
+  var wm = (P === 'weekly' && typeof dmWeekMarks === 'function') ? dmWeekMarks() : null;
+  var wc = function(k) { return !wm ? '' : k === wm.last ? ' class="dmd-hl"' : k >= wm.cur ? ' class="dmd-ing"' : ''; };
+  var h = '<thead><tr><th class="mt-cty">국가</th><th class="mt-lbl">지표</th>';
+  data.forEach(function(d) { h += '<th' + wc(d.date) + '>' + d.label + (!wm ? '' : d.date === wm.last ? '<span class="dmd-hl-badge">지난주</span>' : d.date >= wm.cur ? '<span class="dmd-ing-badge">진행 중</span>' : '') + '</th>'; });
+  h += '</tr></thead><tbody>';
+  rows.forEach(function(m, i) {
+    h += '<tr>' + (i === 0 ? '<td class="mt-cty" rowspan="' + rows.length + '">미국</td>' : '') + '<td class="ads-metric-lbl">' + m[0] + '</td>';
+    data.forEach(function(d) { var v = m[2](d); h += '<td' + wc(d.date) + '>' + m[1](typeof v === 'number' ? v : null) + '</td>'; });
+    h += '</tr>';
+  });
+  el.innerHTML = h + '</tbody>';
+  if (typeof dmScrollRight_ === 'function') dmScrollRight_(el.parentElement);
+}
+function onlRender_() {
+  if (!ONL.byDate) return;
+  onlFillFilters_(); onlRenderNote_();
+  var data = onlData_();
+  onlRenderKpi_(data); onlRenderChart_(data); onlRenderTable_(data);
+}
+async function refreshOnline() {
+  if (!ONL.byDate) { var n = document.getElementById('onlSrcNote'); if (n) { n.style.display = ''; n.textContent = '포털 매출을 읽는 중입니다…'; } }
+  await onlLoad_();
+  onlRender_();
+}
+window.setOnlPeriod = function(p) { ONL.period = p; document.querySelectorAll('[data-onl-period]').forEach(function(b) { b.classList.toggle('active', b.dataset.onlPeriod === p); }); onlRender_(); };
+window.setOnlCur = function(c) { ONL.cur = c; document.querySelectorAll('[data-ocur]').forEach(function(b) { b.classList.toggle('on', b.dataset.ocur === c); }); onlRender_(); };
+window.setOnlTblCur = function(c) { ONL.tcur = c; document.querySelectorAll('[data-otcur]').forEach(function(b) { b.classList.toggle('on', b.dataset.otcur === c); }); onlRender_(); };
+window.toggleOnl = function(btn) { var k = btn.dataset.onlShow; ONL.show[k] = !ONL.show[k]; btn.classList.toggle('active', ONL.show[k]); onlRender_(); };
+window.setOnlFilter = function() { ONL.month = document.getElementById('onlMonth').value; ONL.week = document.getElementById('onlWeek').value; onlRender_(); };
+window.refreshOnline = refreshOnline;
 // ═══ 구글 쿼리 탭 — /query-us/ 를 iframe 으로 띄우고, 이 대시보드 로그인 토큰(시트 읽기 전용 포함)을
 //     그 페이지 출처로만 넘긴다. 토큰으로 시트를 못 읽으면 탭 안에서 따로 로그인 화면이 뜬다.
 const QUS_URL = 'https://wyatt-biz-dashboard.vercel.app/query-us/?brand=UN';
