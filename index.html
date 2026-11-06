@@ -1347,7 +1347,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
     </div>
 
     <div class="sec-hdr" style="margin-top:22px">PLA SKU별 성과</div>
-    <div class="chart-card"><div class="chart-sec-title">SKU별 매출 & ROAS</div><div style="position:relative;height:360px"><canvas id="onsSku"></canvas></div></div>
+    <div class="chart-card"><div class="chart-sec-title">SKU별 매출 & ROAS</div><div id="onsSkuWrap" style="position:relative;height:360px"><canvas id="onsSku"></canvas></div></div>
     <div class="chart-card" style="margin-top:12px;overflow-x:auto">
       <table id="onsSkuTbl" style="width:100%;border-collapse:collapse">
         <thead><tr><th>Product</th><th>단가($)</th><th>Spend</th><th>Sales</th><th>ROAS</th><th>매출%</th><th>CVR</th><th>CPM</th><th>CPC</th><th>CPA</th></tr></thead>
@@ -8099,8 +8099,8 @@ function refreshOnsite() {
   var STEP = USD ? 5e3 : 5e6;   // 축 눈금 단위 — 원화 500만 · 달러 5천
   var lbl = function(p,i){ var d = String(p).slice(5).replace('-','/'); return i===0 ? '~'+d : d; };
   // SKU 단가($)·표시명 매핑 (라이브 name 기준 — 데이터엔 단가 없음)
-  var PRICE = {'Deep Damage Repair Hydrating Shampoo':22,'Deep Damage Repair Hydrating Hair Mask':26,'Deep Damage Repair Mini Trio Hair Set':28,'Silk Shine Hair Oil for Damaged Hair':25,'Mini Silk Shine Hair Oil for Damaged Hair':13,'Detangling Heat Protection Spray for Damaged Hair':28,'Damage Repair & Shine Leave in Conditioner':28,'Frizz-Calming Leave in Conditioner with Heat Protectant':26,'Mini Deep Damage Repair Hydrating Hair Mask':11,'Frizz-Calming Gel Hair Taming Wand':15,'Frizz-Calming Sleek Hydrating Conditioner':22,'Damage Repair Hydrating Conditioner':22};
-  var DNAME = {'Deep Damage Repair Hydrating Shampoo':'Deep Damage Shampoo 290ml','Deep Damage Repair Hydrating Hair Mask':'Deep Damage Hair Mask 207ml','Deep Damage Repair Mini Trio Hair Set':'Deep Essentials Kit (Mini Trio)','Silk Shine Hair Oil for Damaged Hair':'Silk Shine Hair Oil 70ml','Mini Silk Shine Hair Oil for Damaged Hair':'Mini Silk Shine Oil 10ml','Detangling Heat Protection Spray for Damaged Hair':'Detangling Heat Protectant Spray','Damage Repair & Shine Leave in Conditioner':'Damage Repair & Shine LIC 150ml','Frizz-Calming Leave in Conditioner with Heat Protectant':'Frizz-Calming LIC 150ml','Mini Deep Damage Repair Hydrating Hair Mask':'Mini Deep Damage Hair Mask 40ml','Frizz-Calming Gel Hair Taming Wand':'Frizz-Calming Gel Taming Wand','Frizz-Calming Sleek Hydrating Conditioner':'Sleek Conditioner 290ml','Damage Repair Hydrating Conditioner':'Damage Conditioner 290ml'};
+  var PRICE = {'Deep Damage Repair Hydrating Shampoo':22,'Deep Damage Repair Hydrating Hair Mask':26,'Deep Damage Repair Mini Trio Hair Set':28,'Silk Shine Hair Oil for Damaged Hair':25,'Mini Silk Shine Hair Oil for Damaged Hair':13,'Detangling Heat Protection Spray for Damaged Hair':28,'Damage Repair & Shine Leave in Conditioner':28,'Frizz-Calming Leave in Conditioner with Heat Protectant':26,'Mini Deep Damage Repair Hydrating Hair Mask':11,'Frizz-Calming Gel Hair Taming Wand':15,'Frizz-Calming Sleek Hydrating Conditioner':22,'Damage Repair Hydrating Conditioner':22,'Frizz-Calming Sleek Hydrating Shampoo':22,'Deep Damage Repair Hydrating Hair Mask Gift Set':26,'Mini Damage Repair & Shine Leave in Conditioner':13,'Frizz-Calming Glass Hair Oil with Heat Protectant':25,'Mini Deep Damage Repair Hydrating Shampoo':8,'HydraCoat Leave in Conditioner Mist for Fine Hair':25};
+  var DNAME = {'Deep Damage Repair Hydrating Shampoo':'Deep Damage Shampoo 290ml','Deep Damage Repair Hydrating Hair Mask':'Deep Damage Hair Mask 207ml','Deep Damage Repair Mini Trio Hair Set':'Deep Essentials Kit (Mini Trio)','Silk Shine Hair Oil for Damaged Hair':'Silk Shine Hair Oil 70ml','Mini Silk Shine Hair Oil for Damaged Hair':'Mini Silk Shine Oil 10ml','Detangling Heat Protection Spray for Damaged Hair':'Detangling Heat Protectant Spray','Damage Repair & Shine Leave in Conditioner':'Damage Repair & Shine LIC 150ml','Frizz-Calming Leave in Conditioner with Heat Protectant':'Frizz-Calming LIC 150ml','Mini Deep Damage Repair Hydrating Hair Mask':'Mini Deep Damage Hair Mask 40ml','Frizz-Calming Gel Hair Taming Wand':'Frizz-Calming Gel Taming Wand','Frizz-Calming Sleek Hydrating Conditioner':'Sleek Conditioner 290ml','Damage Repair Hydrating Conditioner':'Damage Conditioner 290ml','Frizz-Calming Sleek Hydrating Shampoo':'Sleek Shampoo 290ml','Deep Damage Repair Hydrating Hair Mask Gift Set':'Deep Damage Hair Mask Holiday Set','Mini Damage Repair & Shine Leave in Conditioner':'Damage LIC 30ml','Frizz-Calming Glass Hair Oil with Heat Protectant':'Glass Hair Oil 70ml','Mini Deep Damage Repair Hydrating Shampoo':'Damage Shampoo 52ml','HydraCoat Leave in Conditioner Mist for Fine Hair':'Hydracoat Hair Mist'};
   var dn = function(n){ return DNAME[n] || n; };
   var pr = function(n){ return PRICE[n]!=null ? '$'+PRICE[n] : '—'; };
 
@@ -8286,6 +8286,7 @@ function refreshOnsite() {
   // ---- 4) PLA SKU ----
   var skus = O.skus.slice();
   var skuLabels = skus.map(function(d){ return dn(d.name); });
+  document.getElementById('onsSkuWrap').style.height = Math.max(360, skus.length * 28 + 90) + 'px';   // SKU가 늘어도 이름이 모두 보이게 (2026-11-06)
   mk('onsSku', { data:{ labels:skuLabels, datasets:[
       { type:'bar', label:'매출', data:skus.map(function(d){return d.sales;}), backgroundColor:NAVY, xAxisID:'x', yAxisID:'y', borderRadius:2, order:1 },
       { type:'line', label:'ROAS', data:skus.map(function(d){return d.roas;}), borderColor:SALES, backgroundColor:SALES, borderWidth:0, pointStyle:'rectRot', pointRadius:6, showLine:false, xAxisID:'x1', yAxisID:'y', order:0 }
@@ -8293,7 +8294,7 @@ function refreshOnsite() {
     options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{position:'bottom',labels:{boxWidth:10,boxHeight:10,padding:9,font:{size:10}}},
         tooltip:{ callbacks:{ label:function(c){ return c.dataset.label==='ROAS' ? 'ROAS '+c.parsed.x.toFixed(2)+'×' : '매출 '+won(c.parsed.x); } } } },
-      scales:{ y:{grid:{display:false},ticks:{font:{size:10}}},
+      scales:{ y:{grid:{display:false},ticks:{autoSkip:false,font:{size:10}}},
         x:{position:'top',grid:{color:GRID},title:{display:true,text:USD?'매출($)':'매출(₩)',font:{size:10}},ticks:{callback:axT}},
         x1:{position:'bottom',min:0,suggestedMax:4,grid:{display:false},title:{display:true,text:'ROAS(×)',font:{size:10}},ticks:{callback:function(v){return v+'×';}}} } }
   });
