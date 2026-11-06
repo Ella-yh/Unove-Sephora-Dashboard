@@ -6636,9 +6636,13 @@ function onlFillFilters_() {
 }
 function onlRenderNote_() {
   var el = document.getElementById('onlSrcNote'); if (!el) return;
-  if (ONL.src === 'channel') {
+  // 2026-11-06 401 = 로그인 토큰 만료(권한 문제 아님) → 다시 로그인 안내. 권한 안내는 403일 때만
+  if (ONL.err && (/\(401\)/.test(ONL.err) || ONL.err === '로그인 토큰 없음')) {
     el.style.display = '';
-    el.textContent = '시트를 직접 읽지 못해(' + ONL.err + ') 유입 탭 매출(NA 채널 제외)로 표시 중입니다. 포털 이커머스 합계보다 약 10% 작게 나옵니다. RAW_매출유입 시트 접근 권한을 확인해 주세요.';
+    el.innerHTML = '로그인이 만료되어 시트를 읽지 못했습니다. ' + (ONL.src === 'channel' ? '지금은 유입 탭 매출(NA 채널 제외)로 표시 중이라 포털 이커머스 합계보다 약 10% 작게 나옵니다.' : '지금은 마지막으로 읽은 값을 표시 중입니다.') + ' <button type="button" onclick="startGoogleLogin()" style="margin-left:6px;padding:2px 10px;border:1px solid #1D2847;border-radius:4px;background:#1D2847;color:#fff;font-size:11px;cursor:pointer">다시 로그인</button>';
+  } else if (ONL.src === 'channel') {
+    el.style.display = '';
+    el.textContent = '시트를 직접 읽지 못해(' + ONL.err + ') 유입 탭 매출(NA 채널 제외)로 표시 중입니다. 포털 이커머스 합계보다 약 10% 작게 나옵니다.' + (/\(403\)/.test(ONL.err || '') ? ' RAW_매출유입 시트 접근 권한을 확인해 주세요.' : '');
   } else if (ONL.err) {
     el.style.display = '';
     el.textContent = '시트를 새로 읽지 못해(' + ONL.err + ') 마지막으로 읽은 값을 표시 중입니다.';
