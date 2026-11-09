@@ -1341,6 +1341,21 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
     </div>
 
     <div class="sec-hdr" style="margin-top:22px">Banner · PLA 일별 추이</div>
+    <!-- 2026-11-09 Banner vs PLA 비교 — 칩으로 지표 선택(지표마다 Banner·PLA 2개 계열) -->
+    <div class="chart-card" style="margin-bottom:12px">
+      <div class="chart-sec-title">Banner vs PLA 일별 비교</div>
+      <div id="onsCmpChips" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">
+        <span class="ons-chip on" data-k="매출" style="color:#1D2847"><span class="d"></span>매출</span>
+        <span class="ons-chip" data-k="광고비" style="color:#1D2847"><span class="d"></span>광고비</span>
+        <span class="ons-chip on" data-k="ROAS" style="color:#1D2847"><span class="d"></span>ROAS</span>
+        <span class="ons-chip" data-k="노출" style="color:#1D2847"><span class="d"></span>노출</span>
+        <span class="ons-chip" data-k="클릭" style="color:#1D2847"><span class="d"></span>클릭</span>
+        <span class="ons-chip" data-k="CTR" style="color:#1D2847"><span class="d"></span>CTR</span>
+        <span class="ons-chip" data-k="전환율" style="color:#1D2847"><span class="d"></span>전환율(CVR)</span>
+      </div>
+      <div style="position:relative;height:320px"><canvas id="onsCmp"></canvas></div>
+      <div style="font-size:9px;color:#bbb;margin-top:6px">Banner = 파랑 계열 · PLA = 빨강 계열 (지표마다 같은 계열 안에서 색을 달리함) · 매출은 아래 그래프와 같은 보정값 기준 · ROAS = 매출 ÷ 광고비 · 전환율 = 판매 수량 ÷ 클릭(Banner는 노출 기반 귀속이라 100%를 넘을 수 있음) · 첫 구간(~날짜) = 캠페인 누적</div>
+    </div>
     <div class="ons-two">
       <div class="chart-card"><div class="chart-sec-title">Banner 일별 Spend·Sales·ROAS</div><div style="position:relative;height:290px"><canvas id="onsBanner"></canvas></div><div class="ons-out ons-out-note" style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div></div>
       <div class="chart-card"><div class="chart-sec-title">PLA 일별 Spend·Sales·ROAS</div><div style="position:relative;height:290px"><canvas id="onsPla"></canvas></div><div class="ons-out ons-out-note" style="font-size:10px;color:#6b7280;margin-top:8px;padding-top:6px;border-top:1px dashed #eee">※ 7/11–13 회색 막대 = 세포라 브랜드 포털 원본 리포트 내 세일즈 · 컬러 막대 = 클릭수 비례 재배분 보정값 (단, 3일 누적 합계는 불변)</div></div>
@@ -8286,6 +8301,58 @@ function refreshOnsite() {
   };
   combo('onsBanner', db, SALES);
   combo('onsPla', dp, NAVY);
+
+  // ---- 3-1) Banner vs PLA 비교 (2026-11-09) — 칩으로 지표를 고르면 Banner·PLA 두 계열이 함께 나온다 ----
+  (function(){
+    var sB = adoptedOns(db), sP = adoptedOns(dp);
+    var f = function(se, k){ return se.map(function(x){ return x[k] || 0; }); };
+    var pct = function(se, a, b){ return se.map(function(x){ return x[b] ? x[a] / x[b] * 100 : null; }); };
+    var ro = function(sa, se){ return sa.map(function(v, i){ return se[i].spend ? v / se[i].spend : null; }); };
+    var M = [
+      { k:'매출',   ax:'yWon', bar:true, b:sB, p:sP, cb:'#2f5fb3', cp:'#c0392b' },
+      { k:'광고비', ax:'yWon', b:f(db,'spend'), p:f(dp,'spend'), cb:'#7ea6e0', cp:'#ec8a7f' },
+      { k:'ROAS',   ax:'yRoas', b:ro(sB, db), p:ro(sP, dp), cb:'#1b2f73', cp:'#7d1414' },
+      { k:'노출',   ax:'yImpr', b:f(db,'impr'), p:f(dp,'impr'), cb:'#a9c3ea', cp:'#f2b0a8' },
+      { k:'클릭',   ax:'yClk',  b:f(db,'clicks'), p:f(dp,'clicks'), cb:'#3b8fdc', cp:'#e0602f' },
+      { k:'CTR',    ax:'yPct',  b:pct(db,'clicks','impr'), p:pct(dp,'clicks','impr'), cb:'#3aa0c4', cp:'#d6336c' },
+      { k:'전환율', ax:'yPct',  b:pct(db,'units','clicks'), p:pct(dp,'units','clicks'), cb:'#5a4fc0', cp:'#a8323e' }
+    ];
+    var on = {}; document.querySelectorAll('#onsCmpChips .ons-chip').forEach(function(c){ on[c.getAttribute('data-k')] = c.classList.contains('on'); });
+    var ds = [];
+    M.forEach(function(m, j){
+      [['Banner', m.b, m.cb], ['PLA', m.p, m.cp]].forEach(function(t){   // Banner = 파랑 계열 · PLA = 빨강 계열 (2026-11-09 민경)
+        var lab = t[0] + ' ' + (m.k === '전환율' ? '전환율(CVR)' : m.k);
+        ds.push(m.bar ? { key:m.k, type:'bar', label:lab, data:t[1], backgroundColor:t[2], yAxisID:m.ax, order:9, hidden:!on[m.k] }
+                      : { key:m.k, type:'line', label:lab, data:t[1], borderColor:t[2], backgroundColor:t[2], borderWidth:2, tension:.3, pointRadius:2, spanGaps:true, yAxisID:m.ax, order:j, hidden:!on[m.k] });
+      });
+    });
+    var cnt = function(v){ return Math.abs(v) >= 1e6 ? (v/1e6).toFixed(1) + 'M' : Math.abs(v) >= 1e3 ? (v/1e3).toFixed(0) + 'K' : v; };
+    mk('onsCmp', { data:{ labels:labels, datasets:ds },
+      options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, boxHeight:10, padding:9, font:{size:10}, filter:function(it, d){ return !d.datasets[it.datasetIndex].hidden; } } },
+          tooltip:{ filter:function(c){ return c.parsed.y != null; }, callbacks:{ label:function(c){ var k = c.dataset.key, v = c.parsed.y;
+            if (k === 'ROAS') return c.dataset.label + ' ' + v.toFixed(2) + '×';
+            if (k === 'CTR' || k === '전환율') return c.dataset.label + ' ' + v.toFixed(2) + '%';
+            if (k === '매출' || k === '광고비') return c.dataset.label + ' ' + won(v);
+            return c.dataset.label + ' ' + Math.round(v).toLocaleString(); } } } },
+        scales:{ yWon:{ display:'auto', position:'left', grid:{color:GRID}, ticks:{callback: USD ? axT : function(v){ var m = v / 1e6; return '₩' + (Number.isInteger(m) ? m : m.toFixed(1)) + 'M'; }} },
+          yRoas:{ display:'auto', position:'right', min:0, grid:{display:false}, title:{display:true,text:'ROAS(×)'}, ticks:{callback:function(v){ return v + '×'; }} },
+          yImpr:{ display:'auto', position:'right', grid:{display:false}, title:{display:true,text:'노출'}, ticks:{callback:cnt} },
+          yClk:{ display:'auto', position:'right', grid:{display:false}, title:{display:true,text:'클릭'}, ticks:{callback:cnt} },
+          yPct:{ display:'auto', position:'right', min:0, grid:{display:false}, title:{display:true,text:'%'}, ticks:{callback:function(v){ return v + '%'; }} },
+          x:{ grid:{color:GRID} } } } });
+    var chips = document.getElementById('onsCmpChips');
+    if (chips && !chips.__wired) {
+      chips.addEventListener('click', function(e){
+        var c = e.target.closest('.ons-chip'); if (!c) return;
+        var ch = window.__onsCharts['onsCmp']; if (!ch) return;
+        var k = c.getAttribute('data-k'), h = c.classList.contains('on');
+        ch.data.datasets.forEach(function(d){ if (d.key === k) d.hidden = h; });
+        c.classList.toggle('on', !h); ch.update();
+      });
+      chips.__wired = true;
+    }
+  })();
 
   // ---- 4) PLA SKU ----
   var skus = O.skus.slice();
