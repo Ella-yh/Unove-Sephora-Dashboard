@@ -1382,13 +1382,13 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 
 <!-- ══ B&M 매출 및 재고 현황 탭 (2026-08-03 신설) ══════════════════════════ -->
 <div id="tabBm" style="display:none">
-<div class="cty-row" style="margin-bottom:4px;"><span class="cty-hint">국가(왼쪽 메뉴)는 주간 핵심 지표 · 매장별 실적에 적용 · 「미국 기준」 표시가 붙은 차트·표는 국가와 무관하게 미국 값</span></div>
+<div class="cty-row" style="margin-bottom:4px;"><span class="cty-hint">국가(왼쪽 메뉴)는 주간 핵심 지표 · 매출 추이 · 이상 징후 · 매장별 실적에 적용 ($5M 목표 카드는 미국) · 「미국 기준」 표시가 붙은 차트·표는 국가와 무관하게 미국 값</span></div>
 
 
 <div class="sec-hdr"><span class="bar"></span>주간 핵심 지표 <span style="font-weight:500;letter-spacing:0;text-transform:none;color:#9ca3af" id="bmKpiVs"></span></div>
 <div class="kpi-row" id="bmKpiRow"></div>
 
-<div class="sec-hdr"><span class="bar"></span>매출 추이 &amp; $5M 목표 <span class="cty-badge us" title="국가 칩과 무관하게 미국 값입니다. 캐나다 자료는 있으나 이번 국가 분리 범위가 아닙니다.">미국 기준</span> <span class="note">목표선은 보기 단위에 맞춰 환산 — 주 $96,154 / 일 $13,736 / 월 = 주 목표 × 해당 월 주수</span></div>
+<div class="sec-hdr"><span class="bar"></span>매출 추이 &amp; $5M 목표 <span class="cty-badge us" id="bmTrendBadge" title="국가 칩과 무관하게 미국 값입니다. 캐나다 자료는 있으나 이번 국가 분리 범위가 아닙니다.">미국 기준</span> <span class="note">목표선은 보기 단위에 맞춰 환산 — 주 $96,154 / 일 $13,736 / 월 = 주 목표 × 해당 월 주수</span></div>
 <div class="g32">
   <div class="chart-card">
     <div class="chart-sec-title"><span>채널별 매출 추이 · 목표 기준선</span>
@@ -1425,7 +1425,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
   <div class="foot">SKU명 클릭 → 세포라닷컴 상품 페이지 · <b>🌐</b> = 닷컴 전용(B&amp;M 미배치, 음수는 반품 처리분) · <span class="alert">빨간 숫자</span> = In-Stock 80% 미만 또는 세포라 창고 여유 4주 미만</div>
 </div>
 
-<div class="sec-hdr"><span class="bar"></span>이상 징후 <span class="cty-badge us" title="국가 칩과 무관하게 미국 값입니다. 캐나다 자료는 있으나 이번 국가 분리 범위가 아닙니다.">미국 기준</span> <span class="note">기준값 자동 판정 — 결품 심각(In-Stock 80% 미만 + 닷컴 실보유 2주 미만) · In-Stock 80% · 세포라 창고 여유 4주 · 닷컴 실보유 2주 · 전주 대비 ±30%</span></div>
+<div class="sec-hdr"><span class="bar"></span>이상 징후 <span class="cty-badge us" id="bmSigBadge" title="국가 칩과 무관하게 미국 값입니다. 캐나다 자료는 있으나 이번 국가 분리 범위가 아닙니다.">미국 기준</span> <span class="note">기준값 자동 판정 — 결품 심각(In-Stock 80% 미만 + 닷컴 실보유 2주 미만) · In-Stock 80% · 세포라 창고 여유 4주 · 닷컴 실보유 2주 · 전주 대비 ±30%</span></div>
 <div class="chart-card" style="padding:0"><div id="signals"></div></div>
 
 <div class="sec-hdr"><span class="bar"></span>B&amp;M 매장별 실적
@@ -1714,9 +1714,12 @@ function drawTrend(g){
     perBar=D.mon_wks.map(w=>w*D.goal.wk_target);
     tipT=i=>D.months[i]+' ('+D.mon_wks[i]+'주'+(D.mon_full[i]?'':' · 부분')+')';
     foot='월별 · 주차 마감일 기준 집계. 빨간 눈금 = 해당 월 목표($96,154 × 그 달 주수). <b>2026-02는 런칭월이라 3주만 포함</b>(부분 구간).';}
+  if(typeof window.ctyBmTrend_==='function'){const o=window.ctyBmTrend_(g,D);   // 국가 분리 6차 — 캐나다·전체면 막대를 바꾸고 목표선은 끈다
+    if(o){labels=o.labels;bm=o.bm;com=o.com;ref=null;perBar=null;band=null;tipT=o.tipT;foot=o.foot;
+      if(!labels.length){BMQ('chTrend').innerHTML='';BMQ('trendFoot').innerHTML=foot;return;}}}
   chart(BMQ('chTrend'),{labels:labels,H:248,W:820,pr:44,band:band,
     stacks:[{name:'B&M',color:NAVY,data:bm},{name:'.COM',color:ROSE,data:com}],
-    line:{name:'B&M 비중',color:CLICKS,data:bm.map((v,i)=>Math.max(0,Math.min(100,v/Math.max(1,v+com[i])*100))),min:0,max:100,fmt:v=>Math.round(v)+'%',tipF:v=>v.toFixed(1)+'%'},
+    line:{name:'B&M 비중',color:CLICKS,data:bm.map((v,i)=>v==null?0:Math.max(0,Math.min(100,v/Math.max(1,v+com[i])*100))),min:0,max:100,fmt:v=>Math.round(v)+'%',tipF:v=>v.toFixed(1)+'%'},
     ref:ref,refLabel:refL,refPerBar:perBar,yFmt:v=>'$'+Math.round(v/1000)+'K',tipF:v=>usd(v),tipT:tipT,xTicks:ticks,negNote:'(반품)'});
   BMQ('trendFoot').innerHTML=foot+' <span style="color:#ddd">| 렌더 '+(performance.now()-t0).toFixed(0)+'ms</span>';}
 drawTrend('w');
@@ -1860,13 +1863,15 @@ BMQ('btnAll').onclick=function(){this.classList.add('on');BMQ('btnTop').classLis
     sig.push({g:d>0?'ok':'warn',t:'권역 매장 생산성 '+(d>0?'급등':'급락')+' — '+r.region,
       d:'매장당 주간 매출 $'+r.spd24.toFixed(0)+' → $'+r.spd25.toFixed(0)+' ('+(d>0?'▲':'▼')+Math.abs(d).toFixed(0)+'%) · 판매매장 '+r.stores+'개',
       a:d>0?'상승 요인 확인 후 타 권역 적용 검토':'하락 요인 점검',v:-0.5});});
+  if(typeof window.ctyBmSignals_==='function'){const r=window.ctyBmSignals_(sig,D,CW,PW);if(r)sig.splice(0,sig.length,...r);}   // 국가 분리 6차
   sig.sort((a,b)=>({sev:-1,crit:0,warn:1,ok:2})[a.g]-({sev:-1,crit:0,warn:1,ok:2})[b.g]||a.v-b.v);
   const LB={sev:'결품 심각',crit:'경보',warn:'주의',ok:'호조'};
   BMQ('signals').innerHTML=sig.map(s=>'<div class="sig">'
     +'<span class="grade g-'+s.g+'">'+LB[s.g]+'</span>'
     +'<span style="flex:1;min-width:0"><b style="color:#333">'+s.t+'</b><br><span style="color:#9ca3af;font-size:10px">'+s.d+'</span></span>'
     +'<span style="width:230px;flex:none;color:#666;font-size:10px;text-align:right">'+s.a+'</span></div>').join('')
-   +'<div class="foot" style="padding:8px 11px;margin:0">판정 규칙 — ⓪ <b>결품 심각</b> = 매장 In-Stock 80% 미만 <b>이면서</b> 닷컴 실보유 2주 미만(매장·닷컴 동시 악화 — 세포라 MD 알람 대상, 맨 위 표시) ① In-Stock 80% 미만이고 실보유로 매장당 1개 이상 보낼 수 있으면 세포라 내부 배분 지연 ② 매장당 1개도 못 보내면 세포라 물류센터 미입고 ③ 품절 전이라도 세포라 창고 여유가 4주 미만이면 미리 경보. 매장 미배치(🌐) SKU는 B&M 기준으로는 계산이 성립하지 않아, 닷컴 실보유 주수(RAW 열 이름 「닷컴재고소진주수」)로 따로 판정합니다(2주 미만 경보 · 2~4주 주의). 전주 대비 ±30%는 급변으로 표시합니다. 규칙에 걸린 항목만 자동 표시되며, 해당 없으면 비어 있는 것이 정상입니다.</div>';})();
+   +'<div class="foot" style="padding:8px 11px;margin:0">판정 규칙 — ⓪ <b>결품 심각</b> = 매장 In-Stock 80% 미만 <b>이면서</b> 닷컴 실보유 2주 미만(매장·닷컴 동시 악화 — 세포라 MD 알람 대상, 맨 위 표시) ① In-Stock 80% 미만이고 실보유로 매장당 1개 이상 보낼 수 있으면 세포라 내부 배분 지연 ② 매장당 1개도 못 보내면 세포라 물류센터 미입고 ③ 품절 전이라도 세포라 창고 여유가 4주 미만이면 미리 경보. 매장 미배치(🌐) SKU는 B&M 기준으로는 계산이 성립하지 않아, 닷컴 실보유 주수(RAW 열 이름 「닷컴재고소진주수」)로 따로 판정합니다(2주 미만 경보 · 2~4주 주의). 전주 대비 ±30%는 급변으로 표시합니다. 규칙에 걸린 항목만 자동 표시되며, 해당 없으면 비어 있는 것이 정상입니다.</div>';
+  if(typeof window.ctyBmSignalsAfter_==='function')window.ctyBmSignalsAfter_(BMQ('signals'),sig);})();
 
 /* region */
 (function(){const R=D.regions,W=560,H=228,pl=38,pr=8,pt=12,pb=42,n=R.length,iw=W-pl-pr,ih=H-pt-pb;
@@ -2114,9 +2119,10 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
   <div class="chart-card"><div class="chart-sec-title"><span><span id="sk_mixTitle"></span> <span class="cty-badge us" title="국가 칩과 무관하게 미국 값입니다. 캐나다 자료는 있으나 이번 국가 분리 범위가 아닙니다.">미국 기준</span></span></div><div id="sk_chMix"></div>
     <div class="legend"><span><i style="background:#1D2847"></i>B&amp;M</span><span><i style="background:#D9A89A"></i>.COM</span></div></div>
 </div>
-<div class="sec-hdr"><span class="bar"></span>SKU별 상세 <span class="cty-badge us" title="국가 칩과 무관하게 미국 값입니다. 캐나다 자료는 있으나 이번 국가 분리 범위가 아닙니다.">미국 기준</span> <span class="note" id="sk_tblNote"></span>
+<div class="sec-hdr"><span class="bar"></span>SKU별 상세 <span class="cty-badge us" id="skDetBadge" title="국가 칩과 무관하게 미국 값입니다. 캐나다 자료는 있으나 이번 국가 분리 범위가 아닙니다.">미국 기준</span> <span class="note" id="sk_tblNote"></span>
   <span style="display:flex;gap:5px;align-items:center;order:9"><span class="lb">금액</span>
   <span class="cur-sw" title="금액 통화 — 달러 = 세포라 원본 · 원화 = 날짜별 환율(2026-08-31까지 1,500원 · 09-01부터 1,400원)"><button class="on" id="sk_curK">₩ 원화(백만원)</button><button id="sk_curU">$ 달러</button></span></span></div>
+<div class="cty-why" id="skDetCaNote" style="display:none;margin:0 0 6px;font-size:11px;color:#7B3F1D"></div>
 <div class="chart-card"><div class="tw"><table id="sk_tbl"></table></div><div class="foot" id="sk_tblFoot"></div></div>
 <div class="warn" id="sk_warnBox"></div>
 <details id="skCaSec" class="chart-card" style="margin-top:9px">
@@ -2319,8 +2325,10 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
     const eom=new Date(Date.UTC(y,mo,0)).toISOString().slice(0,10);
     return LASTDAY>=eom?[]:keys.filter(k=>k===lm);
   }
-  window._skuRedraw=function(){ draw(); };   // 국가 분리 2차 — 국가 칩 변경 시 요약만 다시 그리기 위해 노출
+  window._skuRedraw=function(){ draw(); };
+  window._skuRedrawCty=function(){ try{ if(window.ctySkuDetail_) window.ctySkuDetail_(); }catch(e){} };   // 국가 분리 2차 — 국가 칩 변경 시 요약만 다시 그리기 위해 노출
   function draw(){
+    setTimeout(window._skuRedrawCty,0);   // 국가 분리 6차 — SKU별 상세 국가 표시
     CUR=window.SKU_CUR||'K';
     const a=agg(),per=a.per;
     const keys=RSEL?a.keys.filter(k=>RSEL.has(k)):a.keys;
@@ -2710,7 +2718,7 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
 <div id="onlSrcNote" class="onl-note" style="display:none;"></div>
 <div class="chart-sec">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-    <div class="sec-hdr" style="margin-bottom:0;flex:1;">온라인매출 그래프 <span class="cty-badge" title="미국 브랜드포털 이커머스 파일(RAW_commerce) 기준입니다.">미국 · 포털 매출 기준</span></div>
+    <div class="sec-hdr" style="margin-bottom:0;flex:1;">온라인매출 그래프 <span class="cty-badge" id="onlCtyBadge" title="브랜드포털 이커머스 파일 기준입니다 — 미국 RAW_commerce · 캐나다 RAW_CA_commerce. 국가는 왼쪽 메뉴를 따릅니다.">미국 · 포털 매출 기준</span></div>
     <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
       <button class="ads-p-btn" data-onl-period="monthly" onclick="setOnlPeriod('monthly')">월</button>
       <button class="ads-p-btn active" data-onl-period="weekly" onclick="setOnlPeriod('weekly')">주</button>
@@ -4434,6 +4442,8 @@ MAIN_TABLE_METRICS.push(
 //   ⑨ renderMainDataTable — 지표 확인용 표는 국가 칩에 맞는 묶음만 (2026-10-12)
 //   ⑩ evCtyOk_ — 통합 탭 이벤트 마커·이벤트 목록·KOL 표 (2026-10-12)
 //   ⑪ ctyChComboSplit_ — 유입 탭 Overview 매출 막대 「전체」 누적 (2026-10-12)
+//   ⑫ onlCty_ — 온라인매출 탭  ⑬ ctyBmTrend_·ctyBmSignals_ — B&M 매출 추이·이상 징후
+//   ⑭ ctySkuDetail_ — SKU별 상세  ⑮ ctyNoDataNote_ — 퍼포먼스·온사이트 안내 줄 (2026-11-11)
 // 「미국」(기본값)일 때 ①~⑤는 숫자를 바꾸지 않는다. 바꾸는 것은 닷컴 ROAS 카드 제목·부제(승인 문구)뿐이다.
 var CTY = 'US';
 const CTY_WHY = {
@@ -4455,7 +4465,7 @@ function ctyCurBadge_() {
   var tab = act ? act.dataset.tab : 'main';
   b.dataset.cty = CTY;
   b.textContent = { US:'미국', CA:'캐나다', ALL:'전체 (미국+캐나다)' }[CTY];
-  b.style.display = ['main', 'channel', 'bm', 'sku'].indexOf(tab) >= 0 ? '' : 'none';
+  b.style.display = ['main', 'channel', 'bm', 'sku', 'online'].indexOf(tab) >= 0 ? '' : 'none';   // 2026-11-11 온라인매출 추가
 }
 window.setCty = function(c) {
   if (c === CTY) return;
@@ -4476,6 +4486,9 @@ window.setCty = function(c) {
   try { if (typeof window._skuRedraw === 'function') window._skuRedraw(); } catch(e) { console.warn('[CTY] SKU', e); }
   try { ctyChannelApply_(); } catch(e) { console.warn('[CTY] 유입', e); }   // 2026-10-12 유입 탭
   try { renderEventList(); } catch(e) { console.warn('[CTY] 이벤트', e); }   // 2026-10-12 이벤트 목록·KOL 표 (마커는 renderChart 가 다시 그린다)
+  try { if (typeof window.ctySkuDetail_ === 'function') window.ctySkuDetail_(); } catch(e) { console.warn('[CTY] SKU 상세', e); }   // 2026-11-11 ⑭
+  try { if (typeof window.ctyNoDataNote_ === 'function') window.ctyNoDataNote_(); } catch(e) { console.warn('[CTY] 광고 안내', e); }   // 2026-11-11 ⑮
+  try { if (typeof ONL !== 'undefined' && ONL.byDate) onlRender_(); } catch(e) { console.warn('[CTY] 온라인매출', e); }   // 2026-11-11 ⑫
 };
 // ③ (2026-10-15 해제) 「전체」 채널 칩 단일 선택 감싸기는 없앴다 — 미국·캐나다와 같은 multi-select
 // 캐나다 매출 — 기간 집합에 대한 합계 (USD)
@@ -4913,6 +4926,130 @@ window.ctyStoreAfter_ = function(shown, rows, foot, tb, D) {
     + ' · 추이 = ' + D.weeks[0] + '~' + CW + ' (캐나다는 ' + CA_ENTRY_WEEK + '부터, 점선 = 캐나다 진입)'
     + ' · 등급 = 최근 4주 주당 매출, 미국과 같은 기준'
     + ' · <span class="cty-na">WOS — ' + CTY_WOS_WHY + (CTY === 'ALL' ? ' (전체에서는 미국 매장도 끕니다)' : '') + '</span>';
+};
+// ═══ 국가 분리 6차 (2026-11-11) — B&M 「매출 추이」·「이상 징후」 · SKU 「SKU별 상세」 · 퍼포먼스·온사이트 안내 ═══
+// 🛑 CTY 를 읽는 곳 ⑫ 온라인매출 탭(onlCty_) ⑬ ctyBmTrend_·ctyBmSignals_ ⑭ ctySkuDetail_ ⑮ ctyNoDataNote_
+// 원칙은 앞 차수와 같다 — 「미국」(기본값)이면 아무것도 바꾸지 않는다(null 을 돌려 기존 그림 그대로).
+//   캐나다 값 = window.CADATA (주 = wk · 일 = daily · 월 = 주 마감일 기준 주간 합 — 미국 B&M 월 막대와 같은 집계)
+//   「전체」 = 같은 주·같은 날·같은 달끼리 미국 + 캐나다. 캐나다 자료가 없는 칸은 0 이 아니라 결측(합산하지 않음)
+function ctyBadgeSet_(id) {
+  var b = document.getElementById(id); if (!b) return;
+  var us = CTY === 'US';
+  b.classList.toggle('us', us);
+  b.textContent = us ? '미국 기준' : CTY === 'CA' ? '캐나다' : '전체 (미국+캐나다)';
+  b.title = us ? '국가 칩 「미국」 — 미국 값입니다. 왼쪽 메뉴에서 캐나다·전체를 고르면 바뀝니다.'
+               : '왼쪽 메뉴 국가 칩을 따릅니다 (' + b.textContent + ')';
+}
+// ⑬-1 B&M 「채널별 매출 추이」 — g = 'w' | 'd' | 'm'. 미국이면 null
+window.ctyBmTrend_ = function(g, D) {
+  ctyBadgeSet_('bmTrendBadge');
+  if (CTY === 'US') return null;
+  var c = caData_(), ALL = CTY === 'ALL';
+  var nf = function(v){ return '$' + Math.round(v).toLocaleString(); };
+  var labels = [], bm = [], com = [], tipT = null, foot = '', miss = 0;
+  var push = function(lb, ub, uc, cb, cc) {
+    labels.push(lb);
+    if (cb == null) { bm.push(null); com.push(null); miss++; return; }
+    bm.push(ALL ? ub + cb : cb); com.push(ALL ? uc + cc : cc);
+  };
+  if (!c) return { labels: [], bm: [], com: [], tipT: null, foot: '<span class="cty-na">' + CA_WHY.none + '</span>' };
+  if (g === 'w') {
+    var byW = {}; c.wk.forEach(function(x){ byW[x.w] = x; });
+    var ws = ALL ? D.weeks : D.weeks.filter(function(w){ return c.weeks.indexOf(w) >= c.weeks.indexOf(CA_ENTRY_WEEK); });
+    ws.forEach(function(w){ var i = D.weeks.indexOf(w), x = byW[w];
+      push(w, D.wk_bm[i] || 0, D.wk_com[i] || 0, x ? x.bm : null, x ? x.com : null); });
+    tipT = function(i){ return labels[i] + ' (' + (D.wend[labels[i]] || '') + ' 마감)'; };
+    foot = '주간 · ' + (labels[0] || '') + '~' + (labels[labels.length - 1] || '') + (ALL ? '' : ' (캐나다 진입 ' + CA_ENTRY_WEEK + '부터)');
+  } else if (g === 'd') {
+    var dm = caDaily_();
+    if (!dm) return { labels: [], bm: [], com: [], tipT: null, foot: '<span class="cty-na">' + CTY_WHY.caDaily + '</span>' };
+    var first = ''; Object.keys(dm).sort().some(function(k){ if (dm[k].ttl > 0) { first = k; return true; } return false; });
+    var ds = ALL ? D.ddates.slice() : Object.keys(dm).filter(function(k){ return k >= first; }).sort();
+    var dates = [];
+    ds.forEach(function(d){ var i = D.ddates.indexOf(d), x = dm[d]; dates.push(d);
+      push(d.slice(5).replace('-', '/'), i >= 0 ? D.dbm[i] || 0 : 0, i >= 0 ? D.dcom[i] || 0 : 0, x ? x.bm : null, x ? x.com : null); });
+    tipT = function(i){ return dates[i]; };
+    foot = '일별 · ' + (dates[0] || '') + '~' + (dates[dates.length - 1] || '') + ' (' + dates.length + '일)' + (ALL ? '' : ' · 캐나다 첫 매출일부터');
+  } else {
+    var byM = {}; c.wk.forEach(function(x){ var k = String(x.we).slice(0, 7); var o = byM[k] || (byM[k] = { bm: 0, com: 0 }); o.bm += x.bm; o.com += x.com; });
+    var ms = ALL ? D.months : D.months.filter(function(m){ return byM[m] && (byM[m].bm || byM[m].com); });
+    ms.forEach(function(m){ var i = D.months.indexOf(m), x = byM[m];
+      push(m.slice(2).replace('-', '/'), D.mon_bm[i] || 0, D.mon_com[i] || 0, x ? x.bm : null, x ? x.com : null); });
+    tipT = function(i){ return ms[i]; };
+    foot = '월별 · 주차 마감일 기준 집계 (미국 월 막대와 같은 방식)';
+  }
+  var tb = bm.concat(com).some(function(v){ return v != null; });
+  var tot = bm.map(function(v, i){ return v == null ? 0 : v + com[i]; }), last = tot.length - 1;
+  if (tb && last >= 0) foot += '. 마지막 칸 ' + nf(tot[last]) + '.';
+  foot += ' 목표선은 미국 $5M 목표 기준이라 ' + (ALL ? '전체' : '캐나다') + '에는 그리지 않습니다.';
+  if (ALL) foot += ' 막대 = 미국 + 캐나다 합' + (miss ? ' · 캐나다 자료가 없는 ' + miss + '칸은 비움(미국만 더하지 않음)' : '') + '.';
+  return { labels: labels, bm: bm, com: com, tipT: tipT, foot: foot };
+};
+// ⑬-2 B&M 「이상 징후」 — 미국이면 null. 캐나다는 SKU별 주간 재고가 없어 재고 판정 없이 매출 급변 2종만
+window.ctyBmSignals_ = function(sig, D, CW, PW) {
+  ctyBadgeSet_('bmSigBadge');
+  if (CTY === 'US') return null;
+  var out = [];
+  if (CTY === 'ALL') sig.forEach(function(s){ var x = Object.assign({}, s); x.t = '[미국] ' + s.t; out.push(x); });
+  var c = caData_(); if (!c) return out;
+  var usd = function(v){ return '$' + Math.round(v).toLocaleString(); };
+  var cw = c.wk.find(function(x){ return x.w === CW; }), pw = c.wk.find(function(x){ return x.w === PW; });
+  if (cw && pw) {
+    var t1 = cw.bm + cw.com, t0 = pw.bm + pw.com, dt = t0 ? (t1 / t0 - 1) * 100 : null;
+    var pc = function(a, b){ return b ? ((a / b - 1) * 100 >= 0 ? '▲' : '▼') + Math.abs((a / b - 1) * 100).toFixed(1) + '%' : '—'; };
+    if (dt != null && Math.abs(dt) >= 30) out.push({ g: dt > 0 ? 'ok' : 'crit', t: '[캐나다] 전체 매출 ' + (dt > 0 ? '급증' : '급감') + ' — ' + (dt > 0 ? '▲' : '▼') + Math.abs(dt).toFixed(1) + '%',
+      d: PW + ' ' + usd(t0) + ' → ' + CW + ' ' + usd(t1) + ' · B&M ' + pc(cw.bm, pw.bm) + ' / .COM ' + pc(cw.com, pw.com),
+      a: '단주 급등 여부 차주 확인 · 재고 회전 가속 대비', v: -1 });
+  }
+  // 권역 매장 생산성 — 미국과 같은 정의: 권역 주간 B&M ÷ 그 주 판매 발생 매장 수 · 전주 대비 ±30%
+  var ci = c.weeks.indexOf(CW), pi = c.weeks.indexOf(PW);
+  if (ci >= 0 && pi >= 0 && c.stores) {
+    var R = {};
+    c.stores.forEach(function(st){ var k = st.reg || '미매핑', r = R[k] || (R[k] = { s1: 0, n1: 0, s0: 0, n0: 0 });
+      var a = st.hist[ci] || 0, b = st.hist[pi] || 0;
+      if (a > 0) { r.s1 += a; r.n1++; } if (b > 0) { r.s0 += b; r.n0++; } });
+    Object.keys(R).sort().forEach(function(k){ var r = R[k]; if (!r.n1 || !r.n0) return;
+      var s1 = r.s1 / r.n1, s0 = r.s0 / r.n0, d = (s1 / s0 - 1) * 100;
+      if (Math.abs(d) >= 30) out.push({ g: d > 0 ? 'ok' : 'warn', t: '[캐나다] 권역 매장 생산성 ' + (d > 0 ? '급등' : '급락') + ' — ' + k,
+        d: '매장당 주간 매출 $' + s0.toFixed(0) + ' → $' + s1.toFixed(0) + ' (' + (d > 0 ? '▲' : '▼') + Math.abs(d).toFixed(0) + '%) · 판매매장 ' + r.n0 + ' → ' + r.n1 + '개',
+        a: d > 0 ? '상승 요인 확인 후 타 권역 적용 검토' : '하락 요인 점검', v: -0.5 });
+    });
+  }
+  return out;
+};
+window.ctyBmSignalsAfter_ = function(host, sig) {
+  var n = (sig || []).filter(function(s){ return CTY === "CA" || String(s.t).indexOf("[캐나다]") === 0; }).length;
+  if (!host || CTY === 'US') return;
+  var c = caData_(), CWc = c ? c.curWeek : '';
+  host.insertAdjacentHTML('afterbegin', '<div class="foot" style="padding:8px 11px;margin:0;border-bottom:.5px solid #EBEBEF">'
+    + '<b style="color:#7B3F1D">' + (CTY === 'CA' ? '캐나다' : '전체 — 미국 항목 + 캐나다 항목') + '</b> · 캐나다는 SKU별 주간 재고 자료가 없어 결품·보충 신호(In-Stock·소진주수)는 판정하지 않고, '
+    + '전체 매출 급변(전주 대비 ±30%)과 권역 매장 생산성 급변(±30%)만 미국과 같은 기준으로 판정합니다' + (CWc ? ' (캐나다 자료 ' + CWc + '까지)' : '')
+    + (!n ? ' · <b>이번 주 해당 항목 없음</b>' : '') + '</div>');
+};
+// ⑭ SKU 실매출 「SKU별 상세」 — 캐나다는 SKU 주간·일간 자료가 없어 「캐나다 월간 SKU」 표로 대신한다
+window.ctySkuDetail_ = function() {
+  ctyBadgeSet_('skDetBadge');
+  var tbl = document.getElementById('sk_tbl'), sec = document.getElementById('skCaSec'), note = document.getElementById('skDetCaNote');
+  if (!tbl || !sec) return;
+  var card = tbl.closest('.chart-card');
+  if (card) card.style.display = CTY === 'CA' ? 'none' : '';
+  if (note) {
+    note.style.display = CTY === 'US' ? 'none' : '';
+    note.innerHTML = CTY === 'CA' ? '캐나다는 SKU별 주간·일간 자료가 없어 미국 표 대신 아래 「캐나다 월간 SKU」 표를 엽니다 (SKU 번호가 달라 한 표로 합치지 않음)'
+                                  : '전체 — 미국 표(위)와 캐나다 월간 SKU 표(아래)를 함께 봅니다. 두 나라 SKU 번호가 달라 한 표로 합치지 않습니다';
+  }
+  if (CTY !== 'US') { if (!sec.open) { sec.dataset.ctyOpened = '1'; sec.open = true; } else ctySkuCaRender_(); }
+  else if (sec.dataset.ctyOpened) { delete sec.dataset.ctyOpened; sec.open = false; }
+};
+// ⑮ 퍼포먼스·온사이트 — 캐나다 자료가 없다는 안내 줄 (숫자는 그대로 미국)
+window.ctyNoDataNote_ = function() {
+  [['tabAds', 'ctyAdsNote', CTY_WHY.ads], ['tabOnsite', 'ctyOnsiteNote', '캐나다 온사이트 광고 자료가 없습니다']].forEach(function(p){
+    var tab = document.getElementById(p[0]); if (!tab) return;
+    var el = document.getElementById(p[1]);
+    if (!el) { el = document.createElement('div'); el.id = p[1]; el.className = 'onl-note'; el.style.margin = '0 0 10px'; tab.insertBefore(el, tab.firstChild); }
+    el.style.display = CTY === 'US' ? 'none' : '';
+    el.innerHTML = '<b>' + (CTY === 'CA' ? '캐나다' : '전체 (미국+캐나다)') + '</b> 선택 중 — ' + p[2] + '. 이 탭의 숫자는 모두 미국 값입니다.';
+  });
 };
 // ═══ 국가 분리 4차 (2026-10-08) — SKU 실매출 탭 「캐나다 월간 SKU」 접이식 섹션 ═══════════════
 // 미국 SKU 표(sk_tbl)는 건드리지 않는다. 캐나다는 열 구조가 달라(11열) 아래에 따로 둔다.
@@ -6488,6 +6625,7 @@ function switchTab(tab) {
   if (tab === 'sku')     { try { if (!window.SKUDATA) window.SKUDATA = loadTabCache_('sephora_cache_sku'); refreshSKU(); } catch(e){} }
   if (tab === 'events')  { try { renderTypeLegend(); renderEventListFull(); } catch(e){} }
   if (tab === 'query')   openQueryTab();
+  if (tab === 'ads' || tab === 'onsite') { try { ctyNoDataNote_(); } catch(e){} }   // 국가 분리 6차 ⑮
   if (tab === 'online')  { try { refreshOnline(); } catch(e){ console.warn('[online]', e); } }
 }
 // ── KOL Table ─────────────────────────────────────────────────────────────────
@@ -6633,7 +6771,8 @@ function renderKolTable() {
 const ONL_SHEET = '1_Wbyc4AEpm_RHHhD-8yCmoXUc7AVoYjLOI1eAkuYoO0';
 const ONL = { period:'weekly', cur:'KRW', tcur:'KRW', month:'', week:'',
   show:{ visits:true, cvr:false, ad:false, brand:false, kol:false, ch:false, total:false, roas:false, roasT:false },
-  byDate:null, src:'', at:0, loading:false, err:'' };
+  byDate:null, src:'', at:0, loading:false, err:'',
+  caByDate:null, caErr:'' };   // 2026-11-11 캐나다 포털(RAW_CA_commerce · C$)
 let onlChart = null;
 function onlDate_(v) {
   if (typeof v === 'number') return new Date(Date.UTC(1899, 11, 30) + Math.round(v) * 86400000).toISOString().slice(0, 10);
@@ -6645,23 +6784,30 @@ function onlNum_(v) {
   var n = parseFloat(String(v == null ? '' : v).replace(/[^0-9.\-]/g, ''));
   return isNaN(n) ? 0 : n;
 }
+// 포털 이커머스 시트 한 탭 → { 날짜: Sales TY 합 } (미국 RAW_commerce · 캐나다 RAW_CA_commerce 같은 열 구조 — I열 Sales TY)
+async function onlReadSales_(token, range) {
+  const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + ONL_SHEET + '/values/' + encodeURIComponent(range) + '?valueRenderOption=UNFORMATTED_VALUE';
+  const res = await fetch(url, { headers:{ Authorization:'Bearer ' + token } });
+  if (!res.ok) throw new Error('시트 읽기 실패 (' + res.status + ')');
+  const js = await res.json(), m = {};
+  (js.values || []).forEach(function(r) {
+    var d = onlDate_(r[0]);
+    if (d) m[d] = (m[d] || 0) + onlNum_(r[8]);
+  });
+  if (!Object.keys(m).length) throw new Error(range.split('!')[0] + ' 행 없음');
+  return m;
+}
 async function onlLoad_() {
   if (ONL.loading) return;
   if (ONL.byDate && ONL.src === 'commerce' && Date.now() - ONL.at < 600000) return;   // 10분 안에는 다시 읽지 않는다
   ONL.loading = true; ONL.err = '';
+  const token = sessionStorage.getItem('sephora_token');
+  // 캐나다 포털은 미국과 따로 읽는다 — 실패해도 미국 화면은 그대로 (2026-11-11)
+  const caP = !token ? Promise.resolve(ONL.caErr = '로그인 토큰 없음')
+    : onlReadSales_(token, 'RAW_CA_commerce!A2:I').then(function(m) { ONL.caByDate = m; ONL.caErr = ''; }, function(e) { ONL.caErr = e.message || String(e); });
   try {
-    const token = sessionStorage.getItem('sephora_token');
     if (!token) throw new Error('로그인 토큰 없음');
-    const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + ONL_SHEET + '/values/' + encodeURIComponent('RAW_commerce!A2:I') + '?valueRenderOption=UNFORMATTED_VALUE';
-    const res = await fetch(url, { headers:{ Authorization:'Bearer ' + token } });
-    if (!res.ok) throw new Error('시트 읽기 실패 (' + res.status + ')');
-    const js = await res.json(), m = {};
-    (js.values || []).forEach(function(r) {
-      var d = onlDate_(r[0]);
-      if (d) m[d] = (m[d] || 0) + onlNum_(r[8]);
-    });
-    if (!Object.keys(m).length) throw new Error('RAW_commerce 행 없음');
-    ONL.byDate = m; ONL.src = 'commerce'; ONL.at = Date.now();
+    ONL.byDate = await onlReadSales_(token, 'RAW_commerce!A2:I'); ONL.src = 'commerce'; ONL.at = Date.now();
   } catch (e) {
     ONL.err = e.message || String(e);
     if (ONL.src !== 'commerce') {
@@ -6670,27 +6816,49 @@ async function onlLoad_() {
       if (typeof CTY === 'undefined' || CTY === 'US') (CH_RAW || []).forEach(function(r) { m2[r.date] = (m2[r.date] || 0) + (r.sales || 0) / fxRate(r.date); });
       ONL.byDate = m2; ONL.src = 'channel';
     }
-  } finally { ONL.loading = false; }
+  } finally { await caP; ONL.loading = false; }
+}
+// ⑫ 국가 칩 — 「미국」은 지금 그대로. 캐나다 = RAW_CA_commerce(C$) · 원화 = C$ × 1,000 · 달러 = 원화 ÷ 그 날 미국 환율 (유입 탭과 같은 기준)
+//   캐나다 날짜는 첫 매출일(ctyCaCut_ · 유입 탭과 같은 기준)부터. 「전체」는 두 나라 자료가 모두 있는 날짜만 더한다.
+//   광고비·ROAS는 미국만 있어 캐나다·전체에서는 비운다(통합 탭과 같은 규칙)
+function onlCty_() { return typeof CTY === 'undefined' ? 'US' : CTY; }
+function onlSalesAt_(d) {
+  var cty = onlCty_(), us = ONL.byDate ? ONL.byDate[d] : null, ca = ONL.caByDate ? ONL.caByDate[d] : null, fx = fxRate(d);
+  var U = us == null ? null : { usd: us, krw: us * fx };
+  var C = ca == null ? null : { usd: ca * 1000 / fx, krw: ca * 1000 };
+  if (cty === 'US') return U;
+  if (cty === 'CA') return C;
+  return (U && C) ? { usd: U.usd + C.usd, krw: U.krw + C.krw } : null;
+}
+function onlDays_() {
+  var cty = onlCty_();
+  if (cty === 'US') return Object.keys(ONL.byDate || {}).sort();
+  var k = typeof ctyCaCut_ === 'function' ? ctyCaCut_() : null, st = (k && k.start) || '';
+  var ca = Object.keys(ONL.caByDate || {}).filter(function(d) { return d >= st; });
+  if (cty === 'ALL') ca = ca.filter(function(d) { return ONL.byDate && ONL.byDate[d] != null; });
+  return ca.sort();
 }
 function onlDates_(period) {
-  var ds = Object.keys(ONL.byDate || {}).sort();
+  var ds = onlDays_();
   return ds.filter(function(d) {
     return (!ONL.month || d.slice(0, 7) === ONL.month) && (!ONL.week || getWeekKey(d) === ONL.week);
   });
 }
 function onlData_() {
-  var p = ONL.period, ds = onlDates_(), b = {}, v = {}, o = {}, sp = {};
-  RAW_SKU.forEach(function(r) { v[r.date] = (v[r.date] || 0) + (r.visits || 0); o[r.date] = (o[r.date] || 0) + (r.orders || 0); });
-  ADS_RAW.forEach(function(r) { sp[r.date] = (sp[r.date] || 0) + (r.spend || 0); });
+  var p = ONL.period, ds = onlDates_(), b = {}, v = {}, o = {}, sp = {}, cty = onlCty_();
+  if (cty !== 'CA') RAW_SKU.forEach(function(r) { v[r.date] = (v[r.date] || 0) + (r.visits || 0); o[r.date] = (o[r.date] || 0) + (r.orders || 0); });
+  if (cty !== 'US') ((typeof ctyCaCom_ === 'function' && ctyCaCom_()) || []).forEach(function(r) { v[r.date] = (v[r.date] || 0) + (r.visits || 0); o[r.date] = (o[r.date] || 0) + (r.orders || 0); });   // 캐나다 방문·주문 = 통합 탭 Visits·CVR 과 같은 원천
+  if (cty === 'US') ADS_RAW.forEach(function(r) { sp[r.date] = (sp[r.date] || 0) + (r.spend || 0); });
   ds.forEach(function(d) {
     var k = p === 'daily' ? d : getPeriodKey(d, p);
     var x = b[k] || (b[k] = { date:k, label:p === 'daily' ? d.slice(5) : fmtPeriodLabel(k, p), visits:0, orders:0, sales:0, sales_krw:0, spend:0 });
-    var s = ONL.byDate[d] || 0;
-    x.visits += v[d] || 0; x.orders += o[d] || 0; x.sales += s; x.sales_krw += s * fxRate(d); x.spend += sp[d] || 0;
+    var s = onlSalesAt_(d) || { usd:0, krw:0 };
+    x.visits += v[d] || 0; x.orders += o[d] || 0; x.sales += s.usd; x.sales_krw += s.krw; x.spend += sp[d] || 0;
   });
   return Object.values(b).sort(function(a, c) { return a.date.localeCompare(c.date); }).map(function(x) {
     x.cvr = x.visits > 0 ? x.orders / x.visits * 100 : 0;
-    if (p === 'daily') { x.roas = roasSafe_(x.sales_krw, x.spend); x.roasT = null; }
+    if (cty !== 'US') { x.roas = null; x.roasT = null; x.spend = null; }
+    else if (p === 'daily') { x.roas = roasSafe_(x.sales_krw, x.spend); x.roasT = null; }
     else {
       x.roas = roasSafe_(x.sales_krw, costVal(p, '퍼포먼스 비용', x.date) + costVal(p, '온사이트 비용', x.date));
       x.roasT = roasSafe_(x.sales_krw, costVal(p, '광고비 총계', x.date));
@@ -6698,14 +6866,16 @@ function onlData_() {
     return x;
   });
 }
-function onlCost_(d, label) { return ONL.period === 'daily' ? null : costVal(ONL.period, label === '채널' ? channelLabel(ONL.period) : label, d.date); }
+function onlCost_(d, label) { return (ONL.period === 'daily' || onlCty_() !== 'US') ? null : costVal(ONL.period, label === '채널' ? channelLabel(ONL.period) : label, d.date); }
 function onlFillFilters_() {
-  var ds = Object.keys(ONL.byDate || {}).sort();
+  var ds = onlDays_();
   var fill = function(id, vals, lab, cur) {
     var el = document.getElementById(id); if (!el) return;
     el.innerHTML = '<option value="">ALL</option>' + vals.map(function(x) { return '<option value="' + x + '"' + (x === cur ? ' selected' : '') + '>' + lab(x) + '</option>'; }).join('');
   };
-  fill('onlMonth', [...new Set(ds.map(function(d) { return d.slice(0, 7); }))], function(m) { return m; }, ONL.month);
+  var mons = [...new Set(ds.map(function(d) { return d.slice(0, 7); }))];
+  if (ONL.month && mons.indexOf(ONL.month) < 0) ONL.month = '';   // 국가를 바꿔 목록에 없는 달이면 해제
+  fill('onlMonth', mons, function(m) { return m; }, ONL.month);
   var src = ONL.month ? ds.filter(function(d) { return d.slice(0, 7) === ONL.month; }) : ds;
   var wks = [...new Set(src.map(getWeekKey))];
   if (ONL.week && wks.indexOf(ONL.week) < 0) ONL.week = '';
@@ -6724,18 +6894,33 @@ function onlRenderNote_() {
     el.style.display = '';
     el.textContent = '시트를 새로 읽지 못해(' + ONL.err + ') 마지막으로 읽은 값을 표시 중입니다.';
   } else el.style.display = 'none';
+  // 캐나다·전체 안내 (2026-11-11)
+  var cty = onlCty_(); if (cty === 'US') return;
+  var msg;
+  if (!ONL.caByDate) msg = '캐나다 포털 매출(RAW_CA_commerce)을 읽지 못했습니다' + (ONL.caErr ? ' (' + ONL.caErr + ')' : '') + ' — ' + (cty === 'CA' ? '표시할 값이 없습니다' : '「전체」는 합산하지 않습니다');
+  else { var ds = onlDays_(); msg = '<b>' + (cty === 'CA' ? '캐나다' : '전체 (미국+캐나다)') + '</b> — 캐나다 = 브랜드포털 캐나다 이커머스(RAW_CA_commerce) · C$ → 원화 C$×1,000 · 달러 = 원화÷미국 환율(유입 탭과 같은 기준) · '
+    + (ds.length ? ds[0] + '~' + ds[ds.length - 1] : '자료 없음') + (cty === 'ALL' ? ' (두 나라 자료가 모두 있는 날짜만 합산)' : ' (첫 매출일부터)') + ' · 광고비·ROAS는 미국만 있어 비웁니다'; }
+  var pre = el.style.display !== 'none' && el.innerHTML ? el.innerHTML + '<br>' : '';
+  el.style.display = '';
+  el.innerHTML = pre + msg;
 }
 function onlRenderKpi_(data) {
   var el = document.getElementById('onlKpiRow'); if (!el) return;
   var sum = function(k) { return data.reduce(function(a, d) { return a + (d[k] || 0); }, 0); };
   var v = sum('visits'), o = sum('orders'), s = sum('sales'), sk = sum('sales_krw');
   var card = function(t, val, sub) { return '<div class="kpi"><div class="kpi-label">' + t + '</div><div class="kpi-value">' + val + '</div><div class="kpi-sub">' + (sub || '') + '</div></div>'; };
-  el.innerHTML = card('포털 매출', curFmt_(ONL.cur === 'USD' ? s : sk, ONL.cur), ONL.cur === 'USD' ? curFmt_(sk, 'KRW') : curFmt_(s, 'USD'))
-    + card('TOTAL VISITS', Math.round(v).toLocaleString('en-US'), '포털')
+  var tag = { US:'', CA:' · 캐나다', ALL:' · 전체' }[onlCty_()] || '';
+  el.innerHTML = card('포털 매출' + tag, curFmt_(ONL.cur === 'USD' ? s : sk, ONL.cur), ONL.cur === 'USD' ? curFmt_(sk, 'KRW') : curFmt_(s, 'USD'))
+    + card('TOTAL VISITS' + tag, Math.round(v).toLocaleString('en-US'), '포털')
     + card('CVR', (v > 0 ? o / v * 100 : 0).toFixed(2) + '%', '주문 수량 ' + Math.round(o).toLocaleString('en-US'));
 }
 function onlRenderChart_(data) {
-  var S = ONL.show, P = ONL.period, cur = ONL.cur, n = data.length, cost = P !== 'daily';
+  var US_ = onlCty_() === 'US', S = Object.assign({}, ONL.show), P = ONL.period, cur = ONL.cur, n = data.length, cost = P !== 'daily';
+  if (!US_) ['ad', 'brand', 'kol', 'ch', 'total', 'roas', 'roasT'].forEach(function(k) { S[k] = false; });   // 캐나다·전체 — 광고비·ROAS 없음
+  document.querySelectorAll('[data-onl-show]').forEach(function(b) { var k = b.dataset.onlShow; if (k === 'visits' || k === 'cvr') return;
+    b.disabled = !US_; b.classList.toggle('cty-locked', !US_); b.title = US_ ? '' : CTY_WHY.ads; });
+  var bdg = document.getElementById('onlCtyBadge');
+  if (bdg) bdg.textContent = { US:'미국 · 포털 매출 기준', CA:'캐나다 · 포털 매출 기준 (C$)', ALL:'전체 (미국+캐나다) · 포털 매출 기준' }[onlCty_()];
   var ln = function(label, vals, color, axis, order) { return { label:label, data:vals, type:'line', borderColor:color, backgroundColor:'transparent', borderWidth:1.8, pointRadius:n > 40 ? 0 : 2, pointHoverRadius:4, pointBackgroundColor:color, spanGaps:false, fill:false, yAxisID:axis, order:order == null ? 0 : order, tension:0.25 }; };
   var ds = [];
   ds.push({ label:'Sales (포털)', data:data.map(function(d) { return cur === 'USD' ? d.sales : d.sales_krw; }), type:'bar', backgroundColor:makeGrad('onlineChart', '#d97070', 0.85, 0.45), hoverBackgroundColor:makeGrad('onlineChart', '#d97070', 0.95, 0.6), yAxisID:'yS', order:2, barPercentage:0.5, categoryPercentage:0.85 });
@@ -6772,7 +6957,7 @@ function onlRenderChart_(data) {
 }
 function onlRenderTable_(data) {
   var el = document.getElementById('onlineDataTable'); if (!el) return;
-  var P = ONL.period, usd = ONL.tcur === 'USD';
+  var P = ONL.period, usd = ONL.tcur === 'USD', cty = onlCty_();
   var rows = [
     ['Visits', mtblCount, function(d) { return d.visits; }],
     ['Sales 포털' + (usd ? ' (USD)' : ''), usd ? mtblUsd : mtblMoney, function(d) { return usd ? d.sales : d.sales_krw; }],
@@ -6785,13 +6970,14 @@ function onlRenderTable_(data) {
     ['온라인 ROAS', function(v) { return mtblPct(v, true); }, function(d) { return d.roas; }],
     ['전체 광고비 ROAS', function(v) { return mtblPct(v, true); }, function(d) { return d.roasT; }]
   ];
+  if (cty !== 'US') rows.forEach(function(m, i) { if (i >= 3) m[2] = function() { return null; }; });   // 광고비·ROAS — 미국만 있음
   var wm = (P === 'weekly' && typeof dmWeekMarks === 'function') ? dmWeekMarks() : null;
   var wc = function(k) { return !wm ? '' : k === wm.last ? ' class="dmd-hl"' : k >= wm.cur ? ' class="dmd-ing"' : ''; };
   var h = '<thead><tr><th class="mt-cty">국가</th><th class="mt-lbl">지표</th>';
   data.forEach(function(d) { h += '<th' + wc(d.date) + '>' + d.label + (!wm ? '' : d.date === wm.last ? '<span class="dmd-hl-badge">지난주</span>' : d.date >= wm.cur ? '<span class="dmd-ing-badge">진행 중</span>' : '') + '</th>'; });
   h += '</tr></thead><tbody>';
   rows.forEach(function(m, i) {
-    h += '<tr>' + (i === 0 ? '<td class="mt-cty" rowspan="' + rows.length + '">미국</td>' : '') + '<td class="ads-metric-lbl">' + m[0] + '</td>';
+    h += '<tr>' + (i === 0 ? '<td class="mt-cty" rowspan="' + rows.length + '">' + ({ US:'미국', CA:'캐나다', ALL:'전체' }[cty] || '미국') + '</td>' : '') + '<td class="ads-metric-lbl">' + m[0] + '</td>';
     data.forEach(function(d) { var v = m[2](d); h += '<td' + wc(d.date) + '>' + m[1](typeof v === 'number' ? v : null) + '</td>'; });
     h += '</tr>';
   });
