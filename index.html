@@ -4300,8 +4300,8 @@ const MAIN_TABLE_METRICS = [
 // 위 12행은 미국 값이며 손대지 않는다. 캐나다 자료가 있는 매출 지표만 아래에 행을 더한다.
 // 원천 window.CADATA (Apps Script parseCA_)
 //   주 = Raw_CA_주간 매장 행 합(B&M) + Raw_CA_창고 위치구분='닷컴 물류센터' 행 합(.COM) — 미국 닷컴과 같은 방식
-//   월 = Raw_CA_월간_SKU 합계 — 채널 구분이 없어 .COM·B&M 행은 「—」
-//   일 = 캐나다는 주 단위 자료뿐 → 「—」
+//   일 = Raw_CA_일간 (2026-11-11 · Location 「Daily」 탭 · 주별 합 = 주간 탭) — CADATA.daily
+//   월 = 일별 합(미국 월과 같은 방식 · 채널 구분 있음). daily 가 없을 때만 예전 Raw_CA_월간_SKU 합계(채널 구분 없음)
 // 환율은 미국과 같은 fxRate(날짜) — 세포라 엑셀의 캐나다 값도 USD다(2026-10-02 확정). 주 = 주 마감일 · 월 = 그 달 기준.
 // 계산할 수 없는 칸은 0 이 아니라 「—」 + 이유(셀 툴팁 · 행 전체가 「—」이면 행 이름 아래 한 줄).
 const CA_WHY = {
@@ -4314,11 +4314,36 @@ function caData_() {
   var c = window.CADATA;
   return (c && Array.isArray(c.wk)) ? c : null;
 }
+// 2026-11-11 — 캐나다 일별(Raw_CA_일간 · Location 「Daily」 · 주간 탭과 합 일치). Apps Script 반영 전이면 null → 예전처럼 주 단위만
+var _caDayMap = null, _caDaySrc = null;
+function caDaily_() {
+  var c = caData_(); var d = c && Array.isArray(c.daily) && c.daily.length ? c.daily : null;
+  if (d !== _caDaySrc) { _caDaySrc = d; _caDayMap = null; if (d) { _caDayMap = {}; d.forEach(function(x){ _caDayMap[x.date] = x; }); } }
+  return d ? _caDayMap : null;
+}
+// 날짜 묶음(달 'YYYY-MM' 또는 날짜 배열)의 캐나다 일별 합 { bm, com, ttl, bmK, comK, ttlK, n } — 원화 = 날짜별 환율
+function caDaySum_(pred) {
+  var m = caDaily_(); if (!m) return null;
+  var s = { bm:0, com:0, bmK:0, comK:0, n:0 };
+  Object.keys(m).forEach(function(k){ if (!pred(k)) return; var x = m[k], fx = fxRate(k); s.bm += x.bm; s.com += x.com; s.bmK += x.bm * fx; s.comK += x.com * fx; s.n++; });
+  s.ttl = s.bm + s.com; s.ttlK = s.bmK + s.comK;
+  return s;
+}
 // 한 기간(d)의 캐나다 값 { v: USD 숫자 또는 null, why: 이유, fx: 그 기간 환율 } · part = 'bm' | 'com' | 'ttl'
 function caPart_(d, part) {
   var c = caData_();
   if (!c) return { v:null, why:CA_WHY.none };
-  if (mainPeriod === 'daily') return { v:null, why:CA_WHY.daily };
+  if (mainPeriod === 'daily') {
+    var dm = caDaily_(); if (!dm) return { v:null, why:CA_WHY.daily };
+    var x = dm[d.date]; if (!x) return { v:null, why:CA_WHY.gap };
+    return { v: part === 'bm' ? x.bm : part === 'com' ? x.com : x.bm + x.com, why:'', fx:fxRate(d.date) };
+  }
+  if (mainPeriod === 'monthly' && caDaily_()) {   // 2026-11-11 — 월 = 일별 합(미국 월 값과 같은 방식 · .COM·B&M 구분 가능)
+    var mk = String(d.date).slice(0, 7), s = caDaySum_(function(k){ return k.slice(0, 7) === mk; });
+    if (!s.n) return { v:null, why:CA_WHY.gap };
+    var v = part === 'bm' ? s.bm : part === 'com' ? s.com : s.ttl, vK = part === 'bm' ? s.bmK : part === 'com' ? s.comK : s.ttlK;
+    return { v:v, why:'', fx: v ? vK / v : fxRate(mk) };
+  }
   if (mainPeriod === 'monthly') {
     if (part !== 'ttl') return { v:null, why:CA_WHY.monCh };
     var m = (c.monthly || []).find(function(x){ return x.key === d.date; });
@@ -4330,8 +4355,8 @@ function caPart_(d, part) {
   return { v: part === 'bm' ? w.bm : part === 'com' ? w.com : w.bm + w.com, why:'', fx:fxRate(w.we) };   // 주 마감일(토요일) 환율
 }
 function caRowWhy_(part) {
-  var why = !caData_() ? CA_WHY.none : mainPeriod === 'daily' ? CA_WHY.daily
-          : (mainPeriod === 'monthly' && part !== 'ttl') ? CA_WHY.monCh : '';
+  var why = !caData_() ? CA_WHY.none : (mainPeriod === 'daily' && !caDaily_()) ? CA_WHY.daily
+          : (mainPeriod === 'monthly' && part !== 'ttl' && !caDaily_()) ? CA_WHY.monCh : '';
   return why ? '<span class="ca-why">— ' + why + '</span>' : '';
 }
 // withUs = true 이면 「전체」 = 미국(위 12행과 같은 값) + 캐나다
@@ -4365,6 +4390,26 @@ function caInMetric_(name, key, fmt) {
     }
   };
 }
+// 2026-11-11 민경 요청 — 「전체」 표에 US 매출 · CA 매출 · US 매출 비중 (TTL 기준)
+//   US = 위 미국 Sales TTL 과 같은 값 · CA = 캐나다 Sales TTL 과 같은 값(caPart_ 'ttl')
+//   비중 = 미국 ÷ (미국 + 캐나다), 둘 다 USD 원본으로 계산(환율 영향 없음). 캐나다 값이 없는 기간은 「—」
+function usShareMetric_(name, kind) {
+  return {
+    get label() { return '<span class="ca-lbl">' + (kind === 'share' ? name : salesLbl_(name)) + '</span>' + (kind === 'us' ? '' : caRowWhy_('ttl')); },
+    fmt: function(v) { return v == null ? '<span class="ca-na" title="' + (this._why || '') + '">—</span>' : kind === 'share' ? mtblPct(v, true) : mtblSales_(v); },
+    get: function(d) {
+      this._why = '';
+      if (kind === 'us') return d.sales == null ? null : (TBL_CUR === 'USD' ? d.sales : d.sales_krw);
+      var r = caPart_(d, 'ttl');
+      this._why = r.why;
+      if (r.v == null) return null;
+      if (kind === 'ca') return TBL_CUR === 'USD' ? r.v : r.v * r.fx;
+      if (typeof d.sales !== 'number') { this._why = '이 기간의 미국 값이 없습니다'; return null; }
+      var tot = d.sales + r.v;
+      return tot ? d.sales / tot : null;
+    }
+  };
+}
 function ctyRow_(c, m) { m.cty = c; return m; }
 MAIN_TABLE_METRICS.push(
   ctyRow_('CA',  caInMetric_('Visits', 'v', mtblCount)),
@@ -4375,6 +4420,9 @@ MAIN_TABLE_METRICS.push(
   ctyRow_('ALL', caInMetric_('Visits', 'v', mtblCount)),
   ctyRow_('ALL', caMetric_('Sales .COM', 'com', true)),
   ctyRow_('ALL', caMetric_('Sales TTL', 'ttl', true)),
+  ctyRow_('ALL', usShareMetric_('US 매출', 'us')),
+  ctyRow_('ALL', usShareMetric_('CA 매출', 'ca')),
+  ctyRow_('ALL', usShareMetric_('US 매출 비중', 'share')),
   ctyRow_('ALL', caInMetric_('CVR', 'cvr', function(v){ return mtblPct(v, false); }))
 );
 // ═══ 국가 분리 2차 (2026-10-08) — 국가 칩 1단 · 전역 국가 상태 CTY · 끄는 규칙 ═══════════
@@ -4416,7 +4464,7 @@ window.setCty = function(c) {
   ctyCurBadge_();   // 2026-10-12 제목 옆 지금 국가
   // 「전체」 — 채널 칩(COM·TTL·B&M)도 여러 개 함께 고를 수 있다 (2026-10-15 MJ · 채널마다 미국+캐나다 막대를 나란히)
   // 「캐나다」 — 일 보기 잠금 (주 단위만). 일 보기 중이었으면 주 보기로 옮긴다
-  if (c === 'CA' && mainPeriod === 'daily') {
+  if (c === 'CA' && mainPeriod === 'daily' && !caDaily_()) {
     var wb = document.querySelector('[data-main-period="weekly"]');
     if (wb) { window.setMainPeriod(wb, 'weekly'); }
   }
@@ -4437,6 +4485,18 @@ function ctyCaSales_(dateSet, months) {
   var c = caData_();
   if (!c) return { v:null, why:CA_WHY.none };
   // *K = 원화 — 달·주마다 그 기간 환율(월 = 그 달 · 주 = 주 마감일)로 환산한 뒤 더한다
+  if (months && caDaily_()) {   // 2026-11-11 — 일별 합 · 채널 구분 있음
+    var s = caDaySum_(function(k){ return months.indexOf(k.slice(0, 7)) >= 0; });
+    if (!s.n) return { v:null, why:CA_WHY.gap };
+    return { v: s.ttl, bm: s.bm, com: s.com, split:true, vK: s.ttlK, bmK: s.bmK, comK: s.comK };
+  }
+  if (!months && dateSet && caDaily_()) {   // 2026-11-11 — 미국과 같은 날짜 집합 그대로(주 단위로 넓히지 않는다)
+    var ds = {}, mx = ''; dateSet.forEach(function(d){ ds[d] = 1; if (d > mx) mx = d; });
+    var sd = caDaySum_(function(k){ return ds[k]; });
+    if (!sd.n) return { v:null, why:CA_WHY.gap };
+    var lastD = c.daily[c.daily.length - 1].date;
+    return { v: sd.ttl, bm: sd.bm, com: sd.com, split:true, vK: sd.ttlK, bmK: sd.bmK, comK: sd.comK, lastDay: lastD, short: mx > lastD };
+  }
   if (months) {
     var gm = (c.monthly || []).filter(function(x){ return months.indexOf(x.key) >= 0; });
     if (!gm.length) return { v:null, why:CA_WHY.gap };
@@ -4513,7 +4573,8 @@ function ctyMainKpi_(items, data, prevDates, cmpLbl) {
   } else { s.badge = null; s.vs = null; }
   var notes = [];
   if (ca.used) notes.push('캐나다 월간 자료: ' + ca.used.join('·'));
-  if (ca.short) notes.push('캐나다는 ' + fmtWkLabel(getWeekKey(ca.lastWe)).split('-')[1] + ' 마감 주까지 반영');
+  if (ca.short && ca.lastDay) notes.push('캐나다는 ' + ca.lastDay.slice(5).replace('-', '/') + '까지 반영');
+  else if (ca.short) notes.push('캐나다는 ' + fmtWkLabel(getWeekKey(ca.lastWe)).split('-')[1] + ' 마감 주까지 반영');
   if (CTY === 'ALL' && monthMode) notes.push('미국은 일별 자료를 달력 월로 합산한 값이고, 캐나다는 세포라 월간 자료 합계입니다. 집계 단위가 달라 단순 비교에 주의하십시오.');
   s.excl = notes.join('<br>') || null;
 }
@@ -4544,7 +4605,7 @@ function ctyMainChart_(cfg, data) {
     }
   });
   if (dayBtn) {
-    if (CTY === 'CA') { dayBtn.disabled = true; dayBtn.classList.add('cty-locked'); dayBtn.title = CTY_WHY.caDaily; }
+    if (CTY === 'CA' && !caDaily_()) { dayBtn.disabled = true; dayBtn.classList.add('cty-locked'); dayBtn.title = CTY_WHY.caDaily; }
     else if (dayBtn.classList.contains('cty-locked')) { dayBtn.disabled = false; dayBtn.classList.remove('cty-locked'); dayBtn.title = ''; }
   }
   if (CTY === 'US') {
