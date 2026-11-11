@@ -4365,6 +4365,26 @@ function caInMetric_(name, key, fmt) {
     }
   };
 }
+// 2026-11-11 민경 요청 — 「전체」 표에 US 매출 · CA 매출 · US 매출 비중 (TTL 기준)
+//   US = 위 미국 Sales TTL 과 같은 값 · CA = 캐나다 Sales TTL 과 같은 값(caPart_ 'ttl')
+//   비중 = 미국 ÷ (미국 + 캐나다), 둘 다 USD 원본으로 계산(환율 영향 없음). 캐나다 값이 없는 기간은 「—」
+function usShareMetric_(name, kind) {
+  return {
+    get label() { return '<span class="ca-lbl">' + (kind === 'share' ? name : salesLbl_(name)) + '</span>' + (kind === 'us' ? '' : caRowWhy_('ttl')); },
+    fmt: function(v) { return v == null ? '<span class="ca-na" title="' + (this._why || '') + '">—</span>' : kind === 'share' ? mtblPct(v, true) : mtblSales_(v); },
+    get: function(d) {
+      this._why = '';
+      if (kind === 'us') return d.sales == null ? null : (TBL_CUR === 'USD' ? d.sales : d.sales_krw);
+      var r = caPart_(d, 'ttl');
+      this._why = r.why;
+      if (r.v == null) return null;
+      if (kind === 'ca') return TBL_CUR === 'USD' ? r.v : r.v * r.fx;
+      if (typeof d.sales !== 'number') { this._why = '이 기간의 미국 값이 없습니다'; return null; }
+      var tot = d.sales + r.v;
+      return tot ? d.sales / tot : null;
+    }
+  };
+}
 function ctyRow_(c, m) { m.cty = c; return m; }
 MAIN_TABLE_METRICS.push(
   ctyRow_('CA',  caInMetric_('Visits', 'v', mtblCount)),
@@ -4375,6 +4395,9 @@ MAIN_TABLE_METRICS.push(
   ctyRow_('ALL', caInMetric_('Visits', 'v', mtblCount)),
   ctyRow_('ALL', caMetric_('Sales .COM', 'com', true)),
   ctyRow_('ALL', caMetric_('Sales TTL', 'ttl', true)),
+  ctyRow_('ALL', usShareMetric_('US 매출', 'us')),
+  ctyRow_('ALL', usShareMetric_('CA 매출', 'ca')),
+  ctyRow_('ALL', usShareMetric_('US 매출 비중', 'share')),
   ctyRow_('ALL', caInMetric_('CVR', 'cvr', function(v){ return mtblPct(v, false); }))
 );
 // ═══ 국가 분리 2차 (2026-10-08) — 국가 칩 1단 · 전역 국가 상태 CTY · 끄는 규칙 ═══════════
