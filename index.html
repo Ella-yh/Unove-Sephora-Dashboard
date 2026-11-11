@@ -5046,7 +5046,7 @@ window.ctySkuDetail_ = function() {
 };
 // ⑮ 퍼포먼스·온사이트 — 캐나다 자료가 없다는 안내 줄 (숫자는 그대로 미국)
 window.ctyNoDataNote_ = function() {
-  [['tabAds', 'ctyAdsNote', CTY_WHY.ads], ['tabOnsite', 'ctyOnsiteNote', '캐나다 온사이트 광고 자료가 없습니다']].forEach(function(p){
+  [['tabAds', 'ctyAdsNote', CTY_WHY.ads], ['tabOnsite', 'ctyOnsiteNote', '캐나다는 세포라 온사이트 광고를 집행하지 않습니다']].forEach(function(p){
     var tab = document.getElementById(p[0]); if (!tab) return;
     var el = document.getElementById(p[1]);
     if (!el) { el = document.createElement('div'); el.id = p[1]; el.className = 'onl-note'; el.style.margin = '0 0 10px'; tab.insertBefore(el, tab.firstChild); }
