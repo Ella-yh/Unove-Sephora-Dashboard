@@ -3306,7 +3306,7 @@ function toggleTotalCost(btn) {
 //   시트 「퍼포먼스 비용」·「광고비 총계」에는 캐나다 광고비가 섞여 있다
 //     주 = RAW_퍼포먼스 SUMIFS(주차·매체, 캠페인 구분 없음) · 월 = [★작성]광고선전비 메타 청구서(한 장에 캐나다분 포함)
 //   → costVal(대시보드 기본 = 미국) = 시트 − 같은 기간 키의 캐나다 광고비. 시트가 빈칸·0(월 마감 전)이면 그대로 0
-//   → costValCty_(…, 'CA') = 캐나다 광고비만 · 'ALL' = 시트 그대로. 브랜딩·KOL·채널마케팅·온사이트는 캐나다분이 없다고 보고 미국에 둔다
+//   → costValCty_(…, 'CA') = 캐나다 광고비 + 장부 캐나다(⑰) · 'ALL' = 미국 + 캐나다. KOL·채널마케팅·온사이트는 캐나다분이 없다고 보고 미국에 둔다
 //   🛑 미국 12행·KPI·그래프는 모두 costVal(미국)을 쓴다. 국가 칩 값(CTY)을 costVal 안에서 읽지 않는다 — 표의 미국 행이 국가 칩 따라 바뀌면 안 된다
 var AD_CA_RE = /(^|[^a-z])ca([^a-z]|$)/i;
 var CTY_AD_LABELS = { '퍼포먼스 비용':1, '광고비 총계':1 };
@@ -3358,17 +3358,49 @@ function costValSheet_(p, label, key) {
   v = v && v[label] ? v[label][key] : undefined;
   return typeof v === 'number' ? v : 0;
 }
+// ⑰ 장부 캐나다 비용 (2026-11-12 MJ 「장부 캐나다 비용 넣기」) — DEMAND.caLedger = [★작성]광고선전비 국가='캐나다' 행 (Apps Script parseCaLedger_)
+//   원가 시트 규칙을 그대로 재현한다
+//     주 = SUMMARY(주차)_DM : L(작성 비용) ÷ (종료일−시작일+1) × 그 주와 겹치는 날 수 · 비용구분2(F)로 행 구분 · 국가 조건 없음 → 캐나다 행이 이미 미국 주 비용에 섞여 있다
+//     월 = 사업실적_Summary : N(마감 비용 원)을 년월(S)로 · 국가='미국'만 → 캐나다 행은 빠져 있다
+//   → 미국 = 시트 − (주 단위면 장부 캐나다분) · 캐나다 = 장부 캐나다분 · 전체 = 미국 + 캐나다
+//   항목 매핑(시트와 같은 기준): 콘텐츠 제작비·PR/앰블럼·옥외·팝업/오프라인행사·브랜딩 기타 → 브랜딩 · 퍼포먼스 기타 → 퍼포먼스
+//   🛑 매장 행사/광고비(미국도 대시보드 비용에 안 들어감)·KOL(주 = KOL 시트, 국가 칸 없음)은 MJ 답 대기 — 아직 넣지 않는다
+var LED_BRAND_C2 = { '콘텐츠 제작비':1, 'PR/앰블럼':1, '옥외':1, '팝업/오프라인행사':1, '브랜딩 기타':1 };
+function caLedRows_() { var d = window.DEMAND || {}; return Array.isArray(d.caLedger) ? d.caLedger : null; }
+function ledLabel_(x) { return LED_BRAND_C2[x.c2] ? '브랜딩 비용' : x.c2 === '퍼포먼스 기타' ? '퍼포먼스 비용' : null; }
+function ledDayN_(a, b) { return Math.round((Date.parse(b) - Date.parse(a)) / 864e5) + 1; }
+function caLedger_(p, label, key) {   // p = 'weekly'(L 날짜 배분) | 'monthly'(N · 년월) | 'daily'(L 날짜 배분, 하루)
+  var rows = caLedRows_(); if (!rows) return 0;
+  var t = 0;
+  rows.forEach(function(x){
+    var lb = ledLabel_(x); if (!lb) return;
+    if (label !== '광고비 총계' && label !== lb) return;
+    if (p === 'monthly') { if (x.ym === key) t += x.n || 0; return; }
+    if (!x.s || !x.e) return;
+    var days = ledDayN_(x.s, x.e); if (!(days > 0)) return;
+    var to = p === 'weekly' ? new Date(Date.parse(key) + 6 * 864e5).toISOString().slice(0, 10) : key;
+    var lo = x.s > key ? x.s : key, hi = x.e < to ? x.e : to;
+    if (lo > hi) return;
+    t += (x.l || 0) / days * ledDayN_(lo, hi);
+  });
+  return t;
+}
 function costVal(p, label, key) { return costValCty_(p, label, key, 'US'); }
 function costValCty_(p, label, key, cty) {
   var v = costValSheet_(p, label, key);
-  if (cty === 'ALL') return v;
-  if (cty === 'CA') return CTY_AD_LABELS[label] ? caAdSpend_(p, key) : 0;
-  if (!CTY_AD_LABELS[label] || !(v > 0)) return v;
-  // 그 주·월 시트 「퍼포먼스 비용」이 비어 있으면(월 장부 마감 전) 캐나다 광고비가 아직 시트에 안 들어간 것 → 빼지 않는다
-  //   예: 2026-11 월 = 퍼포먼스 0 · 광고비 총계 76.3M(브랜딩 등만) — 총계에서 캐나다분을 빼면 안 된다 (2026-11-12 검산)
-  if (label !== '퍼포먼스 비용' && !(costValSheet_(p, '퍼포먼스 비용', key) > 0)) return v;
-  return v - caAdSpend_(p, key);
+  var isAd = !!CTY_AD_LABELS[label];
+  var caAd = isAd ? caAdSpend_(p, key) : 0;
+  // 광고: 시트에 들어 있는 캐나다분 — 그 칸이 0(빈칸)이거나, 총계인데 그 주·월 퍼포먼스가 비어 있으면(월 장부 마감 전) 아직 안 들어간 것
+  //   예: 2026-11 월 = 퍼포먼스 0 · 광고비 총계 76.3M(브랜딩 등만) — 총계에서 캐나다 광고비를 빼면 안 된다 (2026-11-12 검산)
+  var adIn = (isAd && v > 0 && (label === '퍼포먼스 비용' || costValSheet_(p, '퍼포먼스 비용', key) > 0)) ? caAd : 0;
+  var led = (p === 'weekly' || p === 'monthly') ? caLedger_(p, label, key) : 0;
+  var ledIn = (p === 'weekly' && v > 0) ? led : 0;   // 주차 시트만 장부 캐나다 행을 이미 품고 있다
+  var us = v - adIn - ledIn, ca = caAd + led;
+  if (cty === 'CA') return ca;
+  if (cty === 'ALL') return us + ca;
+  return us;
 }
+var CA_COST_LABELS = { '퍼포먼스 비용':1, '광고비 총계':1, '브랜딩 비용':1 };   // 캐나다 값이 있는 비용 항목 (KOL·채널마케팅·온사이트 = 캐나다분 없음)
 function sumCost(p, label, keySet) {
   let s = 0;
   keySet.forEach(function(k) { s += costVal(p, label, k); });
@@ -3847,7 +3879,7 @@ function renderKPI() {
   }
   const RT = roasScope(data, bucketKeys, ['광고비 총계']);
   const RC = roasScope(data, bucketKeys, ['퍼포먼스 비용', '온사이트 비용']);
-  window.__kpiRoasCtx = { RT: RT, RC: RC, roasP: roasP, useWeekly: useWeekly };   // ⑯ 전체 ROAS 카드가 같은 버킷 규칙을 쓰도록
+  window.__kpiRoasCtx = { RT: RT, RC: RC, roasP: roasP, useWeekly: useWeekly, bucketKeys: bucketKeys };   // ⑯ 전체 ROAS 카드가 같은 버킷 규칙을 쓰도록
   const roasTotal = RT.denom > 0 ? RT.sales / RT.denom : null;
   const roasCom   = RC.denom > 0 ? RC.com   / RC.denom : null;
   const fmtRoas   = v => v === null ? '—' : Math.round(v * 100) + '%';
@@ -4512,7 +4544,7 @@ MAIN_TABLE_METRICS.push(
 var CTY = 'US';
 const CTY_WHY = {
   inflow: '아직 받지 못한 자료입니다 (세포라 포털 캐나다 쪽에 있음)',     // 유입·전환율
-  ads:    '캐나다 비용은 광고 raw의 캐나다 광고비(캠페인·광고그룹명 CA)만 있습니다 — 브랜딩·KOL·채널마케팅은 미국에 포함',   // ⑯ 2026-11-12 (이전 「광고를 집행하지 않아」는 사실과 달라 고침)
+  ads:    '캐나다 KOL·채널마케팅 비용은 따로 없어 미국에 포함되어 있습니다 (캐나다 비용 = 광고 raw 캐나다 광고 + 장부 캐나다 브랜딩)',   // ⑯ 2026-11-12 (이전 「광고를 집행하지 않아」는 사실과 달라 고침)
   stock:  '캐나다는 SKU별 주간 재고 자료가 없어 계산할 수 없습니다',      // 재고보유율·소진주수
   comInv: '미국 .COM 재고(.COM_OH)와 같은 기준의 캐나다 자료가 없습니다', // .COM 재고
   caDaily:'캐나다는 주 단위 자료만 있습니다 (일 보기 잠금)'
@@ -4598,48 +4630,59 @@ function ctyCaSales_(dateSet, months) {
 //   캐나다 = 캐나다 매출(원화) ÷ 같은 날짜의 캐나다 광고비(광고 raw · 날짜 단위라 버킷 제외 없음). 캐나다 매출 마지막 날 이후 광고비는 뺀다
 //   전체 = (미국 매출 + 캐나다 매출) ÷ 시트 비용(캐나다 포함) — 미국 카드와 같은 버킷(시트 비용이 있는 주·월)만
 //   닷컴 ROAS 분모 = 퍼포먼스 + 온사이트 (캐나다는 온사이트 광고 없음 → 캐나다 광고비만)
+function ctyLedMiss_() { return caLedRows_() ? '' : ' (장부 캐나다 비용은 Apps Script 반영 후 표시)'; }
 function ctyRoasKpi_(it, data) {
   var rt = it('roas_total'), rc = it('roas_com');
   var fmt = function(v){ return v == null ? ctyNA_() : Math.round(v * 100) + '%'; };
   var set = function(x, v, label, excl){ if (!x) return; x.label = label; x.val = fmt(v); x.badge = null; x.vs = null; x.excl = excl; };
   var monthMode = selWeeks.size === 0 && selMonths.size > 0;
+  var cx = window.__kpiRoasCtx; if (!cx) return;
+  var bk = function(d){ return cx.useWeekly ? getWeekKey(d) : getMonthKey(d); };
+  var won = function(v){ return '₩' + Math.round(v).toLocaleString('ko-KR'); };
+  var kf = function(k){ return fmtPeriodLabel(k, cx.roasP); };
+  var rng = function(keys){ var ks = Array.from(keys).sort(); return ks.length > 1 ? kf(ks[0]) + '–' + kf(ks[ks.length - 1]) : kf(ks[0]); };
   if (CTY === 'CA') {
-    // 미국 카드와 같은 규칙 — 비용(캐나다 광고비)이 0인 주·월 버킷은 매출·비용 양쪽에서 뺀다 (광고 시작 전 매출로 ROAS 가 부풀지 않게)
-    var cx = window.__kpiRoasCtx || { roasP:'monthly', useWeekly:false };
-    var bk = function(d){ return cx.useWeekly ? getWeekKey(d) : getMonthKey(d); };
-    var keep = new Set();
-    data.forEach(function(d){ var k = bk(d.date); if (caAdSpend_(cx.roasP, k) > 0) keep.add(k); });
-    if (!keep.size) { set(rt, null, '전체 ROAS (캐나다)', '이 기간 캐나다 광고비가 없습니다'); set(rc, null, '닷컴 ROAS (캐나다)', '이 기간 캐나다 광고비가 없습니다'); return; }
-    var dates = new Set(data.filter(function(d){ return keep.has(bk(d.date)); }).map(function(d){ return d.date; }));
-    var months = monthMode ? Array.from(keep).sort() : null;
-    var ca = ctyCaSales_(dates, months);
-    if (ca.v == null) { set(rt, null, '전체 ROAS (캐나다)', ca.why); set(rc, null, '닷컴 ROAS (캐나다)', ca.why); return; }
-    var ks = Array.from(keep).sort(), kf = function(k){ return cx.roasP === 'monthly' ? fmtPeriodLabel(k, 'monthly') : fmtPeriodLabel(k, 'weekly'); };
-    var range = (ks.length > 1 ? kf(ks[0]) + '–' + kf(ks[ks.length - 1]) : kf(ks[0])) + ' 기준(캐나다 광고 집행 기간) · ';
+    // 캐나다 = 날짜 단위. 미국 카드와 같은 규칙 — 캐나다 비용이 0인 주·월 버킷은 매출·비용 양쪽에서 뺀다
+    //   비용: 광고 = 광고 raw 날짜별 · 장부 = L ÷ 기간 일수(주차 시트와 같은 배분) — 캐나다 매출 마지막 날 이후 비용은 뺀다
     var dl = caDaily_() ? (caData_().daily.slice(-1)[0] || {}).date : null;
-    var last = ca.lastDay || dl || ca.lastWe || '9999-12-31';
-    var sp = 0;
-    adsRows_('CA').forEach(function(r){ if (dates.has(r.date) && r.date <= last) sp += r.spend || 0; });
-    var why = sp > 0 ? '캐나다 광고비 ₩' + Math.round(sp).toLocaleString('ko-KR') + ' (캠페인·광고그룹명 CA 기준)' : '이 기간 캐나다 광고비가 없습니다';
-    set(rt, sp > 0 ? ca.vK / sp : null, '전체 ROAS (캐나다)', range + why + ' · 브랜딩·KOL 비용은 미국에 포함');
-    set(rc, (sp > 0 && ca.split && ca.comK != null) ? ca.comK / sp : null, '닷컴 ROAS (캐나다)', ca.split ? range + why : CA_WHY.monCh);
+    var one = function(labels, adOnly) {
+      var dayCost = function(d){ var c = adsDaySpend_('CA', d); if (!adOnly) c += caLedger_('daily', '광고비 총계', d); return c; };
+      var keep = new Set(), byB = {};
+      data.forEach(function(d){ var k = bk(d.date); byB[k] = (byB[k] || 0) + dayCost(d.date); });
+      Object.keys(byB).forEach(function(k){ if (byB[k] > 0) keep.add(k); });
+      if (!keep.size) return { v:null, why:'이 기간 캐나다 비용이 없습니다' };
+      var dates = new Set(data.filter(function(d){ return keep.has(bk(d.date)); }).map(function(d){ return d.date; }));
+      var ca = ctyCaSales_(dates, monthMode ? Array.from(keep).sort() : null);
+      if (ca.v == null) return { v:null, why:ca.why };
+      var last = ca.lastDay || dl || ca.lastWe || '9999-12-31', ad = 0, led = 0;
+      dates.forEach(function(d){ if (d > last) return; ad += adsDaySpend_('CA', d); if (!adOnly) led += caLedger_('daily', '광고비 총계', d); });
+      var den = ad + led, num = adOnly ? (ca.split ? ca.comK : null) : ca.vK;
+      if (num == null) return { v:null, why:CA_WHY.monCh };
+      return { v: den > 0 ? num / den : null,
+               why: rng(keep) + ' 기준 · 캐나다 광고 ' + won(ad) + (adOnly ? '' : ' + 장부 브랜딩 ' + won(led)) + (last !== '9999-12-31' ? ' (' + last.slice(5).replace('-', '/') + '까지)' : '') };
+    };
+    var a = one(['광고비 총계'], false), c = one(['퍼포먼스 비용'], true);
+    set(rt, a.v, '전체 ROAS (캐나다)', a.why + ' · KOL·채널마케팅은 미국에 포함' + ctyLedMiss_());
+    set(rc, c.v, '닷컴 ROAS (캐나다)', c.why + ' · 분모 = 캐나다 광고비(온사이트 광고 없음)');
     return;
   }
-  // 전체
-  var ctx = window.__kpiRoasCtx; if (!ctx) return;
-  var part = function(S, num) {
-    if (!(S.denom > 0)) return { v:null, why:'비용이 아직 없는 기간입니다' };
-    var ds = new Set(data.filter(function(d){ return S.keys.has(ctx.useWeekly ? getWeekKey(d.date) : getMonthKey(d.date)); }).map(function(d){ return d.date; }));
-    var ms = monthMode ? Array.from(S.keys) : null;
-    var ca = ds.size ? ctyCaSales_(ds, ms && ms.length ? ms : null) : { v:null };
+  // 전체 = (미국 매출 + 캐나다 매출) ÷ (미국 비용 + 캐나다 비용) — 비용이 있는 주·월 버킷만 (미국 카드와 같은 규칙)
+  var part = function(labels, num) {
+    var cost = function(k){ var c = 0; labels.forEach(function(l){ c += costValCty_(cx.roasP, l, k, 'ALL'); }); return c; };
+    var keys = new Set(); cx.bucketKeys.forEach(function(k){ if (cost(k) > 0) keys.add(k); });
+    if (!keys.size) return { v:null, why:'비용이 아직 없는 기간입니다' };
+    var rows = data.filter(function(d){ return keys.has(bk(d.date)); });
+    var den = 0; keys.forEach(function(k){ den += cost(k); });
+    var us = sumData(rows), ds = new Set(rows.map(function(d){ return d.date; }));
+    var ca = ds.size ? ctyCaSales_(ds, monthMode ? Array.from(keys).sort() : null) : { v:null };
     var caK = ca.v == null ? 0 : (num === 'com' ? (ca.split ? ca.comK : null) : ca.vK);
     if (caK == null) return { v:null, why:CA_WHY.monCh };
-    var usK = num === 'com' ? S.com : S.sales;
-    return { v: (usK + caK) / S.denom, why: ca.v == null ? '이 기간 캐나다 매출 없음 — 미국 매출만' : '' };
+    var usK = num === 'com' ? us.comK : us.salesK;
+    return { v: (usK + caK) / den, why: rng(keys) + ' 기준 · 비용 ' + won(den) + (ca.v == null ? ' · 이 기간 캐나다 매출 없음' : '') };
   };
-  var a = part(ctx.RT, 'ttl'), b = part(ctx.RC, 'com');
-  set(rt, a.v, '전체 ROAS (미국+캐나다)', (a.why ? a.why + ' · ' : '') + '비용 = 시트 그대로(캐나다 광고비 포함)');
-  set(rc, b.v, '닷컴 ROAS (미국+캐나다)', (b.why ? b.why + ' · ' : '') + '비용 = 퍼포먼스+온사이트 시트 그대로');
+  var x = part(['광고비 총계'], 'ttl'), y = part(['퍼포먼스 비용', '온사이트 비용'], 'com');
+  set(rt, x.v, '전체 ROAS (미국+캐나다)', x.why + ctyLedMiss_());
+  set(rc, y.v, '닷컴 ROAS (미국+캐나다)', y.why);
 }
 // ① 통합 KPI — renderKPI 가 카드 목록(items)을 만든 직후 호출. 기존 계산은 건드리지 않고 카드 내용만 바꾼다
 function ctyMainKpi_(items, data, prevDates, cmpLbl) {
@@ -4647,7 +4690,7 @@ function ctyMainKpi_(items, data, prevDates, cmpLbl) {
   var rc = it('roas_com'), rt = it('roas_total');
   if (CTY === 'US') {   // ⑯ 2026-11-12 — 미국 카드 = 캐나다 광고비를 뺀 비용 기준
     if (rc) { rc.label = '닷컴 ROAS (미국)'; rc.excl = (rc.excl ? rc.excl + '<br>' : '') + '캐나다 광고비 제외'; }
-    if (rt) { rt.label = '전체 ROAS (미국)'; rt.excl = (rt.excl ? rt.excl + '<br>' : '') + '캐나다 광고비 제외'; }
+    if (rt) { rt.label = '전체 ROAS (미국)'; rt.excl = (rt.excl ? rt.excl + '<br>' : '') + '캐나다 광고비·장부 캐나다 비용 제외' + ctyLedMiss_(); }
     return;
   }
   try { ctyRoasKpi_(it, data); } catch(e) { console.warn('[CTY] ROAS 카드', e); }
@@ -4709,9 +4752,9 @@ function ctyMainKpi_(items, data, prevDates, cmpLbl) {
 // ⑯ 2026-11-12 — 페이드·총계·ROAS 는 국가별로 다시 계산해 연다. 브랜딩·KOL·채널마케팅은 캐나다분이 없어 「캐나다」에서만 잠근다
 const CTY_LOCK_CHIPS = [
   ['btnVisitsToggle', 'inflow'], ['btnCvrToggle', 'inflow'],
-  ['btnBrandCostToggle', 'ads'], ['btnKolCostToggle', 'ads'], ['btnChannelCostToggle', 'ads']
+  ['btnKolCostToggle', 'ads'], ['btnChannelCostToggle', 'ads']
 ];
-const CTY_LOCK_SERIES = ['Visits','CVR','채널마케팅 비용','브랜딩 비용','KOL 비용'];
+const CTY_LOCK_SERIES = ['Visits','CVR','채널마케팅 비용','KOL 비용'];   // ⑰ 브랜딩 = 장부 캐나다 행으로 연다
 // 국가별 비용·ROAS 계열 값 (그래프 데이터 d 한 칸 · cty = 'CA'|'ALL')
 function ctySeriesVal_(label, d, cty) {
   var p = mainPeriod, k = d.date, day = p === 'daily';
@@ -4859,8 +4902,8 @@ function ctyMainChart_(cfg, data) {
     var uniq = notes.filter(function(x, i){ return x && notes.indexOf(x) === i; });
     var from = caIn ? ctyDateSpan_(ctyCaCom_()).from : '';
     note.innerHTML = [caIn
-      ? (CTY === 'CA' ? '캐나다 — 비용·ROAS = 캐나다 광고비(캠페인·광고그룹명 CA) 기준 · 브랜딩·KOL·채널마케팅은 미국에 포함 · Visits·CVR은 캐나다 이커머스 기준 (' + from + ' 이전 빈칸)'
-                      : '전체 — 비용 = 시트 그대로(캐나다 광고비 포함) · ROAS = 미국+캐나다 매출 기준 · Visits·CVR은 미국+캐나다 합산 (' + from + ' 이전 빈칸)')
+      ? (CTY === 'CA' ? '캐나다 — 비용 = 캐나다 광고(캠페인·광고그룹명 CA) + 브랜딩 = 장부 캐나다 행(팝업 등) · KOL·채널마케팅은 미국에 포함' + ctyLedMiss_() + ' · Visits·CVR은 캐나다 이커머스 기준 (' + from + ' 이전 빈칸)'
+                      : '전체 — 비용 = 미국 + 캐나다' + ctyLedMiss_() + ' · ROAS = 미국+캐나다 매출 기준 · Visits·CVR은 미국+캐나다 합산 (' + from + ' 이전 빈칸)')
       : '국가: ' + (CTY === 'CA' ? '캐나다' : '전체') + ' — 유입·전환율 계열은 꺼집니다'].concat(uniq).join(' · ');
     note.style.display = '';
   }
@@ -7016,10 +7059,10 @@ function onlData_() {
     return x;
   });
 }
-function onlCost_(d, label) {   // ⑯ 캐나다 = 퍼포먼스·총계만(그 외 비용은 미국에 포함 → 「-」)
+function onlCost_(d, label) {   // ⑯⑰ 캐나다 = 퍼포먼스·총계·브랜딩만(KOL·채널마케팅은 미국에 포함 → 「-」)
   var cty = onlCty_();
   if (ONL.period === 'daily') return null;
-  if (cty === 'CA' && !CTY_AD_LABELS[label]) return null;
+  if (cty === 'CA' && !CA_COST_LABELS[label]) return null;
   return costValCty_(ONL.period, label === '채널' ? channelLabel(ONL.period) : label, d.date, cty);
 }
 function onlFillFilters_() {
@@ -7055,7 +7098,7 @@ function onlRenderNote_() {
   if (!ONL.caByDate) msg = '캐나다 포털 매출(RAW_CA_commerce)을 읽지 못했습니다' + (ONL.caErr ? ' (' + ONL.caErr + ')' : '') + ' — ' + (cty === 'CA' ? '표시할 값이 없습니다' : '「전체」는 합산하지 않습니다');
   else { var ds = onlDays_(); msg = '<b>' + (cty === 'CA' ? '캐나다' : '전체 (미국+캐나다)') + '</b> — 캐나다 = 브랜드포털 캐나다 이커머스(RAW_CA_commerce) · C$ → 원화 C$×1,000 · 달러 = 원화÷미국 환율(유입 탭과 같은 기준) · '
     + (ds.length ? ds[0] + '~' + ds[ds.length - 1] : '자료 없음') + (cty === 'ALL' ? ' (두 나라 자료가 모두 있는 날짜만 합산)' : ' (첫 매출일부터)')
-    + (cty === 'CA' ? ' · 비용 = 캐나다 광고비(캠페인·광고그룹명 CA) · 브랜딩·KOL·채널마케팅은 미국에 포함' : ' · 비용 = 시트 그대로(캐나다 광고비 포함)'); }
+    + (cty === 'CA' ? ' · 비용 = 캐나다 광고(캠페인·광고그룹명 CA) + 브랜딩 = 장부 캐나다 행(팝업 등) · KOL·채널마케팅은 미국에 포함' : ' · 비용 = 미국 + 캐나다') + ctyLedMiss_(); }
   var pre = el.style.display !== 'none' && el.innerHTML ? el.innerHTML + '<br>' : '';
   el.style.display = '';
   el.innerHTML = pre + msg;
@@ -7072,7 +7115,7 @@ function onlRenderKpi_(data) {
 }
 function onlRenderChart_(data) {
   var US_ = onlCty_() === 'US', S = Object.assign({}, ONL.show), P = ONL.period, cur = ONL.cur, n = data.length, cost = P !== 'daily';
-  var CA_ = onlCty_() === 'CA', caLock = { brand:1, kol:1, ch:1 };   // ⑯ 캐나다 = 브랜딩·KOL·채널마케팅만 잠금(캐나다분 비용 없음)
+  var CA_ = onlCty_() === 'CA', caLock = { kol:1, ch:1 };   // ⑯⑰ 캐나다 = KOL·채널마케팅만 잠금(캐나다분 비용 없음)
   if (CA_) Object.keys(caLock).forEach(function(k) { S[k] = false; });
   document.querySelectorAll('[data-onl-show]').forEach(function(b) { var k = b.dataset.onlShow; if (k === 'visits' || k === 'cvr') return;
     var lk = CA_ && !!caLock[k]; b.disabled = lk; b.classList.toggle('cty-locked', lk); b.title = lk ? CTY_WHY.ads : ''; });
