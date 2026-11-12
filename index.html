@@ -1888,7 +1888,6 @@ BMQ('btnAll').onclick=function(){this.classList.add('on');BMQ('btnTop').classLis
  for(let t=0;t<=4;t++){const v=max*t/4;svg.appendChild(el('line',{x1:pl,x2:W-pr,y1:Y(v),y2:Y(v),stroke:GRID}));
    svg.appendChild(txt(pl-5,Y(v)+3,'$'+Math.round(v),{'text-anchor':'end'}));}
  R.forEach((r,i)=>{const cx=pl+gw*(i+0.5),d=(r.spd25/r.spd24-1)*100;
-  const est24=Math.round(r.spd24*r.stores);
   const b24=el('rect',{x:cx-bw-1,y:Y(r.spd24),width:bw,height:pt+ih-Y(r.spd24),fill:'#D8D8DC',rx:1});
   b24.addEventListener('mousemove',e=>ST(e,'<b>'+r.region+' · '+PW+' (전주)</b><br>매장당 주간매출 $'+r.spd24.toFixed(1)
     +'<br>'+CW+' 대비 '+(d>=0?'▼':'▲')+Math.abs(d).toFixed(1)+'%<br><span style="color:#9fb0d6">전주 대비 증감은 '+CW+' 막대 기준</span>'));
@@ -2947,13 +2946,6 @@ window.setAdsMetric = function(btn) {
   });
   refreshAdsChart(cn);
 };
-window.toggleAdsMedia = function(btn) {
-  const m = btn.dataset.adsMedia;
-  if (selAdsMedia.has(m)) {
-    if (selAdsMedia.size > 1) { selAdsMedia.delete(m); btn.classList.remove('active'); }
-  } else { selAdsMedia.add(m); btn.classList.add('active'); }
-  refreshAds();
-};
 window.setChartPeriod = function(chartNum, btn, period) {
   document.querySelectorAll('[data-chart="' + chartNum + '"]').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
@@ -2968,112 +2960,6 @@ window.setChartPeriod = function(chartNum, btn, period) {
   refreshAdsChart(chartNum);
 };
 // ── 기간 드롭다운 ──────────────────────────────────────────────
-window.toggleAdsDD = function() {
-  var btn = document.getElementById('ddBtn-adsPeriod');
-  var panel = document.getElementById('ddPanel-adsPeriod');
-  if (!btn || !panel) return;
-  var isOpen = panel.classList.contains('show');
-  // 다른 모든 드롭다운 닫기
-  document.querySelectorAll('.dd-panel.show').forEach(function(p){ p.classList.remove('show'); });
-  document.querySelectorAll('.dd-btn.open').forEach(function(b){ b.classList.remove('open'); });
-  if (!isOpen) {
-    panel.classList.add('show');
-    btn.classList.add('open');
-    populateAdsPeriodOpts(adsGlobalPeriod2);
-  }
-};
-window.setAdsDDTab = function(period) {
-  adsGlobalPeriod2 = period;
-  adsSelectedRange = null;
-  // 탭 active
-  ['monthly','weekly','daily'].forEach(function(p){
-    var t = document.getElementById('adsDD-tab-' + p);
-    if (t) t.classList.toggle('active', p === period);
-  });
-  // ALL 체크
-  var allChk = document.getElementById('chk-adsPeriod-all');
-  if (allChk) allChk.checked = true;
-  // 옵션 재빌드
-  populateAdsPeriodOpts(period);
-  // 차트 업데이트
-  [1,2,3].forEach(function(n) {
-    adsChartPeriod[n] = period;
-    document.querySelectorAll('[data-chart="' + n + '"]').forEach(function(b){ b.classList.remove('active'); });
-    var pb = document.querySelector('[data-chart="' + n + '"][data-period="' + period + '"]');
-    if (pb) pb.classList.add('active');
-  });
-  updateAdsDDLabel();
-  refreshAds();
-};
-window.clearAdsPeriodDD = function() {
-  adsSelectedRange = new Set();
-  var allChk = document.getElementById('chk-adsPeriod-all');
-  if (allChk) allChk.checked = true;
-  document.querySelectorAll('#ddPanel-adsPeriod-opts .dd-opt input').forEach(function(c){ c.checked = false; });
-  updateAdsDDLabel();
-  refreshAds();
-};
-window.setAdsPeriodRange = function(chk, rangeKey) {
-  if (chk.checked) {
-    adsSelectedRange.add(rangeKey);
-    var allChk = document.getElementById('chk-adsPeriod-all');
-    if (allChk) allChk.checked = false;
-  } else {
-    adsSelectedRange.delete(rangeKey);
-    if (adsSelectedRange.size === 0) {
-      var allChk = document.getElementById('chk-adsPeriod-all');
-      if (allChk) allChk.checked = true;
-    }
-  }
-  updateAdsDDLabel();
-  refreshAds();
-};
-function populateAdsPeriodOpts(period) {
-  var container = document.getElementById('ddPanel-adsPeriod-opts');
-  if (!container) return;
-  var keys = new Set();
-  ADS_RAW.forEach(function(r){ keys.add(getPeriodKey(r.date, period)); });
-  Object.keys(SALES_BY_DATE).forEach(function(d){ keys.add(getPeriodKey(d, period)); });
-  var sorted = Array.from(keys).sort();
-  container.innerHTML = sorted.map(function(k) {
-    var label = '';
-    if (period === 'monthly') {
-      var parts = k.split('-');
-      label = parseInt(parts[1]) + '월';
-    } else if (period === 'weekly') {
-      label = fmtPeriodLabel(k, 'weekly');
-    } else {
-      var d = new Date(k + 'T00:00:00');
-      label = (d.getMonth()+1) + '/' + d.getDate() + ' (' + ['일','월','화','수','목','금','토'][d.getDay()] + ')';
-    }
-    var checked = adsSelectedRange.has(k) ? ' checked' : '';
-    return '<label class="dd-opt"><input type="checkbox" value="' + k + '"' + checked + ' onchange="setAdsPeriodRange(this,\'' + k + '\')"> ' + label + '</label>';
-  }).join('');
-}
-function updateAdsDDLabel() {
-  var lbl = document.getElementById('ddLabel-adsPeriod');
-  if (!lbl) return;
-  var pMap = { monthly:'월', weekly:'주', daily:'일' };
-  var pLabel = pMap[adsGlobalPeriod2] || '주';
-  if (adsSelectedRange.size === 0) { lbl.textContent = pLabel + ' · ALL'; return; }
-  var detail = '';
-  var keys = Array.from(adsSelectedRange).sort();
-  if (adsSelectedRange.size > 2) {
-    detail = keys.length + '개 선택';
-  } else {
-    detail = keys.map(function(k) {
-      if (adsGlobalPeriod2 === 'monthly') {
-        var parts = k.split('-'); return parseInt(parts[1]) + '월';
-      } else if (adsGlobalPeriod2 === 'weekly') {
-        return fmtPeriodLabel(k, 'weekly');
-      } else {
-        var d = new Date(k + 'T00:00:00');
-        return (d.getMonth()+1) + '/' + d.getDate();
-      }
-    }).join(', ');
-  }
-  lbl.textContent = pLabel + ' · ' + detail;
-}
 // 차트별 매출/유입 토글
 window.toggleChartSales = function(chartNum, btn) {
   adsShowSales[chartNum] = !adsShowSales[chartNum];
@@ -3086,24 +2972,11 @@ window.toggleChartVisits = function(chartNum, btn) {
   refreshAdsChart(chartNum);
 };
 // 구버전 호환
-window.setAdsGlobalPeriod = function(btn, period) { setAdsDDTab(period); };
-window.toggleMetaCamp = function(btn) {
-  var obj = btn.getAttribute('data-meta-obj');
-  if (metaActiveCampaigns.has(obj)) { metaActiveCampaigns.delete(obj); btn.classList.remove('active'); }
-  else { metaActiveCampaigns.add(obj); btn.classList.add('active'); }
-  refreshAdsChart(2);
-};
 window.setMetaChartType = function(btn, type) {
   document.querySelectorAll('[data-meta-type]').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
   metaChartType = type;
   refreshAdsChart(2);
-};
-window.toggleTtCamp = function(btn) {
-  var obj = btn.getAttribute('data-tt-obj');
-  if (ttActiveCampaigns.has(obj)) { ttActiveCampaigns.delete(obj); btn.classList.remove('active'); }
-  else { ttActiveCampaigns.add(obj); btn.classList.add('active'); }
-  refreshAdsChart(3);
 };
 // ── Chart Filter Dropdown (CFD) ────────────────────────────────
 window.toggleCFD = function(id) {
@@ -3365,41 +3238,30 @@ function costValSheet_(p, label, key) {
   v = v && v[label] ? v[label][key] : undefined;
   return typeof v === 'number' ? v : 0;
 }
-// ⑰ 장부 캐나다 비용 (2026-11-12 MJ 「장부 캐나다 비용 넣기」) — DEMAND.caLedger = [★작성]광고선전비 국가='캐나다' 행 (Apps Script parseCaLedger_)
-//   원가 시트 규칙을 그대로 재현한다
-//     주 = SUMMARY(주차)_DM : L(작성 비용) ÷ (종료일−시작일+1) × 그 주와 겹치는 날 수 · 비용구분2(F)로 행 구분 · 국가 조건 없음 → 캐나다 행이 이미 미국 주 비용에 섞여 있다
-//     월 = 사업실적_Summary : N(마감 비용 원)을 년월(S)로 · 국가='미국'만 → 캐나다 행은 빠져 있다
-//   → 미국 = 시트 − (주 단위면 장부 캐나다분) · 캐나다 = 장부 캐나다분 · 전체 = 미국 + 캐나다
-//   항목 매핑(시트와 같은 기준): 콘텐츠 제작비·PR/앰블럼·옥외·팝업/오프라인행사·브랜딩 기타 → 브랜딩 · 퍼포먼스 기타 → 퍼포먼스
-//   (예전 탭 한정) 매장 행사/광고비 제외 — 11/12 오전 결정. 같은 날 MJ 「다 들어가는 게 맞아」로 바뀌어 ⑲ 새 탭부터 넣는다
-//   KOL = 미국에 둔다 (2026-11-12 MJ 「Nana KOL 2건은 일단 미국으로」)
-//     주 = KOL 시트(국가 칸 없음) → 이미 미국 · 월 = 사업실적_Summary 틱톡·인스타·유튜브 KOL(84·87·90행)이 국가='미국'만 → 장부 캐나다 KOL 행이 빠져 있다
-//     → 월 미국 KOL·총계에 장부 캐나다 KOL(틱톡·인스타그램·유튜브) N을 더한다. KOL 기타·2차(81·82행)는 국가 조건이 없어 이미 들어 있으므로 더하지 않는다
-//     해당 행(2026-11-12): 9월 Nana 틱톡 1차 ₩5,313,000 (Nana 인스타는 장부에 이미 미국)
-// ⑲ 2026-11-12 MJ 「탭 수식 방식, 공통 포함(B), mix 포함으로 진행」 — '세포라 대시보드용' 탭 수식을 장부 기준으로 바꿈
-//   새 탭 = 월·주 모두 장부 N(마감 비용 원)만 · 손익센터 세포라+공통(Creator IQ 제외) · 국가 '미국'만(KOL 은 미국+캐나다)
-//     퍼포먼스 월 = 장부 메타·틱톡·유튜브·구글 / 주 = RAW_퍼포먼스 판매채널 sephora + mix (캐나다 광고 포함 → ⑯이 뺀다)
-//     KOL 주 = KOL 시트(그대로) · 채널마케팅 = 채널 온사이트 광고 + 세포라 프로그램 + CO-OP · 온사이트 = 그중 세부내역 「온사이트」
-//     새 줄: 매장 행사 비용 · 퍼포먼스 기타 비용 / 총계 = 퍼포먼스 + 브랜딩 + KOL + 채널마케팅 + 매장 행사 + 퍼포먼스 기타
-//   → 새 탭이면(그 기간 블록에 「매장 행사 비용」 줄이 있으면) 시트에 장부 캐나다 행이 없다: 주 단위 장부 캐나다 차감·캐나다 KOL 더하기를 하지 않는다
-//   → 장부 캐나다 비용도 같은 기준(N · 기간 일수 배분 · 매장 행사 포함)으로 계산한다
-function costTabNew_(p) { var b = ((window.DEMAND||{}).cost||{})[p]; return !!(b && Object.prototype.hasOwnProperty.call(b, '매장 행사 비용')); }
+// ⑰⑲ 비용 기준 (2026-11-12 MJ 「탭 수식 방식, 공통 포함(B), mix 포함으로 진행」) — DEMAND.cost = '세포라 대시보드용' 탭(장부 수식)
+//   탭 = 월·주 모두 장부 [★작성]광고선전비 N(마감 비용 원)만 · 손익센터 세포라+공통(Creator IQ 제외) · 국가 '미국'(KOL 은 미국+캐나다)
+//     퍼포먼스 월 = 장부 메타·틱톡·유튜브·구글 / 주 = RAW_퍼포먼스 판매채널 sephora + mix(amazon 캠페인 제외 · 캐나다 광고 포함 → 아래에서 뺀다)
+//     KOL 주 = KOL 시트 · 채널마케팅 = 채널 온사이트 광고 + 세포라 프로그램 + CO-OP · 온사이트 = 그중 세부내역 「온사이트」
+//     매장 행사 비용 · 퍼포먼스 기타 비용 / 총계 = 퍼포먼스 + 브랜딩 + KOL + 채널마케팅 + 매장 행사 + 퍼포먼스 기타
+//   국가 나누기: 미국 = 탭 − 캐나다 광고비 · 캐나다 = 캐나다 광고비(광고 raw CA) + 장부 캐나다 행(DEMAND.caLedger, Apps Script parseCaLedger_)
+//     장부 캐나다 행 = 같은 기준(N · 주 = 시작~종료일 일수로 나눔) · 브랜딩 / 매장 행사 / 채널마케팅 / 퍼포먼스 기타(Creator IQ 제외)
+//     KOL 은 미국에 둔다(2026-11-12 MJ 「Nana KOL 2건은 일단 미국으로」) — 탭 KOL 이 이미 미국+캐나다라 따로 더하지 않는다
 var LED_BRAND_C2 = { '콘텐츠 제작비':1, 'PR/앰블럼':1, '옥외':1, '팝업/오프라인행사':1, '브랜딩 기타':1 };
+var LED_CH_C2 = { '채널 온사이트 광고':1, '세포라 프로그램':1, 'CO-OP 캠페인':1 };
 function caLedRows_() { var d = window.DEMAND || {}; return Array.isArray(d.caLedger) ? d.caLedger : null; }
-function ledLabel_(x, nw) {
+function ledLabel_(x) {
   if (LED_BRAND_C2[x.c2]) return '브랜딩 비용';
-  if (x.c2 === '퍼포먼스 기타') return nw ? (/creator\s*iq/i.test(x.memo || '') ? null : '퍼포먼스 기타 비용') : '퍼포먼스 비용';
-  if (nw && x.c2 === '매장 행사/광고비') return '매장 행사 비용';   // ⑲ 새 탭부터 넣는다(예전 탭 = 제외)
-  if (nw && (x.c2 === '채널 온사이트 광고' || x.c2 === '세포라 프로그램' || x.c2 === 'CO-OP 캠페인')) return '채널마케팅 비용';
+  if (x.c2 === '퍼포먼스 기타') return /creator\s*iq/i.test(x.memo || '') ? null : '퍼포먼스 기타 비용';
+  if (x.c2 === '매장 행사/광고비') return '매장 행사 비용';
+  if (LED_CH_C2[x.c2]) return '채널마케팅 비용';
   return null;
 }
 function ledDayN_(a, b) { return Math.round((Date.parse(b) - Date.parse(a)) / 864e5) + 1; }
-function caLedger_(p, label, key) {   // p = 'weekly'(L 날짜 배분) | 'monthly'(N · 년월) | 'daily'(L 날짜 배분, 하루)
+function caLedger_(p, label, key) {   // p = 'weekly'(N 날짜 배분) | 'monthly'(N · 년월) | 'daily'(N 날짜 배분, 하루)
   var rows = caLedRows_(); if (!rows) return 0;
-  var nw = costTabNew_(p === 'daily' ? 'weekly' : p);   // ⑲ 새 탭 기준이면 N · 매장 행사 포함
   var t = 0;
   rows.forEach(function(x){
-    var lb = ledLabel_(x, nw); if (!lb) return;
+    var lb = ledLabel_(x); if (!lb) return;
     if (label !== '광고비 총계' && label !== lb) return;
     if (p === 'monthly') { if (x.ym === key) t += x.n || 0; return; }
     if (!x.s || !x.e) return;
@@ -3407,17 +3269,8 @@ function caLedger_(p, label, key) {   // p = 'weekly'(L 날짜 배분) | 'monthl
     var to = p === 'weekly' ? new Date(Date.parse(key) + 6 * 864e5).toISOString().slice(0, 10) : key;
     var lo = x.s > key ? x.s : key, hi = x.e < to ? x.e : to;
     if (lo > hi) return;
-    t += (nw ? (x.n || 0) : (x.l || 0)) / days * ledDayN_(lo, hi);
+    t += (x.n || 0) / days * ledDayN_(lo, hi);
   });
-  return t;
-}
-var LED_KOL_US_C2 = { '틱톡':1, '인스타그램':1, '유튜브':1 };
-function caLedKolToUs_(p, label, key) {
-  if (p !== 'monthly' || (label !== 'KOL 비용' && label !== '광고비 총계')) return 0;
-  if (costTabNew_('monthly')) return 0;   // ⑲ 새 탭 월 KOL 은 캐나다 KOL 을 이미 품고 있다
-  var rows = caLedRows_(); if (!rows) return 0;
-  var t = 0;
-  rows.forEach(function(x){ if (x.c1 === 'KOL' && LED_KOL_US_C2[x.c2] && x.ym === key) t += x.n || 0; });
   return t;
 }
 function costVal(p, label, key) { return costValCty_(p, label, key, 'US'); }
@@ -3429,8 +3282,7 @@ function costValCty_(p, label, key, cty) {
   //   예: 2026-11 월 = 퍼포먼스 0 · 광고비 총계 76.3M(브랜딩 등만) — 총계에서 캐나다 광고비를 빼면 안 된다 (2026-11-12 검산)
   var adIn = (isAd && v > 0 && (label === '퍼포먼스 비용' || costValSheet_(p, '퍼포먼스 비용', key) > 0)) ? caAd : 0;
   var led = (p === 'weekly' || p === 'monthly') ? caLedger_(p, label, key) : 0;
-  var ledIn = (p === 'weekly' && v > 0 && !costTabNew_('weekly')) ? led : 0;   // 예전 주차 시트만 장부 캐나다 행을 품고 있다(⑲ 새 탭 = 미국만)
-  var us = v - adIn - ledIn + caLedKolToUs_(p, label, key), ca = caAd + led;
+  var us = v - adIn, ca = caAd + led;   // 탭은 미국 장부만 품고 있어 장부 캐나다분은 빼지 않는다
   if (cty === 'CA') return ca;
   if (cty === 'ALL') return us + ca;
   return us;
@@ -3564,7 +3416,6 @@ function buildMonthOptions() {
     Object.keys(SALES_BY_DATE).map(k => k.slice(5,7))
   )].sort();
   // 현재 월 (2자리 문자열, ex: '05')
-  const curMM = String(new Date().getMonth() + 1).padStart(2, '0');
   months.forEach(mm => {
     const lbl = document.createElement('label');
     lbl.className = 'dd-opt';
@@ -4435,8 +4286,8 @@ const MAIN_TABLE_METRICS = [
   {label:'광고비(총계)',  fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? null : costVal(mainPeriod, '광고비 총계', d.date); }},
   {label:'브랜딩 비용',   fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? null : costVal(mainPeriod, '브랜딩 비용', d.date); }},
   {label:'KOL 비용',     fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? null : costVal(mainPeriod, 'KOL 비용', d.date); }},
-  {label:'매장 행사 비용', fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' || !costTabNew_(mainPeriod) ? null : costVal(mainPeriod, '매장 행사 비용', d.date); }},
-  {label:'퍼포먼스 기타 비용', fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' || !costTabNew_(mainPeriod) ? null : costVal(mainPeriod, '퍼포먼스 기타 비용', d.date); }},
+  {label:'매장 행사 비용', fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? null : costVal(mainPeriod, '매장 행사 비용', d.date); }},
+  {label:'퍼포먼스 기타 비용', fmt:mtblMoney, get:function(d){ return mainPeriod==='daily' ? null : costVal(mainPeriod, '퍼포먼스 기타 비용', d.date); }},
   {label:'전체 ROAS',    fmt:function(v){ return mtblPct(v, true); }, get:function(d){ return d.roas_total; }},
   {label:'닷컴 ROAS',    fmt:function(v){ return mtblPct(v, true); }, get:function(d){ return d.roas_com; }},
 ];
@@ -5494,7 +5345,6 @@ function chsMainKpi_(items, data, prevDates, cmpLbl) {
   add('roas_com', '세포라 기준 (콜스 광고비 없음)');
   if (!s) return;
   var us = sumData(data), seK = us.salesK, seT = us.sales;
-  var pse = null;
   if (CTY === 'ALL') {
     var ca = ctyCaSales_(dates, months);
     if (ca.v != null) { seK += ca.vK; seT += ca.v; }
@@ -6373,15 +6223,6 @@ function getEventStats(ev, byDate) {
     };
   }
 }
-function statRowHtml(lbl, cur, prev, fmtFn) {
-  if (cur === 0 && prev === 0) return `<div class="ev-stat-row"><span class="ev-stat-lbl">${lbl}</span><span class="ev-stat-na">-</span></div>`;
-  const d   = cur - prev;
-  const pct = prev !== 0 ? (d/prev*100).toFixed(1) : null;
-  const cls = d >= 0 ? 'ev-stat-up' : 'ev-stat-dn';
-  const arr = d >= 0 ? '▲' : '▼';
-  const pctStr = pct !== null ? ` (${d>=0?'+':''}${pct}%)` : '';
-  return `<div class="ev-stat-row"><span class="ev-stat-lbl">${lbl}</span><span class="${cls}">${arr}${fmtFn(Math.abs(d))}${pctStr}</span></div>`;
-}
 // ─── EVENT LIST ───────────────────────────────────────────────────────────────
 function renderEventList() {
   const el = document.getElementById('evList');
@@ -6468,12 +6309,6 @@ function buildEvFullFilterBtns() {
     });
   });
 }
-window.setEvFullFilter = function(btn, type) {
-  evFullTypeFilter = type;
-  document.querySelectorAll('#evFullFilterRow .ads-p-btn').forEach(function(b){ b.classList.remove('active'); });
-  if (btn) btn.classList.add('active');
-  renderEventListFull();
-};
 function renderEventListFull() {
   buildEvFullFilterBtns();
   var el = document.getElementById('evListFull');
@@ -6594,187 +6429,10 @@ async function saveEvent(idx) {
 // ─── REFRESH ─────────────────────────────────────────────────────────────────
 function refresh() { renderKPI(); renderChart(); renderEventList(); }
 // ─── EVENT ANALYSIS ───────────────────────────────────────────────────────────
-let lagChartInst = null;
 function pctFmt(v) {
   if (v === null) return '<span class="sum-na">-</span>';
   const cls = v >= 0 ? 'sum-up' : 'sum-dn';
   return `<span class="${cls}">${v>=0?'+':''}${v.toFixed(1)}%</span>`;
-}
-function renderEventTypeSummary() {
-  const byDate = getAggByDate();
-  const typeAgg = {}; // type → {vPcts, sPcts, cPcts}
-  // Deduplicate events by (type, start) to avoid counting same-day duplicates
-  const dedupMap = {};
-  EVENTS.forEach(ev => {
-    const key = ev.type + '|||' + ev.start;
-    if (!dedupMap[key]) dedupMap[key] = ev;
-  });
-  Object.values(dedupMap).forEach(ev => {
-    const stats = getEventStats(ev, byDate);
-    if (!stats) return;
-    if (!typeAgg[ev.type]) typeAgg[ev.type] = {vPcts:[], sPcts:[], cPcts:[], count:0};
-    const t = typeAgg[ev.type];
-    t.count++;
-    const calcPct = (cur, prev) => prev > 0 ? (cur - prev) / prev * 100 : null;
-    t.vPcts.push(calcPct(stats.visits.cur, stats.visits.prev));
-    t.sPcts.push(calcPct(stats.sales.cur,  stats.sales.prev));
-    t.cPcts.push(calcPct(stats.cvr.cur,    stats.cvr.prev));
-  });
-  const avg = arr => {
-    const v = arr.filter(x => x !== null);
-    return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null;
-  };
-  const rows = Object.entries(typeAgg)
-    .map(([type, t]) => ({type, count:t.count, v:avg(t.vPcts), s:avg(t.sPcts), c:avg(t.cPcts)}))
-    .sort((a,b) => (b.v||0) - (a.v||0));
-  const tbl = document.getElementById('typeSummaryTable');
-  if (!rows.length) { tbl.innerHTML = '<div class="sum-na" style="font-size:10px;padding:8px 0;">데이터 없음</div>'; return; }
-  tbl.innerHTML = `<table class="sum-tbl">
-    <thead><tr>
-      <th>채널</th><th>건수</th><th>Visits</th><th>Sales</th><th>CVR</th>
-    </tr></thead>
-    <tbody>
-    ${rows.map(r => `<tr>
-      <td><span class="sum-dot" style="background:${TYPES[r.type]||'#888'};"></span>${r.type}</td>
-      <td>${r.count}</td>
-      <td>${pctFmt(r.v)}</td>
-      <td>${pctFmt(r.s)}</td>
-      <td>${pctFmt(r.c)}</td>
-    </tr>`).join('')}
-    </tbody>
-  </table>`;
-  // Dynamic insights
-  const box = document.getElementById('typeInsightBox');
-  if (!box) return;
-  const insights = [];
-  // Best CVR channel
-  const cvrBest = rows.filter(r => r.c !== null).sort((a,b)=>(b.c||0)-(a.c||0))[0];
-  if (cvrBest) insights.push({cls:'good', text:`<b>${cvrBest.type}</b>는 CVR ${cvrBest.c>=0?'+':''}${cvrBest.c.toFixed(1)}%로 전환율 개선 효과가 가장 큼 — 이미 구매 의도가 있는 유저에게 도달하는 채널`});
-  // Visits up CVR down (awareness trap)
-  const trap = rows.filter(r => r.v !== null && r.c !== null && r.v > 20 && r.c < -5);
-  trap.forEach(r => insights.push({cls:'warn', text:`<b>${r.type}</b>: Visits ${r.v>=0?'+':''}${r.v.toFixed(1)}%이지만 CVR ${r.c.toFixed(1)}% — 구매 의도 낮은 신규 오디언스 유입 위주. 랜딩에 즉시 구매 유도 장치 필요`}));
-  // Both up
-  const both = rows.filter(r => r.v !== null && r.s !== null && r.v > 50 && r.s > 50 && (r.c === null || r.c > 0));
-  both.forEach(r => { if (!trap.find(x=>x===r)) insights.push({cls:'good', text:`<b>${r.type}</b>: Visits·Sales·CVR 동반 상승 — 기존 고관여 유저 대상 가장 효율적인 채널`}); });
-  if (!insights.length) insights.push({cls:'info', text:'필터 조건을 변경하면 채널별 패턴이 달라질 수 있습니다.'});
-  box.innerHTML = insights.map(i => `<div class="insight-item ${i.cls}">${i.text}</div>`).join('');
-}
-function renderLagEffect() {
-  const byDate = getAggByDate();
-  const lagByType = {}; // type → [[d0,d1,d2,d3], ...]
-  // Only single-day events
-  const dedupMap = {};
-  EVENTS.filter(ev => ev.start === ev.end).forEach(ev => {
-    const key = ev.type + '|||' + ev.start;
-    if (!dedupMap[key]) dedupMap[key] = ev;
-  });
-  Object.values(dedupMap).forEach(ev => {
-    const base = byDate[offsetDate(ev.start, -1)];
-    if (!base || base.visits === 0) return;
-    const lags = [0,1,2,3].map(d => {
-      const day = byDate[offsetDate(ev.start, d)];
-      return day ? (day.visits - base.visits) / base.visits * 100 : null;
-    });
-    if (lags[0] === null) return; // at minimum event day must exist
-    if (!lagByType[ev.type]) lagByType[ev.type] = [];
-    lagByType[ev.type].push(lags);
-  });
-  // Compute averages per type, only if ≥2 events
-  const labels = ['D+0 (당일)', 'D+1', 'D+2', 'D+3'];
-  const datasets = Object.entries(lagByType)
-    .filter(([,arr]) => arr.length >= 2)
-    .map(([type, arr]) => {
-      const data = [0,1,2,3].map(d => {
-        const vals = arr.map(x => x[d]).filter(v => v !== null);
-        return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
-      });
-      const col = TYPES[type] || '#888';
-      return {
-        label: type === 'Mobile Messaging' ? 'MMS' : type,
-        data,
-        borderColor: col,
-        backgroundColor: col + '22',
-        borderWidth: 2,
-        pointRadius: 4,
-        pointBackgroundColor: col,
-        tension: 0.25,
-        spanGaps: true,
-      };
-    });
-  const ctx = document.getElementById('lagChart').getContext('2d');
-  if (lagChartInst) lagChartInst.destroy();
-  if (!datasets.length) {
-    ctx.font = "11px 'Pretendard','Helvetica Neue'"; ctx.fillStyle = '#ccc';
-    ctx.fillText('데이터 부족 (이벤트 유형별 2건 이상 필요)', 20, 100);
-    return;
-  }
-  lagChartInst = new Chart(ctx, {
-    type: 'line',
-    data: { labels, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom', labels: { font:{size:9}, boxWidth:10, padding:8 } },
-        tooltip: {
-          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw !== null ? (ctx.raw>=0?'+':'')+ctx.raw.toFixed(1)+'%' : '-'}` }
-        }
-      },
-      scales: {
-        x: { ticks: { font:{size:9}, color:'#ffffff' }, grid: { color:'rgba(255,255,255,0.05)' } },
-        y: {
-          ticks: { font:{size:9}, color:'#888', callback: v => (v>=0?'+':'')+v.toFixed(0)+'%' },
-          grid: { color:'rgba(0,0,0,0.05)' },
-          title: { display:true, text:'Visits Lift (%)', font:{size:8}, color:'#aaa' }
-        }
-      }
-    }
-  });
-  // Dynamic lag insights — pattern-based per type
-  const lagBox = document.getElementById('lagInsightBox');
-  if (!lagBox) return;
-  const lagInsights = [];
-  let hasKolVshape = false, hasEmail = false, hasSite = false;
-  datasets.forEach(ds => {
-    const d = ds.data;
-    if (d[0] === null) return;
-    const tn = ds.label;
-    const fv = v => v !== null ? (v>=0?'+':'')+v.toFixed(1)+'%' : '-';
-    // Pattern 1 — V-shape: D+1 dips then D+2/D+3 recovers above D+1
-    const vShape = d[1] !== null && d[2] !== null && d[2] > d[1];
-    // Pattern 2 — Persistent: D+3 still > 50% of D+0
-    const persistent = d[3] !== null && d[0] > 0 && d[3] / d[0] > 0.45;
-    // Pattern 3 — Monotone decay: each day lower than previous
-    const decay = d[1] !== null && d[2] !== null && d[3] !== null
-                  && d[1] < d[0] && d[2] < d[1] && d[3] < d[2];
-    let pattern = '', cls = 'info';
-    if (vShape && !persistent) {
-      pattern = `D+2~3이 D+1보다 오히려 상승 (D+0:${fv(d[0])} → D+1:${fv(d[1])} → D+2:${fv(d[2])} → D+3:${fv(d[3])})`;
-      cls = 'warn';
-      if (tn === 'KOL') hasKolVshape = true;
-    } else if (persistent && !vShape) {
-      pattern = `효과가 수일간 높게 유지 (D+3 ${fv(d[3])} — 배너/온사이트 노출 지속 특성)`;
-      cls = 'good';
-      if (tn === 'Site') hasSite = true;
-    } else if (decay) {
-      const residual = d[0] > 0 ? Math.round(d[3]/d[0]*100) : 0;
-      pattern = `당일 최대 후 서서히 감소 — D+3까지 ${residual}% 잔존 (D+0:${fv(d[0])} → D+1:${fv(d[1])} → D+2:${fv(d[2])} → D+3:${fv(d[3])})`;
-      cls = 'info';
-      if (tn === 'Email') hasEmail = true;
-    } else {
-      pattern = `D+0:${fv(d[0])} → D+1:${fv(d[1])} → D+2:${fv(d[2])} → D+3:${fv(d[3])}`;
-    }
-    lagInsights.push({cls, text:`<b>${tn}</b> : ${pattern}`});
-  });
-  // Combined action tip
-  if (hasKolVshape && hasEmail) {
-    lagInsights.push({cls:'good',
-      text:`💡 <b>KOL → Email/Site 연결 타이밍</b> : KOL 집행 후 D+1에 리마인드 Email 발송하면 KOL 바이럴 피크(D+2~3)와 Email 효과(당일 피크)가 겹쳐 시너지 극대화 가능`});
-  } else if (hasKolVshape) {
-    lagInsights.push({cls:'info',
-      text:`💡 KOL D+1에 리마인드 Email or Site 배너 연계 시 D+2~3 바이럴 피크 구간과 겹쳐 시너지 가능`});
-  }
-  if (!lagInsights.length) lagInsights.push({cls:'info', text:'필터 조건을 조정하면 채널별 잔존 효과 패턴이 달라질 수 있습니다.'});
-  lagBox.innerHTML = lagInsights.map(i => `<div class="insight-item ${i.cls}">${i.text}</div>`).join('');
 }
 // ─── TOOLTIP MOUSE FOLLOW ────────────────────────────────────────────────────
 document.addEventListener('mousemove', function(e) {
@@ -7054,7 +6712,7 @@ async function onlLoad_() {
 }
 // ⑫ 국가 칩 — 「미국」은 지금 그대로. 캐나다 = RAW_CA_commerce(C$) · 원화 = C$ × 1,000 · 달러 = 원화 ÷ 그 날 미국 환율 (유입 탭과 같은 기준)
 //   캐나다 날짜는 첫 매출일(ctyCaCut_ · 유입 탭과 같은 기준)부터. 「전체」는 두 나라 자료가 모두 있는 날짜만 더한다.
-//   광고비·ROAS는 미국만 있어 캐나다·전체에서는 비운다(통합 탭과 같은 규칙)
+//   비용·ROAS = costValCty_ 국가별(⑯⑲)
 function onlCty_() { return typeof CTY === 'undefined' ? 'US' : CTY; }
 function onlSalesAt_(d) {
   var cty = onlCty_(), us = ONL.byDate ? ONL.byDate[d] : null, ca = ONL.caByDate ? ONL.caByDate[d] : null, fx = fxRate(d);
@@ -7155,7 +6813,7 @@ function onlRenderKpi_(data) {
     + card('CVR', (v > 0 ? o / v * 100 : 0).toFixed(2) + '%', '주문 수량 ' + Math.round(o).toLocaleString('en-US'));
 }
 function onlRenderChart_(data) {
-  var US_ = onlCty_() === 'US', S = Object.assign({}, ONL.show), P = ONL.period, cur = ONL.cur, n = data.length, cost = P !== 'daily';
+  var S = Object.assign({}, ONL.show), P = ONL.period, cur = ONL.cur, n = data.length, cost = P !== 'daily';
   var CA_ = onlCty_() === 'CA', caLock = { kol:1, ch:1 };   // ⑯⑰ 캐나다 = KOL·채널마케팅만 잠금(캐나다분 비용 없음)
   if (CA_) Object.keys(caLock).forEach(function(k) { S[k] = false; });
   document.querySelectorAll('[data-onl-show]').forEach(function(b) { var k = b.dataset.onlShow; if (k === 'visits' || k === 'cvr') return;
@@ -7219,8 +6877,8 @@ function onlRenderTable_(data) {
     ['광고비(총계)', mtblMoney, function(d) { return onlCost_(d, '광고비 총계'); }],
     ['브랜딩 비용', mtblMoney, function(d) { return onlCost_(d, '브랜딩 비용'); }],
     ['KOL 비용', mtblMoney, function(d) { return onlCost_(d, 'KOL 비용'); }],
-    ['매장 행사 비용', mtblMoney, function(d) { return costTabNew_(P) ? onlCost_(d, '매장 행사 비용') : null; }],
-    ['퍼포먼스 기타 비용', mtblMoney, function(d) { return costTabNew_(P) ? onlCost_(d, '퍼포먼스 기타 비용') : null; }],
+    ['매장 행사 비용', mtblMoney, function(d) { return onlCost_(d, '매장 행사 비용'); }],
+    ['퍼포먼스 기타 비용', mtblMoney, function(d) { return onlCost_(d, '퍼포먼스 기타 비용'); }],
     ['온라인 ROAS', function(v) { return mtblPct(v, true); }, function(d) { return d.roas; }],
     ['전체 광고비 ROAS', function(v) { return mtblPct(v, true); }, function(d) { return d.roasT; }]
   ];
@@ -7377,13 +7035,6 @@ function updateChLabel(name) {
 let selChMonths = new Set();
 let selChSec = new Set();
 const CH_MONTH_NAMES = {'01':'JAN','02':'FEB','03':'MAR','04':'APR','05':'MAY','06':'JUN','07':'JUL','08':'AUG','09':'SEP','10':'OCT','11':'NOV','12':'DEC'};
-function getFilteredChData() {
-  let data = CH_RAW;
-  if (selChMonths.size > 0) data = data.filter(r => selChMonths.has(r.date.slice(0,7)));
-  if (selChWeeks.size > 0) data = data.filter(r => selChWeeks.has(getWeekKey(r.date)));
-  if (selChChans.size > 0) data = data.filter(r => selChChans.has(r.channel));
-  return data;
-}
 function getFilteredChDataTime() {
   let data = CH_RAW;
   if (selChMonths.size > 0) data = data.filter(r => selChMonths.has(r.date.slice(0,7)));
@@ -7421,7 +7072,6 @@ function refreshChannel() {
   const selW = selChWeeks.size > 0 ? activeWeeks : CH_WEEKS.slice(-1);
   const nSel = selW.length;
   // Comparison: previous N weeks
-  const allIdx = CH_WEEKS.map((w,i) => ({w,i}));
   const selIdx = selW.map(w => CH_WEEKS.indexOf(w)).filter(i=>i>=0);
   const minIdx = Math.min(...selIdx);
   const compWeeks = [];
@@ -8178,19 +7828,6 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
   }
 }
 // ── 배열 파서 (Apps Script 반환 2D array) ────────────────────────────────────
-function parseNum(val) {
-  if (val === null || val === undefined || val === '') return 0;
-  if (typeof val === 'number') return val;
-  return parseFloat(String(val).replace(/[,$%]/g,'')) || 0;
-}
-function parseDate(raw) {
-  // Apps Script에서 이미 "YYYY-MM-DD" 문자열로 반환됨
-  if (!raw) return null;
-  const s = String(raw).trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  if (s.length > 10 && s[10] === 'T') return s.slice(0,10); // ISO datetime fallback
-  return null;
-}
 // ── Rebuild derived data ────────────────────────────────────────────────────
 // ─── PERFORMANCE ADS ─────────────────────────────────────────────────────────
 function getMonthKey(dateStr) {
@@ -8229,26 +7866,6 @@ function fmtWkLabel(wkKey) {
   const sat = new Date(d); sat.setDate(d.getDate() + 6);
   const fmt = x => (x.getMonth()+1) + '/' + x.getDate();
   return fmt(d) + '-' + fmt(sat);
-}
-function buildAdsWeekly(mediaFilter) {
-  // Returns { weekKey: { spend, impressions, clicks, byObj: { objName: {spend,impressions,clicks} } } }
-  const byWeek = {};
-  adsRows_(CTY).forEach(r => {   // ⑯ 국가 칩 기준 광고 행
-    if (mediaFilter && !mediaFilter.has(r.media)) return;
-    const wk = getWeekKey(r.date);
-    const _eng = (r.likes||0) + (r.comments||0) + (r.shares||0) + (r.saves||0);
-    if (!byWeek[wk]) byWeek[wk] = { spend:0, impressions:0, clicks:0, eng:0, byObj:{} };
-    byWeek[wk].spend       += (r.spend       || 0);
-    byWeek[wk].impressions += (r.impressions || 0);
-    byWeek[wk].clicks      += (r.clicks      || 0);
-    byWeek[wk].eng         += _eng;
-    if (!byWeek[wk].byObj[r.objective]) byWeek[wk].byObj[r.objective] = {spend:0,impressions:0,clicks:0,eng:0};
-    byWeek[wk].byObj[r.objective].spend       += (r.spend       || 0);
-    byWeek[wk].byObj[r.objective].impressions += (r.impressions || 0);
-    byWeek[wk].byObj[r.objective].clicks      += (r.clicks      || 0);
-    byWeek[wk].byObj[r.objective].eng         += _eng;
-  });
-  return byWeek;
 }
 function buildAdsByPeriod(mediaFilter, period) {
   const byP = {};
@@ -8318,26 +7935,6 @@ function buildSephoraByPeriod(period) {
     byP[k].visits += v;
   });
   return byP;
-}
-function buildSephoraWeekly() {
-  // Returns { weekKey: { sales_com, sales_bam, sales_total, visits } }
-  const byWeek = {};
-  Object.entries(SALES_BY_DATE).forEach(([date, s]) => {
-    const wk = getWeekKey(date);
-    if (!byWeek[wk]) byWeek[wk] = {sales_com:0, sales_bam:0, sales_total:0, visits:0};
-    byWeek[wk].sales_com   += s.com   || 0;
-    byWeek[wk].sales_bam   += s.bam   || 0;
-    byWeek[wk].sales_total += s.total || 0;
-  });
-  // visits from RAW_SKU (aggregate by date→week)
-  const visitsByDate = {};
-  RAW_SKU.forEach(r => { visitsByDate[r.date] = (visitsByDate[r.date]||0) + r.visits; });
-  Object.entries(visitsByDate).forEach(([date, v]) => {
-    const wk = getWeekKey(date);
-    if (!byWeek[wk]) byWeek[wk] = {sales_com:0, sales_bam:0, sales_total:0, visits:0};
-    byWeek[wk].visits += v;
-  });
-  return byWeek;
 }
 function getSalesKey() {
   return selAdsSales === 'com' ? 'sales_com' : selAdsSales === 'bam' ? 'sales_bam' : 'sales_total';
@@ -9849,7 +9446,6 @@ function dmQueryKeys(p){var dm=window.DEMAND||{},q=dm.query||{},set={};
   while(keys.length&&!tot(keys[keys.length-1]))keys.pop();return keys;}
 function dmDailyKeys(){var set={};try{RAW_SKU.forEach(function(r){set[r.date]=1;});}catch(e){}try{Object.keys(SALES_BY_DATE).forEach(function(d){set[d]=1;});}catch(e){}return Object.keys(set).sort();}
 function dmPeriodKeys(){var st=window.DSTATE,p=st.period,keys=(p==='daily')?dmDailyKeys():dmQueryKeys(p);
-  var startKey=(p==='monthly')?DSTART_MO:DSTART_WK;
   if(st.fMonths.size||st.fWeeks.size){keys=keys.filter(function(k){var mo=k.slice(0,7);var mOk=st.fMonths.size===0||st.fMonths.has(mo);var wOk=st.fWeeks.size===0||st.fWeeks.has(k);return mOk&&wOk;});}
   return keys;}
 function dmVisitsMap(p){var m={};try{RAW_SKU.forEach(function(r){var k=getPeriodKey(r.date,p);m[k]=(m[k]||0)+(r.visits||0);});}catch(e){}return m;}
