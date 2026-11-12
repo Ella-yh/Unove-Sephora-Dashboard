@@ -3365,7 +3365,10 @@ function costValSheet_(p, label, key) {
 //   → 미국 = 시트 − (주 단위면 장부 캐나다분) · 캐나다 = 장부 캐나다분 · 전체 = 미국 + 캐나다
 //   항목 매핑(시트와 같은 기준): 콘텐츠 제작비·PR/앰블럼·옥외·팝업/오프라인행사·브랜딩 기타 → 브랜딩 · 퍼포먼스 기타 → 퍼포먼스
 //   🛑 매장 행사/광고비 = 미국·캐나다 모두 제외 (2026-11-12 MJ 「일단은 그렇게 통일」 — 원가 시트 총계에 없는 비용이라 시트 기준 그대로)
-//   🛑 KOL(주 = KOL 시트, 국가 칸 없음)은 MJ 답 대기 — 아직 넣지 않는다
+//   KOL = 미국에 둔다 (2026-11-12 MJ 「Nana KOL 2건은 일단 미국으로」)
+//     주 = KOL 시트(국가 칸 없음) → 이미 미국 · 월 = 사업실적_Summary 틱톡·인스타·유튜브 KOL(84·87·90행)이 국가='미국'만 → 장부 캐나다 KOL 행이 빠져 있다
+//     → 월 미국 KOL·총계에 장부 캐나다 KOL(틱톡·인스타그램·유튜브) N을 더한다. KOL 기타·2차(81·82행)는 국가 조건이 없어 이미 들어 있으므로 더하지 않는다
+//     해당 행(2026-11-12): 9월 Nana 틱톡 1차 ₩5,313,000 (Nana 인스타는 장부에 이미 미국)
 var LED_BRAND_C2 = { '콘텐츠 제작비':1, 'PR/앰블럼':1, '옥외':1, '팝업/오프라인행사':1, '브랜딩 기타':1 };
 function caLedRows_() { var d = window.DEMAND || {}; return Array.isArray(d.caLedger) ? d.caLedger : null; }
 function ledLabel_(x) { return LED_BRAND_C2[x.c2] ? '브랜딩 비용' : x.c2 === '퍼포먼스 기타' ? '퍼포먼스 비용' : null; }
@@ -3386,6 +3389,14 @@ function caLedger_(p, label, key) {   // p = 'weekly'(L 날짜 배분) | 'monthl
   });
   return t;
 }
+var LED_KOL_US_C2 = { '틱톡':1, '인스타그램':1, '유튜브':1 };
+function caLedKolToUs_(p, label, key) {
+  if (p !== 'monthly' || (label !== 'KOL 비용' && label !== '광고비 총계')) return 0;
+  var rows = caLedRows_(); if (!rows) return 0;
+  var t = 0;
+  rows.forEach(function(x){ if (x.c1 === 'KOL' && LED_KOL_US_C2[x.c2] && x.ym === key) t += x.n || 0; });
+  return t;
+}
 function costVal(p, label, key) { return costValCty_(p, label, key, 'US'); }
 function costValCty_(p, label, key, cty) {
   var v = costValSheet_(p, label, key);
@@ -3396,7 +3407,7 @@ function costValCty_(p, label, key, cty) {
   var adIn = (isAd && v > 0 && (label === '퍼포먼스 비용' || costValSheet_(p, '퍼포먼스 비용', key) > 0)) ? caAd : 0;
   var led = (p === 'weekly' || p === 'monthly') ? caLedger_(p, label, key) : 0;
   var ledIn = (p === 'weekly' && v > 0) ? led : 0;   // 주차 시트만 장부 캐나다 행을 이미 품고 있다
-  var us = v - adIn - ledIn, ca = caAd + led;
+  var us = v - adIn - ledIn + caLedKolToUs_(p, label, key), ca = caAd + led;
   if (cty === 'CA') return ca;
   if (cty === 'ALL') return us + ca;
   return us;
