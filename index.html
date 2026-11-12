@@ -8099,15 +8099,28 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     const label = document.getElementById('lastUpdatedLabel');
     if (label) label.textContent = '업데이트: ' + ts;
     // 캐시 저장 (빠른 재로딩용)
+    // 2026-11-11 — 광고 raw(약 3.3M자)가 늘어 브라우저 저장 한도(약 5M자)를 넘으면서 저장이 조용히 실패 →
+    //   다음 접속마다 11/6 옛 캐시가 먼저 그려지고 「캐시: 119시간 전」이 떴다.
+    //   ① 전체 저장 → ② 실패하면 광고·KOL raw 빼고 저장(새 데이터가 곧 다시 채움) → ③ 그래도 실패하면 옛 캐시를 지워 옛 숫자를 안 보이게
+    var _cacheBase = {
+      ts: Date.now(),
+      commerce: newSku, sales: newSales, channel: newCh, onsite: (data.onsite || null), demand: (data.demand || null),
+      adsDict: window.ADS_DICT || { campaign: [], adgroup: [], creative: [] },
+      ca: (data.ca || null),
+      updatedAt: data.updatedAt
+    };
     try {
-      localStorage.setItem('sephora_data_cache', JSON.stringify({
-        ts: Date.now(),
-        commerce: newSku, sales: newSales, channel: newCh, onsite: (data.onsite || null), demand: (data.demand || null),
-        ads: Array.from(ADS_RAW), adsDict: window.ADS_DICT || { campaign: [], adgroup: [], creative: [] }, kol: Array.from(KOL_RAW),
-        ca: (data.ca || null),
-        updatedAt: data.updatedAt
-      }));
-    } catch(e) { console.warn('[cache] localStorage 저장 실패 — 다음 로딩은 풀 페치:', e.message); }
+      localStorage.setItem('sephora_data_cache', JSON.stringify(Object.assign({}, _cacheBase, { ads: Array.from(ADS_RAW), kol: Array.from(KOL_RAW) })));
+    } catch(e) {
+      try {
+        localStorage.removeItem('sephora_data_cache');
+        localStorage.setItem('sephora_data_cache', JSON.stringify(Object.assign({}, _cacheBase, { ads: [], kol: [], lite: true })));
+        console.warn('[cache] 용량 초과 — 광고·KOL raw 빼고 저장:', e.message);
+      } catch(e2) {
+        try { localStorage.removeItem('sephora_data_cache'); } catch(e3) {}
+        console.warn('[cache] localStorage 저장 실패 — 옛 캐시 삭제, 다음 로딩은 풀 페치:', e2.message);
+      }
+    }
     // B&M·SKU는 별도 키. 용량이 모자라면 이 둘만 조용히 버려지고 위 캐시는 무사하다.
     try { if (data.skuSales) localStorage.setItem('sephora_cache_sku', JSON.stringify(data.skuSales)); }
     catch(e) { console.warn('[cache] SKU 캐시 생략:', e.message); }
