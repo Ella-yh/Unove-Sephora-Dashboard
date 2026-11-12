@@ -4584,17 +4584,25 @@ function ctyRoasKpi_(it, data) {
   var set = function(x, v, label, excl){ if (!x) return; x.label = label; x.val = fmt(v); x.badge = null; x.vs = null; x.excl = excl; };
   var monthMode = selWeeks.size === 0 && selMonths.size > 0;
   if (CTY === 'CA') {
-    var dates = new Set(data.map(function(d){ return d.date; }));
-    var months = monthMode ? Array.from(selMonths).sort().map(function(m){ return '2026-' + m; }) : null;
+    // 미국 카드와 같은 규칙 — 비용(캐나다 광고비)이 0인 주·월 버킷은 매출·비용 양쪽에서 뺀다 (광고 시작 전 매출로 ROAS 가 부풀지 않게)
+    var cx = window.__kpiRoasCtx || { roasP:'monthly', useWeekly:false };
+    var bk = function(d){ return cx.useWeekly ? getWeekKey(d) : getMonthKey(d); };
+    var keep = new Set();
+    data.forEach(function(d){ var k = bk(d.date); if (caAdSpend_(cx.roasP, k) > 0) keep.add(k); });
+    if (!keep.size) { set(rt, null, '전체 ROAS (캐나다)', '이 기간 캐나다 광고비가 없습니다'); set(rc, null, '닷컴 ROAS (캐나다)', '이 기간 캐나다 광고비가 없습니다'); return; }
+    var dates = new Set(data.filter(function(d){ return keep.has(bk(d.date)); }).map(function(d){ return d.date; }));
+    var months = monthMode ? Array.from(keep).sort() : null;
     var ca = ctyCaSales_(dates, months);
     if (ca.v == null) { set(rt, null, '전체 ROAS (캐나다)', ca.why); set(rc, null, '닷컴 ROAS (캐나다)', ca.why); return; }
+    var ks = Array.from(keep).sort(), kf = function(k){ return cx.roasP === 'monthly' ? fmtPeriodLabel(k, 'monthly') : fmtPeriodLabel(k, 'weekly'); };
+    var range = (ks.length > 1 ? kf(ks[0]) + '–' + kf(ks[ks.length - 1]) : kf(ks[0])) + ' 기준(캐나다 광고 집행 기간) · ';
     var dl = caDaily_() ? (caData_().daily.slice(-1)[0] || {}).date : null;
     var last = ca.lastDay || dl || ca.lastWe || '9999-12-31';
     var sp = 0;
     adsRows_('CA').forEach(function(r){ if (dates.has(r.date) && r.date <= last) sp += r.spend || 0; });
     var why = sp > 0 ? '캐나다 광고비 ₩' + Math.round(sp).toLocaleString('ko-KR') + ' (캠페인·광고그룹명 CA 기준)' : '이 기간 캐나다 광고비가 없습니다';
-    set(rt, sp > 0 ? ca.vK / sp : null, '전체 ROAS (캐나다)', why + ' · 브랜딩·KOL 비용은 미국에 포함');
-    set(rc, (sp > 0 && ca.split && ca.comK != null) ? ca.comK / sp : null, '닷컴 ROAS (캐나다)', ca.split ? why : CA_WHY.monCh);
+    set(rt, sp > 0 ? ca.vK / sp : null, '전체 ROAS (캐나다)', range + why + ' · 브랜딩·KOL 비용은 미국에 포함');
+    set(rc, (sp > 0 && ca.split && ca.comK != null) ? ca.comK / sp : null, '닷컴 ROAS (캐나다)', ca.split ? range + why : CA_WHY.monCh);
     return;
   }
   // 전체
