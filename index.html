@@ -3350,6 +3350,9 @@ function costValCty_(p, label, key, cty) {
   if (cty === 'ALL') return v;
   if (cty === 'CA') return CTY_AD_LABELS[label] ? caAdSpend_(p, key) : 0;
   if (!CTY_AD_LABELS[label] || !(v > 0)) return v;
+  // 그 주·월 시트 「퍼포먼스 비용」이 비어 있으면(월 장부 마감 전) 캐나다 광고비가 아직 시트에 안 들어간 것 → 빼지 않는다
+  //   예: 2026-11 월 = 퍼포먼스 0 · 광고비 총계 76.3M(브랜딩 등만) — 총계에서 캐나다분을 빼면 안 된다 (2026-11-12 검산)
+  if (label !== '퍼포먼스 비용' && !(costValSheet_(p, '퍼포먼스 비용', key) > 0)) return v;
   return v - caAdSpend_(p, key);
 }
 function sumCost(p, label, keySet) {
