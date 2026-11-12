@@ -3322,10 +3322,24 @@ function adIsCa_(r) {
   }
   return v;
 }
+var _adsRowsC = { n:-1, d:null, US:null, CA:null, day:{} };
+function adsRowsCache_() {   // ADS_RAW 가 바뀌면(행 수·사전 객체) 다시 나눈다 — 국가 칩을 누를 때마다 1만 행을 다시 거르지 않게
+  if (_adsRowsC.n !== ADS_RAW.length || _adsRowsC.d !== window.ADS_DICT) {
+    var us = [], ca = [];
+    ADS_RAW.forEach(function(r){ (adIsCa_(r) ? ca : us).push(r); });
+    _adsRowsC = { n: ADS_RAW.length, d: window.ADS_DICT, US: us, CA: ca, day:{} };
+  }
+  return _adsRowsC;
+}
 function adsRows_(cty) {   // 'US'(기본) · 'CA' · 'ALL'
   cty = cty || 'US';
   if (cty === 'ALL') return ADS_RAW;
-  return ADS_RAW.filter(function(r){ return cty === 'CA' ? adIsCa_(r) : !adIsCa_(r); });
+  return adsRowsCache_()[cty === 'CA' ? 'CA' : 'US'];
+}
+function adsDaySpend_(cty, date) {   // 국가별 일 광고비 (날짜 → 합)
+  var c = adsRowsCache_();
+  if (!c.day[cty]) { var m = {}; adsRows_(cty).forEach(function(r){ m[r.date] = (m[r.date] || 0) + (r.spend || 0); }); c.day[cty] = m; }
+  return c.day[cty][date] || 0;
 }
 var _caSpendC = { n:-1, d:null, m:null };
 function caAdSpend_(p, key) {   // p = 'daily'|'weekly'|'monthly' · key = getPeriodKey 값
@@ -3985,7 +3999,7 @@ function getMainChartData() {
   if (mainPeriod === 'daily') {
     return raw.map(function(d) {
       var sb = SALES_BY_DATE[d.date] || {};
-      var spend = adsRows_('US').filter(function(r){return r.date===d.date;}).reduce(function(s,r){return s+r.spend;},0);   // ⑯ 캐나다 광고 제외
+      var spend = adsDaySpend_('US', d.date);   // ⑯ 캐나다 광고 제외
       // 일 단위: 광고비 총계(월/주 단위 시트값)가 없어 전체 ROAS는 계산 불가 → null
       // *_krw = 그 날짜 환율로 환산한 원화 (그래프·표·ROAS 는 이 값을 쓴다)
       var fx = fxRate(d.date);
@@ -4539,7 +4553,10 @@ window.setCty = function(c) {
   try { if (typeof window.ctySkuDetail_ === 'function') window.ctySkuDetail_(); } catch(e) { console.warn('[CTY] SKU 상세', e); }   // 2026-11-11 ⑭
   try { if (typeof window.ctyNoDataNote_ === 'function') window.ctyNoDataNote_(); } catch(e) { console.warn('[CTY] 광고 안내', e); }   // 2026-11-11 ⑮
   try { if (typeof ONL !== 'undefined' && ONL.byDate) onlRender_(); } catch(e) { console.warn('[CTY] 온라인매출', e); }   // 2026-11-11 ⑫
-  try { if (ADS_RAW.length) { refreshAds(); refreshAdsCreative(); } } catch(e) { console.warn('[CTY] 광고 탭', e); }   // 2026-11-12 ⑯
+  try {   // 2026-11-12 ⑯ — 광고 탭이 열려 있을 때만 다시 그린다(소재별 포함). 닫혀 있으면 탭을 열 때 switchTab 이 refreshAds() 로 그린다
+    var actTab = document.querySelector('.sb-item.active');
+    if (ADS_RAW.length && actTab && actTab.dataset.tab === 'ads') refreshAds();
+  } catch(e) { console.warn('[CTY] 광고 탭', e); }
 };
 // ③ (2026-10-15 해제) 「전체」 채널 칩 단일 선택 감싸기는 없앴다 — 미국·캐나다와 같은 multi-select
 // 캐나다 매출 — 기간 집합에 대한 합계 (USD)
@@ -4698,7 +4715,7 @@ const CTY_LOCK_SERIES = ['Visits','CVR','채널마케팅 비용','브랜딩 비�
 // 국가별 비용·ROAS 계열 값 (그래프 데이터 d 한 칸 · cty = 'CA'|'ALL')
 function ctySeriesVal_(label, d, cty) {
   var p = mainPeriod, k = d.date, day = p === 'daily';
-  var adDay = function(){ var t = 0; adsRows_(cty).forEach(function(r){ if (r.date === k) t += r.spend || 0; }); return t; };
+  var adDay = function(){ return adsDaySpend_(cty, k); };
   var caK = function(part){ var r = caPart_(d, part); return r.v == null ? null : r.v * (r.fx || fxRate(k)); };
   if (label === '페이드 비용') { var v = day ? adDay() : costValCty_(p, '퍼포먼스 비용', k, cty); return v > 0 ? v : (day ? null : v); }
   if (label === '광고비(총계)') return day ? null : costValCty_(p, '광고비 총계', k, cty);
