@@ -2727,7 +2727,7 @@ BMQ('stBtns').addEventListener('click',e=>{const b=e.target.closest('button');if
   </div>
   <div class="chart-card" style="position:relative;">
     <div class="leg-row" style="align-items:center;flex-wrap:wrap;gap:6px;">
-      <div class="leg"><div class="leg-dot" style="background:#d97070;"></div><span>Sales (포털)</span></div>
+      <div class="leg" id="onlSalesLeg"><div class="leg-dot" style="background:#d97070;"></div><span>Sales (포털)</span></div>
       <span class="cur-sw" title="달러 = 포털 원본 · 원화 = 날짜별 환율(2026-08-31까지 1,500원 · 09-01부터 1,400원)"><button class="on" data-ocur="KRW" onclick="setOnlCur('KRW')">₩ 원화</button><button data-ocur="USD" onclick="setOnlCur('USD')">$ 달러</button></span>
       <button class="mkr-btn active" data-onl-show="visits" onclick="toggleOnl(this)">Visits</button>
       <button class="mkr-btn" data-onl-show="cvr" onclick="toggleOnl(this)">CVR</button>
@@ -7055,7 +7055,7 @@ function onlSalesAt_(d) {
   var C = ca == null ? null : { usd: ca * 1000 / fx, krw: ca * 1000 };
   if (cty === 'US') return U;
   if (cty === 'CA') return C;
-  return (U && C) ? { usd: U.usd + C.usd, krw: U.krw + C.krw } : null;
+  return (U && C) ? { usd: U.usd + C.usd, krw: U.krw + C.krw, us: U, ca: C } : null;   // 「전체」 그래프 누적 막대용으로 나라별 값도 넘긴다
 }
 function onlDays_() {
   var cty = onlCty_();
@@ -7078,9 +7078,10 @@ function onlData_() {
   adsRows_(cty).forEach(function(r) { sp[r.date] = (sp[r.date] || 0) + (r.spend || 0); });   // ⑯ 국가별 광고 raw
   ds.forEach(function(d) {
     var k = p === 'daily' ? d : getPeriodKey(d, p);
-    var x = b[k] || (b[k] = { date:k, label:p === 'daily' ? d.slice(5) : fmtPeriodLabel(k, p), visits:0, orders:0, sales:0, sales_krw:0, spend:0 });
+    var x = b[k] || (b[k] = { date:k, label:p === 'daily' ? d.slice(5) : fmtPeriodLabel(k, p), visits:0, orders:0, sales:0, sales_krw:0, spend:0, us_usd:0, us_krw:0, ca_usd:0, ca_krw:0 });
     var s = onlSalesAt_(d) || { usd:0, krw:0 };
     x.visits += v[d] || 0; x.orders += o[d] || 0; x.sales += s.usd; x.sales_krw += s.krw; x.spend += sp[d] || 0;
+    if (s.us) { x.us_usd += s.us.usd; x.us_krw += s.us.krw; x.ca_usd += s.ca.usd; x.ca_krw += s.ca.krw; }
   });
   return Object.values(b).sort(function(a, c) { return a.date.localeCompare(c.date); }).map(function(x) {
     x.cvr = x.visits > 0 ? x.orders / x.visits * 100 : 0;
@@ -7156,7 +7157,16 @@ function onlRenderChart_(data) {
   if (bdg) bdg.textContent = { US:'미국 · 포털 매출 기준', CA:'캐나다 · 포털 매출 기준 (C$)', ALL:'전체 (미국+캐나다) · 포털 매출 기준' }[onlCty_()];
   var ln = function(label, vals, color, axis, order) { return { label:label, data:vals, type:'line', borderColor:color, backgroundColor:'transparent', borderWidth:1.8, pointRadius:n > 40 ? 0 : 2, pointHoverRadius:4, pointBackgroundColor:color, spanGaps:false, fill:false, yAxisID:axis, order:order == null ? 0 : order, tension:0.25 }; };
   var ds = [];
-  ds.push({ label:'Sales (포털)', data:data.map(function(d) { return cur === 'USD' ? d.sales : d.sales_krw; }), type:'bar', backgroundColor:makeGrad('onlineChart', '#d97070', 0.85, 0.45), hoverBackgroundColor:makeGrad('onlineChart', '#d97070', 0.95, 0.6), yAxisID:'yS', order:2, barPercentage:0.5, categoryPercentage:0.85 });
+  // 2026-11-12 MJ 「온라인매출 탭 색깔 반영」 — 통합 탭과 같은 국가 색(CTY_COLOR): 미국 분홍 · 캐나다 갈색 · 전체 = 미국(아래) + 캐나다(위) 누적
+  var ALL_ = onlCty_() === 'ALL', barCol = CA_ ? CTY_COLOR.CA : CTY_COLOR.US;
+  var sleg = document.getElementById('onlSalesLeg');
+  if (sleg) sleg.innerHTML = ALL_
+    ? '<div class="leg-dot" style="background:' + CTY_COLOR.US + ';"></div><span>Sales (포털) 미국(아래)</span><div class="leg-dot" style="background:' + CTY_COLOR.CA + ';margin-left:6px;"></div><span>캐나다(위) 누적</span>'
+    : '<div class="leg-dot" style="background:' + barCol + ';"></div><span>Sales (포털)' + (CA_ ? ' · 캐나다' : '') + '</span>';
+  if (ALL_) {
+    ds.push({ label:'Sales (포털) 미국', data:data.map(function(d) { return cur === 'USD' ? d.us_usd : d.us_krw; }), type:'bar', stack:'onl', backgroundColor:hexToRgba(CTY_COLOR.US, 0.85), hoverBackgroundColor:CTY_COLOR.US, yAxisID:'yS', order:2, barPercentage:0.5, categoryPercentage:0.85 });
+    ds.push({ label:'Sales (포털) 캐나다', data:data.map(function(d) { return cur === 'USD' ? d.ca_usd : d.ca_krw; }), type:'bar', stack:'onl', backgroundColor:hexToRgba(CTY_COLOR.CA, 0.85), hoverBackgroundColor:CTY_COLOR.CA, yAxisID:'yS', order:2, barPercentage:0.5, categoryPercentage:0.85 });
+  } else ds.push({ label:'Sales (포털)', data:data.map(function(d) { return cur === 'USD' ? d.sales : d.sales_krw; }), type:'bar', backgroundColor:makeGrad('onlineChart', barCol, 0.85, 0.45), hoverBackgroundColor:makeGrad('onlineChart', barCol, 0.95, 0.6), yAxisID:'yS', order:2, barPercentage:0.5, categoryPercentage:0.85 });
   if (S.visits) ds.push(Object.assign(ln('Visits', data.map(function(d) { return d.visits; }), '#6aadd5', 'yV', 3), { fill:true, backgroundColor:makeGrad('onlineChart', '#6aadd5', 0.15, 0), pointRadius:0 }));
   if (S.cvr) ds.push(ln('CVR', data.map(function(d) { return d.cvr; }), '#8878d0', 'yC', 1));
   if (S.ad) ds.push(ln('페이드 비용', data.map(function(d) { return P === 'daily' ? (d.spend || null) : costValCty_(P, '퍼포먼스 비용', d.date, onlCty_()); }), '#e8c84a', 'yA'));
@@ -7173,7 +7183,7 @@ function onlRenderChart_(data) {
       title:function(c) { return '📅 ' + data[c[0].dataIndex].label; },
       label:function(c) { var v = c.raw, l = c.dataset.label; if (v == null) return null;
         if (l === 'Visits') return '  Visits: ' + v.toLocaleString();
-        if (l === 'Sales (포털)') return '  ' + l + ': ' + curFmt_(v, cur);
+        if (l.indexOf('Sales (포털)') === 0) return '  ' + l + ': ' + curFmt_(v, cur) + (l === 'Sales (포털) 캐나다' ? '  (합계 ' + curFmt_(cur === 'USD' ? data[c.dataIndex].sales : data[c.dataIndex].sales_krw, cur) + ')' : '');
         if (l === 'CVR') return '  CVR: ' + v.toFixed(2) + '%';
         if (l.indexOf('ROAS') >= 0) return '  ' + l + ': ' + v + '%';
         return '  ' + l + ': ₩' + Math.round(v).toLocaleString('ko-KR'); } } } },
@@ -7183,6 +7193,8 @@ function onlRenderChart_(data) {
       yC:{ type:'linear', position:'right', display:S.cvr, grid:{ drawOnChartArea:false }, ticks:{ font:{ size:9 }, color:'#8878d0', callback:function(v) { return v.toFixed(1) + '%'; } }, title:{ display:true, text:'CVR(%)', font:{ size:9 }, color:'#8878d0' } },
       yA:{ type:'linear', position:'right', display:showA, grid:{ drawOnChartArea:false }, min:0, ticks:{ font:{ size:9 }, color:'#e8c84a', callback:money('₩') }, title:{ display:true, text:'비용(₩)', font:{ size:9 }, color:'#e8c84a' } },
       yR:{ type:'linear', position:'left', display:S.roas || (S.roasT && cost), grid:{ drawOnChartArea:false }, ticks:{ font:{ size:9 }, color:'#4bc8a0', callback:function(v) { return v + '%'; } }, title:{ display:true, text:'ROAS(%)', font:{ size:9 }, color:'#4bc8a0' } } } } };
+  if (ALL_) { cfg.options.scales.x.stacked = true; cfg.options.scales.yS.stacked = true; }
+  cfg.options.scales.yS.title.color = barCol;
   if (P === 'weekly' && typeof dmWeekHlPlugin_ === 'function') cfg.plugins = [dmWeekHlPlugin_(data.map(function(d) { return d.date; }), dmWeekMarks())];
   var c = document.getElementById('onlineChart'); if (!c) return;
   if (onlChart) onlChart.destroy();
