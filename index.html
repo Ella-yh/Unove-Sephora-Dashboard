@@ -7574,44 +7574,7 @@ async function verifyGoogleToken(token) {
     document.getElementById('loginErr').textContent = '로그인 오류: ' + e.message;
   }
 }
-// ═══ 업데이트 공지 팝업 — 2026-11-12 게시, 11/21까지(한국시간) 로그인 후 표시. 「다시 보지 않기」는 이 브라우저에만 저장
-var UPD_NOTICE = { id: 'upd-261112', until: '2026-11-22T00:00:00+09:00' };
-function showUpdNotice_() {
-  if (Date.now() >= Date.parse(UPD_NOTICE.until)) return;
-  try { if (localStorage.getItem('sephora_notice_hide') === UPD_NOTICE.id) return; } catch (e) {}
-  if (document.getElementById('updNotice')) return;
-  var d = document.createElement('div');
-  d.id = 'updNotice';
-  d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(29,40,71,.45);display:flex;align-items:center;justify-content:center;padding:16px';
-  var sec = function (t, items) {
-    return '<div style="background:#F6F7FA;border-radius:8px;padding:12px 14px;margin-top:10px">'
-      + '<div style="font-weight:700;color:#1D2847;font-size:14px;margin-bottom:6px">' + t + '</div>'
-      + items.map(function (x) { return '<div style="display:flex;gap:8px;font-size:14px;color:#333;line-height:1.6"><span style="color:#d97070">•</span><span>' + x + '</span></div>'; }).join('')
-      + '</div>';
-  };
-  d.innerHTML = '<div role="dialog" aria-modal="true" aria-labelledby="updNoticeT" style="background:#fff;border-radius:12px;max-width:480px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.25);overflow:hidden;color:#333;word-break:keep-all">'
-    + '<div id="updNoticeT" style="background:#1D2847;color:#fff;padding:16px 22px;font-weight:700;font-size:16px">[업데이트 사항 공지]</div>'
-    + '<div style="padding:20px 22px 6px">'
-    + '<p style="margin:0;font-size:14px;line-height:1.75">세포라의 캐나다 권역에 매출이 증가함에 따라,<br><b>캐나다 데이터 분리</b>하였습니다.</p>'
-    + '<p style="margin:8px 0 6px;font-size:14px;line-height:1.75">또한, 추가 업데이트 공지드립니다.</p>'
-    + sec('캐나다 분리', ['퍼포먼스 광고, 온라인 매출'])
-    + sec('비용 수정', ['매장 행사 비용, 퍼포먼스 기타 비용(리테이너) 추가', '광고비 내 아마존 · 틱톡샵 비용 제외'])
-    + '</div>'
-    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 22px 18px">'
-    + '<button type="button" id="updNoticeHide" style="background:none;border:none;color:#999;font-size:12px;cursor:pointer;padding:4px 0;text-decoration:underline">다시 보지 않기</button>'
-    + '<button type="button" id="updNoticeClose" style="background:#1D2847;color:#fff;border:none;border-radius:6px;padding:8px 26px;font-size:14px;cursor:pointer">확인</button>'
-    + '</div></div>';
-  document.body.appendChild(d);
-  function close() { d.remove(); document.removeEventListener('keydown', onKey); }
-  function onKey(e) { if (e.key === 'Escape') close(); }
-  document.addEventListener('keydown', onKey);
-  d.addEventListener('click', function (e) { if (e.target === d) close(); });
-  document.getElementById('updNoticeClose').onclick = close;
-  document.getElementById('updNoticeHide').onclick = function () { try { localStorage.setItem('sephora_notice_hide', UPD_NOTICE.id); } catch (e) {} close(); };
-  document.getElementById('updNoticeClose').focus();
-}
 function onAuthSuccess(user) {
-  showUpdNotice_();
   document.getElementById('loginOverlay').style.display = 'none';
   document.getElementById('userNm').textContent = user.name;
   document.getElementById('userEm').textContent = user.email;
