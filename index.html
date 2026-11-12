@@ -5276,9 +5276,8 @@ window.ctySkuDetail_ = function() {
 };
 // ⑮ 퍼포먼스·온사이트 — 캐나다 자료가 없다는 안내 줄 (숫자는 그대로 미국)
 window.ctyNoDataNote_ = function() {
-  var adsMsg = CTY === 'CA' ? '광고 숫자는 캐나다 광고(캠페인·광고그룹명 CA)만, 매출·유입 비교선은 캐나다 세포라 매출·유입입니다'
-             : '광고 숫자는 미국+캐나다 광고 전체, 매출·유입 비교선은 미국+캐나다 세포라 합계입니다(캐나다 자료가 있는 날짜까지)';   // ⑯ 2026-11-12 · 비교선 국가 반영
-  [['tabAds', 'ctyAdsNote', adsMsg], ['tabOnsite', 'ctyOnsiteNote', '캐나다는 세포라 온사이트 광고를 집행하지 않습니다. 이 탭의 숫자는 모두 미국 값입니다']].forEach(function(p){
+  // 2026-11-12 MJ 「수정되면 안내 문구가 필요 없지」 — 퍼포먼스 광고 탭은 광고·매출·유입이 모두 국가 칩을 따르므로 안내 줄을 두지 않는다
+  [['tabOnsite', 'ctyOnsiteNote', '캐나다는 세포라 온사이트 광고를 집행하지 않습니다. 이 탭의 숫자는 모두 미국 값입니다']].forEach(function(p){
     var tab = document.getElementById(p[0]); if (!tab) return;
     var el = document.getElementById(p[1]);
     if (!el) { el = document.createElement('div'); el.id = p[1]; el.className = 'onl-note'; el.style.margin = '0 0 10px'; tab.insertBefore(el, tab.firstChild); }
