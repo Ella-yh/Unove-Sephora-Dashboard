@@ -4529,7 +4529,7 @@ function ctyCurBadge_() {
   var tab = act ? act.dataset.tab : 'main';
   b.dataset.cty = CTY;
   b.textContent = { US:'미국', CA:'캐나다', ALL:'전체 (미국+캐나다)' }[CTY];
-  b.style.display = ['main', 'channel', 'bm', 'sku', 'online'].indexOf(tab) >= 0 ? '' : 'none';   // 2026-11-11 온라인매출 추가
+  b.style.display = ['main', 'channel', 'bm', 'sku', 'online', 'ads'].indexOf(tab) >= 0 ? '' : 'none';   // 2026-11-11 온라인매출 추가 · 2026-11-12 퍼포먼스 광고 추가(⑯)
 }
 window.setCty = function(c) {
   if (c === CTY) return;
@@ -6766,7 +6766,7 @@ function switchTab(tab) {
   try { ctyCurBadge_(); } catch(e){}
   // 국가 분리 — 캐나다 자료가 없는 3탭은 제목 옆에 「미국 기준」 배지 (국가 선택 상태를 읽지 않는다)
   const usb = document.getElementById('usOnlyBadge');
-  if (usb) usb.style.display = ((tab === 'channel' && !ctyCaChannel_()) || tab === 'ads' || tab === 'onsite') ? '' : 'none';   // 유입 탭은 캐나다 유입 자료가 없을 때만 (2026-10-12)
+  if (usb) usb.style.display = ((tab === 'channel' && !ctyCaChannel_()) || tab === 'onsite') ? '' : 'none';   // 유입 탭은 캐나다 유입 자료가 없을 때만 (2026-10-12) · ⑯ 2026-11-12 퍼포먼스 광고 탭은 국가별로 나뉘어 제외
   if (tab === 'channel') { try { refreshChannel(); } catch(e){} }
   if (tab === 'ads')     { try { refreshAds();     } catch(e){} }
   if (tab === 'onsite')  { try { refreshOnsite(); } catch(e){} }
