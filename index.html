@@ -5276,9 +5276,8 @@ window.ctySkuDetail_ = function() {
 };
 // ⑮ 퍼포먼스·온사이트 — 캐나다 자료가 없다는 안내 줄 (숫자는 그대로 미국)
 window.ctyNoDataNote_ = function() {
-  var adsMsg = CTY === 'CA' ? '광고 숫자는 캐나다 광고(캠페인·광고그룹명 CA)만입니다. 매출 비교선은 미국 세포라 매출입니다'
-             : '광고 숫자는 미국+캐나다 광고 전체입니다. 매출 비교선은 미국 세포라 매출입니다';   // ⑯ 2026-11-12
-  [['tabAds', 'ctyAdsNote', adsMsg], ['tabOnsite', 'ctyOnsiteNote', '캐나다는 세포라 온사이트 광고를 집행하지 않습니다. 이 탭의 숫자는 모두 미국 값입니다']].forEach(function(p){
+  // 2026-11-12 MJ 「수정되면 안내 문구가 필요 없지」 — 퍼포먼스 광고 탭은 광고·매출·유입이 모두 국가 칩을 따르므로 안내 줄을 두지 않는다
+  [['tabOnsite', 'ctyOnsiteNote', '캐나다는 세포라 온사이트 광고를 집행하지 않습니다. 이 탭의 숫자는 모두 미국 값입니다']].forEach(function(p){
     var tab = document.getElementById(p[0]); if (!tab) return;
     var el = document.getElementById(p[1]);
     if (!el) { el = document.createElement('div'); el.id = p[1]; el.className = 'onl-note'; el.style.margin = '0 0 10px'; tab.insertBefore(el, tab.firstChild); }
@@ -8279,9 +8278,31 @@ function buildAdsByPeriod(mediaFilter, period) {
   });
   return byP;
 }
+// 2026-11-12 MJ 「매출 비교선도 합계로」 — 퍼포먼스 광고 탭 매출·유입 비교선을 국가 칩대로
+//   미국 = 미국 세포라(SALES_BY_DATE · RAW_SKU 유입) / 캐나다 = 캐나다 일별(CADATA.daily · 유입 = 캐나다 포털) / 전체 = 둘의 합
+//   전체: 캐나다 진출 전 날짜는 미국만(캐나다 0), 캐나다 자료가 끝난 뒤 날짜는 넣지 않는다(미국만 더해 합계가 작아 보이지 않게)
+//   🛑 매출은 USD 원본이라 날짜별 환율(fxRate)로 원화로 바꿔 넣는다 — 축·툴팁이 ₩ (이전엔 USD 숫자를 ₩ 로 표시하던 문제도 같이 고침)
+function adsSalesSrc_() {
+  const cty = typeof CTY === 'undefined' ? 'US' : CTY, dm = cty === 'US' ? null : (typeof caDaily_ === 'function' ? caDaily_() : null);
+  const toK = (o, d) => { const fx = fxRate(d); return { com:(o.com||0)*fx, bam:(o.bam||0)*fx, total:(o.total||0)*fx }; };
+  const sales = {}, visits = {};
+  const caVis = {}; if (cty !== 'US') ((typeof ctyCaCom_ === 'function' && ctyCaCom_()) || []).forEach(r => { caVis[r.date] = (caVis[r.date]||0) + (r.visits||0); });
+  const usVis = {}; RAW_SKU.forEach(r => { usVis[r.date] = (usVis[r.date]||0) + r.visits; });
+  if (cty === 'US' || !dm) { Object.entries(SALES_BY_DATE).forEach(([d, o]) => { sales[d] = toK(o, d); }); Object.assign(visits, usVis); return { sales, visits }; }
+  const caDays = Object.keys(dm).sort(), c0 = caDays[0], c1 = caDays[caDays.length - 1];
+  const caAt = d => { const x = dm[d]; return x ? { com:x.com||0, bam:x.bm||0, total:(x.com||0)+(x.bm||0) } : null; };
+  if (cty === 'CA') { caDays.forEach(d => { sales[d] = toK(caAt(d), d); }); Object.assign(visits, caVis); return { sales, visits }; }
+  Object.entries(SALES_BY_DATE).forEach(([d, o]) => {
+    if (d > c1) return;
+    const c = d < c0 ? { com:0, bam:0, total:0 } : caAt(d); if (!c) return;
+    sales[d] = toK({ com:(o.com||0)+c.com, bam:(o.bam||0)+c.bam, total:(o.total||0)+c.total }, d);
+  });
+  Object.keys(usVis).forEach(d => { if (d <= c1) visits[d] = usVis[d] + (caVis[d] || 0); });
+  return { sales, visits };
+}
 function buildSephoraByPeriod(period) {
-  const byP = {};
-  Object.entries(SALES_BY_DATE).forEach(([date, s]) => {
+  const byP = {}, src = adsSalesSrc_();
+  Object.entries(src.sales).forEach(([date, s]) => {
     if (adsSelectedRange.size > 0 && !adsSelectedRange.has(getPeriodKey(date, adsGlobalPeriod2))) return;
     const k = getPeriodKey(date, period);
     if (!byP[k]) byP[k] = {sales_com:0, sales_bam:0, sales_total:0, visits:0};
@@ -8289,8 +8310,7 @@ function buildSephoraByPeriod(period) {
     byP[k].sales_bam   += s.bam   || 0;
     byP[k].sales_total += s.total || 0;
   });
-  const visitsByDate = {};
-  RAW_SKU.forEach(r => { visitsByDate[r.date] = (visitsByDate[r.date]||0) + r.visits; });
+  const visitsByDate = src.visits;
   Object.entries(visitsByDate).forEach(([date, v]) => {
     if (adsSelectedRange.size > 0 && !adsSelectedRange.has(getPeriodKey(date, adsGlobalPeriod2))) return;
     const k = getPeriodKey(date, period);
