@@ -441,6 +441,13 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
 .cty-cur[data-cty="US"]{background:#d97070;}
 .cty-cur[data-cty="CA"]{background:#7B3F1D;}
 .cty-cur[data-cty="ALL"]{background:linear-gradient(90deg,#d97070 50%,#7B3F1D 50%);}
+/* 2026-11-12 MJ 「디자인 전체 확인하고 얼라인 맞춰」 — 국가 색 하나로: 미국 #d97070 분홍 · 캐나다 #7B3F1D 갈색 · 전체 = 둘 반반 (제목 옆 배지와 같음)
+   탭 안 작은 배지(.cty-badge)·표 「국가」 칸도 body[data-cty] 를 따라 같은 색 */
+body[data-cty="CA"] .cty-badge:not(.us){color:#7B3F1D;background:#F5ECE6;border-color:#DCC3B3;}
+body[data-cty="ALL"] .cty-badge:not(.us){color:#6B3A2A;background:linear-gradient(90deg,#FBEDEC 50%,#F5ECE6 50%);border-color:#E3C6BC;}
+body[data-cty="US"] td.mt-cty{color:#d97070 !important;}
+body[data-cty="CA"] td.mt-cty{color:#7B3F1D !important;}
+body[data-cty="ALL"] td.mt-cty{color:#1D2847 !important;}
 .sb-text{font-size:11px;font-weight:500;transition:opacity .2s;white-space:nowrap;}
 .sidebar.collapsed .sb-text{opacity:0;pointer-events:none;width:0;overflow:hidden;}
 .sb-footer{padding:10px 8px;border-top:0.5px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;gap:7px;overflow:hidden;}
@@ -1393,7 +1400,7 @@ tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
   <div class="chart-card">
     <div class="chart-sec-title"><span>채널별 매출 추이 · 목표 기준선</span>
       <span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <span class="legend"><span><i style="background:#1D2847"></i>B&amp;M</span><span><i style="background:#D9A89A"></i>.COM</span><span><i style="background:#3D85C6"></i>B&amp;M 비중</span></span>
+      <span class="legend" id="bmTrendLeg"><span><i style="background:#1D2847"></i>B&amp;M</span><span><i style="background:#D9A89A"></i>.COM</span><span><i style="background:#3D85C6"></i>B&amp;M 비중</span></span>
       <span><button class="btn" data-g="d">일</button><button class="btn on" data-g="w">주</button><button class="btn" data-g="m">월</button></span></span></div>
     <div id="chTrend"></div><div class="foot" id="trendFoot"></div>
   </div>
@@ -1714,11 +1721,14 @@ function drawTrend(g){
     perBar=D.mon_wks.map(w=>w*D.goal.wk_target);
     tipT=i=>D.months[i]+' ('+D.mon_wks[i]+'주'+(D.mon_full[i]?'':' · 부분')+')';
     foot='월별 · 주차 마감일 기준 집계. 빨간 눈금 = 해당 월 목표($96,154 × 그 달 주수). <b>2026-02는 런칭월이라 3주만 포함</b>(부분 구간).';}
+  let stacks=[{name:'B&M',color:NAVY,data:bm},{name:'.COM',color:ROSE,data:com}];
+  {const lg=document.getElementById('bmTrendLeg');if(lg&&typeof CTY!=='undefined'&&CTY==='US')lg.innerHTML='<span><i style="background:#1D2847"></i>B&amp;M</span><span><i style="background:#D9A89A"></i>.COM</span><span><i style="background:#3D85C6"></i>B&amp;M 비중</span>';}
   if(typeof window.ctyBmTrend_==='function'){const o=window.ctyBmTrend_(g,D);   // 국가 분리 6차 — 캐나다·전체면 막대를 바꾸고 목표선은 끈다
     if(o){labels=o.labels;bm=o.bm;com=o.com;ref=null;perBar=null;band=null;tipT=o.tipT;foot=o.foot;
+      stacks=(window.ctyBmTrendStacks_&&window.ctyBmTrendStacks_(o,NAVY,ROSE))||[{name:'B&M',color:NAVY,data:bm},{name:'.COM',color:ROSE,data:com}];
       if(!labels.length){BMQ('chTrend').innerHTML='';BMQ('trendFoot').innerHTML=foot;return;}}}
   chart(BMQ('chTrend'),{labels:labels,H:248,W:820,pr:44,band:band,
-    stacks:[{name:'B&M',color:NAVY,data:bm},{name:'.COM',color:ROSE,data:com}],
+    stacks:stacks,
     line:{name:'B&M 비중',color:CLICKS,data:bm.map((v,i)=>v==null?0:Math.max(0,Math.min(100,v/Math.max(1,v+com[i])*100))),min:0,max:100,fmt:v=>Math.round(v)+'%',tipF:v=>v.toFixed(1)+'%'},
     ref:ref,refLabel:refL,refPerBar:perBar,yFmt:v=>'$'+Math.round(v/1000)+'K',tipF:v=>usd(v),tipT:tipT,xTicks:ticks,negNote:'(반품)'});
   BMQ('trendFoot').innerHTML=foot+' <span style="color:#ddd">| 렌더 '+(performance.now()-t0).toFixed(0)+'ms</span>';}
@@ -4589,6 +4599,7 @@ const CTY_ENTRY_LABEL = '캐나다 진입 (닷컴 W28 · 매장 W30)';
 function ctyNA_(why) { return '<span class="cty-na">—</span>'; }
 // 제목 옆 지금 국가 배지 — 국가가 적용되는 탭(통합·유입·B&M·SKU)에서만 (2026-10-12)
 function ctyCurBadge_() {
+  if (document.body) document.body.dataset.cty = CTY;   // 국가 색 CSS(배지·표 국가 칸)가 따른다
   var b = document.getElementById('ctyCurBadge'); if (!b) return;
   var act = document.querySelector('.sb-item.active');
   var tab = act ? act.dataset.tab : 'main';
@@ -5171,9 +5182,11 @@ window.ctyBmTrend_ = function(g, D) {
   var labels = [], bm = [], com = [], tipT = null, foot = '', miss = 0;
   var push = function(lb, ub, uc, cb, cc) {
     labels.push(lb);
-    if (cb == null) { bm.push(null); com.push(null); miss++; return; }
+    if (cb == null) { bm.push(null); com.push(null); ubA.push(null); ucA.push(null); cbA.push(null); ccA.push(null); miss++; return; }
     bm.push(ALL ? ub + cb : cb); com.push(ALL ? uc + cc : cc);
+    ubA.push(ub); ucA.push(uc); cbA.push(cb); ccA.push(cc);   // 「전체」 나라별 누적 막대용
   };
+  var ubA = [], ucA = [], cbA = [], ccA = [];
   if (!c) return { labels: [], bm: [], com: [], tipT: null, foot: '<span class="cty-na">' + CA_WHY.none + '</span>' };
   if (g === 'w') {
     var byW = {}; c.wk.forEach(function(x){ byW[x.w] = x; });
@@ -5208,7 +5221,21 @@ window.ctyBmTrend_ = function(g, D) {
   if (tb && last >= 0) foot += '. 마지막 칸 ' + nf(tot[last]) + '.';
   foot += ' 목표선은 미국 $5M 목표 기준이라 ' + (ALL ? '전체' : '캐나다') + '에는 그리지 않습니다.';
   if (ALL) foot += ' 막대 = 미국 + 캐나다 합' + (miss ? ' · 캐나다 자료가 없는 ' + miss + '칸은 비움(미국만 더하지 않음)' : '') + '.';
-  return { labels: labels, bm: bm, com: com, tipT: tipT, foot: foot };
+  return { labels: labels, bm: bm, com: com, tipT: tipT, foot: foot, ub: ubA, uc: ucA, cb: cbA, cc: ccA };
+};
+// 2026-11-12 MJ 「디자인 전체 확인하고 얼라인 맞춰」 — 국가 색 규칙(통합 탭과 같음): 미국 = 원래 채널 색 · 캐나다 = 갈색 진하기(CTY_CA_SHADE)
+//   B&M 「매출 추이」: 미국 = B&M 남색 · .COM 분홍(그대로) / 캐나다 = B&M 진한 갈색 · .COM 연한 갈색 / 전체 = 네 칸 누적(같은 채널끼리 미국 아래·캐나다 위)
+window.ctyBmTrendStacks_ = function(o, NAVY, ROSE) {
+  if (CTY === 'US' || !o) return null;
+  var B = CTY_CA_SHADE.total, C = CTY_CA_SHADE.bam;
+  var leg = document.getElementById('bmTrendLeg'), i_ = function(c, t){ return '<span><i style="background:' + c + '"></i>' + t + '</span>'; };
+  if (CTY === 'CA') {
+    if (leg) leg.innerHTML = i_(B, 'B&amp;M 캐나다') + i_(C, '.COM 캐나다') + i_('#3D85C6', 'B&amp;M 비중');
+    return [{ name: 'B&M 캐나다', color: B, data: o.bm }, { name: '.COM 캐나다', color: C, data: o.com }];
+  }
+  if (leg) leg.innerHTML = i_(NAVY, 'B&amp;M 미국') + i_(B, 'B&amp;M 캐나다') + i_(ROSE, '.COM 미국') + i_(C, '.COM 캐나다') + i_('#3D85C6', 'B&amp;M 비중');
+  return [{ name: 'B&M 미국', color: NAVY, data: o.ub }, { name: 'B&M 캐나다', color: B, data: o.cb },
+          { name: '.COM 미국', color: ROSE, data: o.uc }, { name: '.COM 캐나다', color: C, data: o.cc }];
 };
 // ⑬-2 B&M 「이상 징후」 — 미국이면 null. 캐나다는 SKU별 주간 재고가 없어 재고 판정 없이 매출 급변 2종만
 window.ctyBmSignals_ = function(sig, D, CW, PW) {
