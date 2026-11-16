@@ -8114,7 +8114,7 @@ const TABLE_METRICS = [
   {key:'sales',     label:'Sales(백만원)', fmt:v => v==null ? '-' : (v/1e6).toLocaleString('ko-KR', {maximumFractionDigits:1})},
   {key:'cpatc',     label:'CPATC',   fmt:wonFmt},
   {key:'cpa',       label:'CPA',     fmt:wonFmt},
-  {key:'roas',      label:'ROAS',    fmt:v => v==null ? '-' : v.toFixed(2)+'×'},
+  {key:'roas',      label:'ROAS',    fmt:v => v==null ? '-' : (v*100).toFixed(2)+'%'},
 ];
 function pctFmt(v){ return v==null ? '-' : v.toFixed(2)+'%'; }
 function wonFmt(v){ return v==null ? '-' : '₩'+Math.round(v).toLocaleString('ko-KR'); }
@@ -8279,7 +8279,7 @@ function refreshOnsite() {
     var share = g.key==='total' ? '통합' : Math.round((d.sales/totalSalesAll)*100)+'% 기여';
     return '<div class="kpi" style="border-left:3px solid '+g.accent+'">'
       + '<div class="kpi-header"><div class="kpi-label">'+g.lab+'</div>'
-      + '<div class="kpi-badge '+(up?'up':'dn')+'">ROAS '+d.roas.toFixed(2)+'×</div></div>'
+      + '<div class="kpi-badge '+(up?'up':'dn')+'">ROAS '+(d.roas*100).toFixed(2)+'%</div></div>'
       + '<div class="kpi-value">'+won(d.sales)+'</div>'
       + '<div class="kpi-vs">Spend '+won(d.spend)+' · '+share+'</div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;margin-top:10px;font-size:11px;color:#666">'
@@ -8370,7 +8370,7 @@ function refreshOnsite() {
       plugins:{ legend:{display:false},
         tooltip:{ callbacks:{ label:function(c){ var l=c.dataset.label;
           if(l.indexOf('%')>=0) return l+' '+c.parsed.y.toFixed(1)+'%';
-          if(l==='ROAS') return 'ROAS '+c.parsed.y.toFixed(2)+'×';
+          if(l==='ROAS') return 'ROAS '+(c.parsed.y*100).toFixed(2)+'%';
           if(l==='세일즈'||l==='광고비') return l+' '+won(c.parsed.y);
           return l+' '+Math.round(c.parsed.y).toLocaleString(); } } } },
       scales:{
@@ -8425,9 +8425,9 @@ function refreshOnsite() {
         plugins:{ legend:{position:'bottom',
             onClick:function(e,item,legend){ if(item.datasetIndex==null||item.datasetIndex<0) return; Chart.defaults.plugins.legend.onClick.call(this,e,item,legend); },
             labels:{boxWidth:10,boxHeight:10,padding:9,font:{size:10}, generateLabels:function(chart){ var items=Chart.defaults.plugins.legend.labels.generateLabels(chart); if (OUT_I.length) items.push({text:GREYO_LABEL,fillStyle:GREYO,strokeStyle:GREYO,lineWidth:0,hidden:false,datasetIndex:-1}); return items; }}},
-          tooltip:{ callbacks:{ label:function(c){ return c.dataset.label==='ROAS' ? 'ROAS '+c.parsed.y.toFixed(2)+'×' : c.dataset.label+' '+won(c.parsed.y); } } } },
+          tooltip:{ callbacks:{ label:function(c){ return c.dataset.label==='ROAS' ? 'ROAS '+(c.parsed.y*100).toFixed(2)+'%' : c.dataset.label+' '+won(c.parsed.y); } } } },
         scales:{ y:{position:'left',min:yMinC,max:yMaxC,grid:{color:GRID},ticks:{callback:axT}},
-          y1:{position:'right',min:r1MinC,max:rMaxC,grid:{display:false},ticks:{callback:function(v){return v.toFixed(1)+'×';}}},
+          y1:{position:'right',min:r1MinC,max:rMaxC,grid:{display:false},ticks:{callback:function(v){return Math.round(v*100)+'%';}}},
           x:{grid:{color:GRID}} } },
       plugins:[greyOnSalesPlugin(series)] });
   };
@@ -8497,9 +8497,9 @@ function refreshOnsite() {
         var sum = function(a, k){ return a.reduce(function(x, y){ return x + y[k]; }, 0); };
         var tb = (s.banner && s.banner.sales || 0) + sum(fB,'sales'), tp = (s.pla && s.pla.sales || 0) + sum(fP,'sales');
         var cb = (s.banner && s.banner.spend || 0) + sum(fB,'spend'), cpl = (s.pla && s.pla.spend || 0) + sum(fP,'spend');
-        fcEl.innerHTML = '※ 예측(' + mmdd(FD[0]) + '~' + mmdd(FD[nF - 1]) + ') = 최근 ' + nd + '일 평균 광고비 × 최근 ' + nd + '일 ROAS(Banner ' + roB.toFixed(2) + '× · PLA ' + roP.toFixed(2) + '×). '
+        fcEl.innerHTML = '※ 예측(' + mmdd(FD[0]) + '~' + mmdd(FD[nF - 1]) + ') = 최근 ' + nd + '일 평균 광고비 × 최근 ' + nd + '일 ROAS(Banner ' + (roB * 100).toFixed(2) + '% · PLA ' + (roP * 100).toFixed(2) + '%). '
           + (BUDGET ? '광고비는 남은 예산 ' + won(Math.max(0, BUDGET - ((s.total && s.total.spend) || 0))) + ' 안에서만 잡았고, ' + (outDay ? '<b>이 속도면 ' + mmdd(outDay) + '에 예산이 소진돼 그 뒤는 0입니다.</b> ' : '종료일까지 예산이 남습니다. ') : '')
-          + '종료 예정일 ' + mmdd(META.end) + '까지 예상 누적 — Banner 매출 ' + won(tb) + ' (ROAS ' + (cb ? (tb / cb).toFixed(2) : '-') + '×) · PLA 매출 ' + won(tp) + ' (ROAS ' + (cpl ? (tp / cpl).toFixed(2) : '-') + '×). 예측 막대·점선은 실적이 아닙니다.';
+          + '종료 예정일 ' + mmdd(META.end) + '까지 예상 누적 — Banner 매출 ' + won(tb) + ' (ROAS ' + (cb ? (tb / cb * 100).toFixed(2) + '%' : '-') + ') · PLA 매출 ' + won(tp) + ' (ROAS ' + (cpl ? (tp / cpl * 100).toFixed(2) + '%' : '-') + '). 예측 막대·점선은 실적이 아닙니다.';
         fcEl.style.display = '';
       }
     }
@@ -8508,12 +8508,12 @@ function refreshOnsite() {
       options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
         plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, boxHeight:10, padding:9, font:{size:10}, filter:function(it, d){ return !d.datasets[it.datasetIndex].hidden; } } },
           tooltip:{ filter:function(c){ return c.parsed.y != null; }, callbacks:{ label:function(c){ var k = c.dataset.key, v = c.parsed.y;
-            if (k === 'ROAS') return c.dataset.label + ' ' + v.toFixed(2) + '×';
+            if (k === 'ROAS') return c.dataset.label + ' ' + (v * 100).toFixed(2) + '%';
             if (k === 'CTR' || k === '전환율') return c.dataset.label + ' ' + v.toFixed(2) + '%';
             if (k === '매출' || k === '광고비') return c.dataset.label + ' ' + won(v);
             return c.dataset.label + ' ' + Math.round(v).toLocaleString(); } } } },
         scales:{ yWon:{ display:'auto', position:'left', grid:{color:GRID}, ticks:{callback: USD ? axT : function(v){ var m = v / 1e6; return '₩' + (Number.isInteger(m) ? m : m.toFixed(1)) + 'M'; }} },
-          yRoas:{ display:'auto', position:'right', min:0, grid:{display:false}, title:{display:true,text:'ROAS(×)'}, ticks:{callback:function(v){ return v + '×'; }} },
+          yRoas:{ display:'auto', position:'right', min:0, grid:{display:false}, title:{display:true,text:'ROAS(%)'}, ticks:{callback:function(v){ return Math.round(v * 100) + '%'; }} },
           yImpr:{ display:'auto', position:'right', grid:{display:false}, title:{display:true,text:'노출'}, ticks:{callback:cnt} },
           yClk:{ display:'auto', position:'right', grid:{display:false}, title:{display:true,text:'클릭'}, ticks:{callback:cnt} },
           yPct:{ display:'auto', position:'right', min:0, grid:{display:false}, title:{display:true,text:'%'}, ticks:{callback:function(v){ return v + '%'; }} },
@@ -8541,10 +8541,10 @@ function refreshOnsite() {
     ]},
     options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{position:'bottom',labels:{boxWidth:10,boxHeight:10,padding:9,font:{size:10}}},
-        tooltip:{ callbacks:{ label:function(c){ return c.dataset.label==='ROAS' ? 'ROAS '+c.parsed.x.toFixed(2)+'×' : '매출 '+won(c.parsed.x); } } } },
+        tooltip:{ callbacks:{ label:function(c){ return c.dataset.label==='ROAS' ? 'ROAS '+(c.parsed.x*100).toFixed(2)+'%' : '매출 '+won(c.parsed.x); } } } },
       scales:{ y:{grid:{display:false},ticks:{autoSkip:false,font:{size:10}}},
         x:{position:'top',grid:{color:GRID},title:{display:true,text:USD?'매출($)':'매출(₩)',font:{size:10}},ticks:{callback:axT}},
-        x1:{position:'bottom',min:0,suggestedMax:4,grid:{display:false},title:{display:true,text:'ROAS(×)',font:{size:10}},ticks:{callback:function(v){return v+'×';}}} } }
+        x1:{position:'bottom',min:0,suggestedMax:4,grid:{display:false},title:{display:true,text:'ROAS(%)',font:{size:10}},ticks:{callback:function(v){return Math.round(v*100)+'%';}}} } }
   });
   // SKU 표
   var tot = { spend:0, sales:0, units:0, clicks:0, impr:0 };
@@ -8552,12 +8552,12 @@ function refreshOnsite() {
   var rows = skus.map(function(d){
     var pct = tot.sales ? Math.round(d.sales/tot.sales*100) : 0;
     return '<tr><td>'+dn(d.name)+'</td><td style="color:#1D2847;font-weight:700">'+pr(d.name)+'</td><td>'+wonK(d.spend)+'</td><td>'+wonK(d.sales)+'</td>'
-      + '<td>'+d.roas.toFixed(2)+'×</td><td>'+pct+'%</td><td>'+Math.round(d.cvr)+'%</td>'
+      + '<td>'+(d.roas*100).toFixed(2)+'%</td><td>'+pct+'%</td><td>'+Math.round(d.cvr)+'%</td>'
       + '<td>'+wonK(d.cpm)+'</td><td>'+wonK(d.cpc)+'</td><td>'+wonK(d.cpa)+'</td></tr>';
   }).join('');
   var totRoas = tot.spend ? (tot.sales/tot.spend) : 0;
   rows += '<tr style="font-weight:700;background:#F5F5F8"><td>PLA 합계</td><td>—</td><td>'+wonK(tot.spend)+'</td><td>'+wonK(tot.sales)+'</td>'
-    + '<td>'+totRoas.toFixed(2)+'×</td><td>100%</td><td>'+(tot.clicks?Math.round(tot.units/tot.clicks*100):0)+'%</td><td>'+wonK(tot.impr?tot.spend/tot.impr*1000:0)+'</td><td>'+wonK(tot.clicks?tot.spend/tot.clicks:0)+'</td><td>'+wonK(tot.units?tot.spend/tot.units:0)+'</td></tr>';
+    + '<td>'+(totRoas*100).toFixed(2)+'%</td><td>100%</td><td>'+(tot.clicks?Math.round(tot.units/tot.clicks*100):0)+'%</td><td>'+wonK(tot.impr?tot.spend/tot.impr*1000:0)+'</td><td>'+wonK(tot.clicks?tot.spend/tot.clicks:0)+'</td><td>'+wonK(tot.units?tot.spend/tot.units:0)+'</td></tr>';
   document.getElementById('onsSkuTbl').querySelector('tbody').innerHTML = rows;
 
   // ---- 5) Brand Media 비교 ----
@@ -8700,7 +8700,7 @@ function crFmt(k, v) {
   if (v == null || !isFinite(v)) return '-';
   if (k === 'spend') return crWonM(v);
   if (k === 'cpc') return crWon(v);
-  if (k === 'roas') return v.toFixed(2) + '×';
+  if (k === 'roas') return (v * 100).toFixed(2) + '%';
   if (CR_ER3.has(k)) return v.toFixed(3) + '%';
   if (CR_PCT.has(k)) return v.toFixed(2) + '%';
   return crInt(v);
