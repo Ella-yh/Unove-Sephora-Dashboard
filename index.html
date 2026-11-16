@@ -7764,6 +7764,8 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
     window.DEMAND = (data.demand) || {};
     ctyChannelLoad_();   // 2026-10-12 — 미국 유입 행 보관 + 국가 칩에 맞춰 CH_RAW 채움
     rebuildDerivedData();
+    // 2026-11-16 — 온라인매출 탭은 캐시로 먼저 그린 뒤 새 데이터가 와도 다시 그리지 않아 새 날짜 Visits가 0으로 남았다 → 새 데이터로 다시 그린다
+    try { ONL.byDate = null; var _ot2=document.querySelector('.sb-item.active'); if (_ot2 && _ot2.getAttribute('data-tab')==='online' && typeof refreshOnline==='function') refreshOnline(); } catch(e){ console.warn('[online] 다시 그리기', e); }
     const ts = data.updatedAt ? new Date(data.updatedAt).toLocaleString('ko-KR') : '—';
     const label = document.getElementById('lastUpdatedLabel');
     if (label) label.textContent = '업데이트: ' + ts;
