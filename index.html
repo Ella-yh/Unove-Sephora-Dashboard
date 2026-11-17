@@ -9622,6 +9622,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     if((m=s.match(/^(\d{4})-(\d{2})-(\d{2})/)))return {t:'d',y:+m[1],m:+m[2],d:+m[3]};
     if((m=s.match(/^(\d{4})-(\d{2})(?![\d-])/)))return {t:'m',y:+m[1],m:+m[2]};
     if((m=s.match(/^(\d{1,2})월/)))return {t:'m',m:+m[1]};
+    if((m=s.match(/^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)(?![A-Z])/i)))return {t:'m',m:'JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC'.indexOf(m[1].toUpperCase())/3+1};
     if((m=s.match(/^(\d{2})-(\d{2})$/)))return {t:'d',m:+m[1],d:+m[2]};
     if((m=s.match(/^(\d{1,2})\/(\d{1,2})$/)))return {t:'ab',a:+m[1],b:+m[2]};
     return null;}
