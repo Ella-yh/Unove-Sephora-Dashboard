@@ -7541,6 +7541,12 @@ const AUTO_REFRESH_MS = 30 * 60 * 1000; // 30분
 // ── 페이지 로드: hash 토큰 확인 → 캐시 확인 → 로그인 화면
 window.addEventListener('load', function() {
   const hash = window.location.hash;
+  // 무음 로그인(prompt=none)이 실패하면 구글이 #error=… 로 돌려준다 → 평소 로그인 버튼 화면
+  if (hash && hash.includes('error=') && !hash.includes('access_token=')) {
+    history.replaceState(null, '', window.location.pathname);
+    sessionStorage.setItem('sephora_silent_tried', '1');
+    return;
+  }
   if (hash && hash.includes('access_token=')) {
     const params = new URLSearchParams(hash.substring(1));
     const token  = params.get('access_token');
@@ -7563,7 +7569,20 @@ window.addEventListener('load', function() {
     sessionStorage.removeItem('sephora_auth');
     sessionStorage.removeItem('sephora_token');
   }
+  // 저장된 로그인이 없으면 먼저 화면 없이 로그인해 본다(이미 구글에 로그인돼 있으면 계정 선택 없이 바로 들어옴). 탭마다 한 번만
+  if (!sessionStorage.getItem('sephora_silent_tried')) { sessionStorage.setItem('sephora_silent_tried', '1'); startSilentLogin_(); }
 });
+// 무음 로그인 — prompt=none + 지난번 로그인한 계정(login_hint). 처음 쓰는 사람·동의 전·계정이 여럿이면 #error 로 돌아와 버튼 화면
+function startSilentLogin_() {
+  const params = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID, redirect_uri: REDIRECT_URI,
+    response_type: 'token', scope: 'email profile https://www.googleapis.com/auth/spreadsheets.readonly',
+    hd: ALLOWED_DOMAIN, prompt: 'none'
+  });
+  const hint = localStorage.getItem('sephora_last_email');
+  if (hint) params.set('login_hint', hint);
+  window.location.replace('https://accounts.google.com/o/oauth2/v2/auth?' + params.toString());
+}
 window.startGoogleLogin = function() {
   const btn = document.getElementById('btnGoogleLogin');
   if (btn) { btn.disabled = true; btn.textContent = '이동 중...'; }
@@ -7595,6 +7614,7 @@ async function verifyGoogleToken(token) {
       return;
     }
     sessionStorage.setItem('sephora_token', token);
+    try { localStorage.setItem('sephora_last_email', info.email); } catch (e) {}   // 다음 무음 로그인 힌트(토큰은 저장하지 않음)
     currentUser = { name: info.name || info.email, email: info.email, picture: info.picture || '' };
     sessionStorage.setItem('sephora_auth', JSON.stringify(currentUser));
     onAuthSuccess(currentUser);
@@ -7736,6 +7756,9 @@ async function loadFromAppsScript(appsScriptUrl, isSilent) {
         // Token expired: clear cache and return to login
         sessionStorage.removeItem('sephora_auth');
         sessionStorage.removeItem('sephora_token');
+        // 구글 토큰은 1시간 — 만료면 화면 없이 다시 받아 온다(10분 안에 이미 해 봤으면 아래 로그인 화면)
+        const lastSilent = +(sessionStorage.getItem('sephora_silent_at') || 0);
+        if (Date.now() - lastSilent > 600000) { sessionStorage.setItem('sephora_silent_at', String(Date.now())); startSilentLogin_(); return; }
         if (autoRefreshTimer) clearInterval(autoRefreshTimer);
         const lo = document.getElementById('loadingOverlay');
         if (lo) lo.style.display = 'none';
